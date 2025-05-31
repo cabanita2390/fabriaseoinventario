@@ -1,26 +1,51 @@
-import { Injectable } from '@nestjs/common';
+// src/proveedor/proveedor.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateProveedorDto } from './dto/create-proveedor.dto';
 import { UpdateProveedorDto } from './dto/update-proveedor.dto';
+import { Proveedor } from '../entities/proveedor.entity';
 
 @Injectable()
 export class ProveedorService {
-  create(createProveedorDto: CreateProveedorDto) {
-    return 'This action adds a new proveedor';
+  constructor(
+    @InjectRepository(Proveedor)
+    private readonly proveedorRepo: Repository<Proveedor>,
+  ) {}
+
+  async create(dto: CreateProveedorDto): Promise<Proveedor> {
+    const entidad = this.proveedorRepo.create(dto);
+    return this.proveedorRepo.save(entidad);
   }
 
-  findAll() {
-    return `This action returns all proveedor`;
+  async findAll(): Promise<Proveedor[]> {
+    return this.proveedorRepo.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} proveedor`;
+  async findOne(id: number): Promise<Proveedor> {
+    const entidad = await this.proveedorRepo.findOne({ where: { id } });
+    if (!entidad) {
+      throw new NotFoundException(`Proveedor con id ${id} no encontrado`);
+    }
+    return entidad;
   }
 
-  update(id: number, updateProveedorDto: UpdateProveedorDto) {
-    return `This action updates a #${id} proveedor`;
+  async update(id: number, dto: UpdateProveedorDto): Promise<Proveedor> {
+    const entidad = await this.proveedorRepo.preload({
+      id,
+      ...dto,
+    });
+    if (!entidad) {
+      throw new NotFoundException(`Proveedor con id ${id} no encontrado`);
+    }
+    return this.proveedorRepo.save(entidad);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} proveedor`;
+  async remove(id: number): Promise<void> {
+    const entidad = await this.proveedorRepo.findOne({ where: { id } });
+    if (!entidad) {
+      throw new NotFoundException(`Proveedor con id ${id} no encontrado`);
+    }
+    await this.proveedorRepo.remove(entidad);
   }
 }

@@ -37,9 +37,9 @@ export class Producto {
   @JoinColumn({ name: 'unidadmedida_idunidadmedida' })
   unidadMedida: UnidadMedida;
 
-  // @ManyToOne(() => Proveedor, (pr) => pr.productos, { eager: true })
-  // @JoinColumn({ name: 'proveedor_idproveedor' })
-  // proveedor: Proveedor;
+  @ManyToOne(() => Proveedor, (pr) => pr.productos, { eager: true })
+  @JoinColumn({ name: 'proveedor_idproveedor' })
+  proveedor: Proveedor;
 
   //   @OneToMany(() => Movimiento, (mov) => mov.producto)
   //   movimientos: Movimiento[];
