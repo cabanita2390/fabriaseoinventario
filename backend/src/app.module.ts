@@ -4,6 +4,15 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService  } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PresentacionModule } from './presentacion/presentacion.module';
+import { UnidadmedidaModule } from './unidadmedida/unidadmedida.module';
+import { ProveedorModule } from './proveedor/proveedor.module';
+import { BodegaModule } from './bodega/bodega.module';
+import { InventarioModule } from './inventario/inventario.module';
+import { MovimientoModule } from './movimiento/movimiento.module';
+import { UsuarioModule } from './usuario/usuario.module';
+import { RolModule } from './rol/rol.module';
+import { ProductoModule } from './producto/producto.module';
 
 @Module({
   imports: [
@@ -26,6 +35,24 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         synchronize: true, // solo en desarrollo
       }),
     }),
+
+    PresentacionModule,
+
+    UnidadmedidaModule,
+
+    ProveedorModule,
+
+    BodegaModule,
+
+    InventarioModule,
+
+    MovimientoModule,
+
+    UsuarioModule,
+
+    RolModule,
+
+    ProductoModule,
   
   ],
   controllers: [AppController],
