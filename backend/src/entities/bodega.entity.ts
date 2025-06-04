@@ -1,7 +1,5 @@
-// src/entities/bodega.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-// import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-// import { Inventario } from './inventario.entity';
+import { Inventario } from './inventario.entity';
 // import { Movimiento } from './movimiento.entity';
 
 @Entity({ name: 'bodega' })
@@ -15,9 +13,9 @@ export class Bodega {
   @Column({ length: 200 })
   ubicacion: string;
 
-  //   // Relación inversa: una bodega puede tener muchos inventarios
-  //   @OneToMany(() => Inventario, (inv) => inv.bodega)
-  //   inventarios: Inventario[];
+  // Relación inversa: una bodega puede tener muchos inventarios
+  @OneToMany(() => Inventario, (inv) => inv.bodega)
+  inventarios: Inventario[];
 
   //   // Relación inversa: una bodega puede registrar muchos movimientos
   //   @OneToMany(() => Movimiento, (mov) => mov.bodega)

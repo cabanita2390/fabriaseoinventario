@@ -9,7 +9,7 @@ import {
 import { Presentacion } from './presentacion.entity';
 import { UnidadMedida } from './unidadmedida.entity';
 import { Proveedor } from './proveedor.entity';
-import { Movimiento } from './movimiento.entity';
+// import { Movimiento } from './movimiento.entity';
 import { Inventario } from './inventario.entity';
 
 @Entity({ name: 'producto' })
@@ -44,6 +44,6 @@ export class Producto {
   //   @OneToMany(() => Movimiento, (mov) => mov.producto)
   //   movimientos: Movimiento[];
 
-  //   @OneToMany(() => Inventario, (inv) => inv.producto)
-  //   inventarios: Inventario[];
+  @OneToMany(() => Inventario, (inv) => inv.producto)
+  inventarios: Inventario[];
 }
