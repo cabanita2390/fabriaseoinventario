@@ -1,26 +1,51 @@
-import { Injectable } from '@nestjs/common';
+// src/bodega/bodega.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateBodegaDto } from './dto/create-bodega.dto';
 import { UpdateBodegaDto } from './dto/update-bodega.dto';
+import { Bodega } from '../entities/bodega.entity';
 
 @Injectable()
 export class BodegaService {
-  create(createBodegaDto: CreateBodegaDto) {
-    return 'This action adds a new bodega';
+  constructor(
+    @InjectRepository(Bodega)
+    private readonly bodegaRepo: Repository<Bodega>,
+  ) {}
+
+  async create(dto: CreateBodegaDto): Promise<Bodega> {
+    const entidad = this.bodegaRepo.create(dto);
+    return this.bodegaRepo.save(entidad);
   }
 
-  findAll() {
-    return `This action returns all bodega`;
+  async findAll(): Promise<Bodega[]> {
+    return this.bodegaRepo.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} bodega`;
+  async findOne(id: number): Promise<Bodega> {
+    const entidad = await this.bodegaRepo.findOne({ where: { id } });
+    if (!entidad) {
+      throw new NotFoundException(`Bodega con id ${id} no encontrada`);
+    }
+    return entidad;
   }
 
-  update(id: number, updateBodegaDto: UpdateBodegaDto) {
-    return `This action updates a #${id} bodega`;
+  async update(id: number, dto: UpdateBodegaDto): Promise<Bodega> {
+    const entidad = await this.bodegaRepo.preload({
+      id,
+      ...dto,
+    });
+    if (!entidad) {
+      throw new NotFoundException(`Bodega con id ${id} no encontrada`);
+    }
+    return this.bodegaRepo.save(entidad);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} bodega`;
+  async remove(id: number): Promise<void> {
+    const entidad = await this.bodegaRepo.findOne({ where: { id } });
+    if (!entidad) {
+      throw new NotFoundException(`Bodega con id ${id} no encontrada`);
+    }
+    await this.bodegaRepo.remove(entidad);
   }
 }
