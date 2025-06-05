@@ -1,16 +1,31 @@
 import React from 'react';
 import Sidebar from '../components/Sidebar/Sidebar';
+import '../styles/Dashboartdpage/Dashboart.css';
+import Labelstack from '../components/LabelStack/Labelstack';
 
-const DashboardPage = () => {
+function DashboardPage() {
+  const movimientosHoy = 18;
+  const productosStockBajo = 3;
+
   return (
-    <div style={{ display: 'flex' }}>
+    <div className="dashboard-container">
       <Sidebar />
-      <main style={{ marginLeft: '240px', padding: '2rem' }}>
+      <div className="dashboard-main">
         <h1>Bienvenido</h1>
-        <p>Aquí se mostrará todo el contenido.</p>
-      </main>
+        <div className="label-div">
+          <Labelstack movimientos={movimientosHoy} stockBajo={productosStockBajo} /> 
+        </div>
+
+        <div className='grafico-div'>
+          <h1>graficas </h1>
+        </div>
+
+        <div className='lista-div'>
+              <h1>entrada de productos </h1>
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 export default DashboardPage;

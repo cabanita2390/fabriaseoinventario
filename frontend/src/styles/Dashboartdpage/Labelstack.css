@@ -1,0 +1,50 @@
+.labelstack-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 150 px; 
+  width: auto; 
+  box-sizing: border-box; 
+  
+}
+
+.label-titulo {
+  width: 300px;
+  height: 100px;
+  
+  border-radius: 20px;
+  background-color: #dae4f3;
+  padding: 10px;
+  font-size: 16px;
+  color: #333;
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.35);
+  font-family: Roboto;
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-align: center;
+}
+
+.label-stock-bajo {
+  width: 300px;
+  height: 100px;
+  
+  border-radius: 20px;
+  background-color: #dae4f3;
+  padding: 10px;
+  font-size: 16px;
+  color: #333;
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.35);
+  font-family: Roboto;
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  text-align: center;
+}
+
+.datos {
+  font-weight: normal;
+  margin-left: 0.5rem;
+}
