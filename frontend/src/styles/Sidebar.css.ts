@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { NavLink } from 'react-router-dom';
 
 export const SidebarContainer = styled.aside<{ isCollapsed: boolean; isMobileMenuOpen: boolean }>`
   width: ${({ isCollapsed }) => (isCollapsed ? '60px' : '240px')};
@@ -20,26 +21,53 @@ export const SidebarContainer = styled.aside<{ isCollapsed: boolean; isMobileMen
   }
 `;
 
-export const NavSection = styled.nav`
+export const LogoSection = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  color: #1B293D;
+  background-color: #ffffff;
+  border-radius: 10px; // color de fondo del logo
+
+  img {
+    max-width: 150px;   // ajusta el ancho máximo que quieras
+    height: auto;
+    object-fit: contain;
+  }
 `;
 
-export const NavItem = styled.div`
+export const NavSection = styled.nav`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.2rem;
+`;
+
+export const NavItem = styled(NavLink)`
   display: flex;
   align-items: center;
   gap: 1rem;
-  cursor: pointer;
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background 0.3s;
+
+  &.active {
+    border-bottom: 2px solid white;
+  }
 
   &:hover {
     background-color: ${({ theme }) => theme.colors.secondary};
-    padding: 0.5rem;
-    border-radius: 8px;
   }
 
   svg {
     font-size: 1.2rem;
+  }
+
+  span {
+    white-space: nowrap;
   }
 `;
 
