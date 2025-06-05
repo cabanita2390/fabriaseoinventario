@@ -14,13 +14,35 @@ export class InventarioService {
   ) {}
 
   async create(dto: CreateInventarioDto): Promise<Inventario> {
+    // 1) Creamos y guardamos la fila en inventario:
     const entidad = this.inventarioRepo.create({
       cantidad_actual: dto.cantidad_actual,
       fechaUltimaActualizacion: new Date(dto.fecha_ultima_actualizacion),
       producto: { id: dto.producto_idproducto },
       bodega: { id: dto.bodega_idbodega },
     });
-    return this.inventarioRepo.save(entidad);
+    const resultadoGuardado = await this.inventarioRepo.save(entidad);
+
+    // 2) Volver a consultar para cargar relaciones
+    const inventarioCompleto = await this.inventarioRepo.findOne({
+      where: { id: resultadoGuardado.id },
+      relations: [
+        'producto',
+        'producto.presentacion',
+        'producto.unidadMedida',
+        'producto.proveedor',
+        'bodega',
+      ],
+    });
+
+    if (!inventarioCompleto) {
+      // Aunque es muy improbable, por seguridad lanzamos excepción si no se encontró
+      throw new NotFoundException(
+        `Inventario con id ${resultadoGuardado.id} no encontrado después de guardar`,
+      );
+    }
+
+    return inventarioCompleto; // <— Aquí se devuelve el objeto completo
   }
 
   async findAll(): Promise<Inventario[]> {
