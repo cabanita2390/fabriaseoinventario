@@ -1,0 +1,33 @@
+.movimiento-list {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+.movimiento-list h2 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.movimiento-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.movimiento-item:last-child {
+  border-bottom: none;
+}
+
+.movimiento-item span {
+  display: block;
+  margin: 0.25rem 0;
+}
+
+.entrada {
+  background-color: #e6f7e6;
+}
+
+.salida {
+  background-color: #ffecec;
+}
