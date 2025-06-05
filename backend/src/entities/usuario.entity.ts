@@ -3,10 +3,10 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  JoinColumn,
+  //   ManyToOne,
+  //   JoinColumn,
 } from 'typeorm';
-import { Rol } from './rol.entity';
+// import { Rol } from './rol.entity';
 
 @Entity({ name: 'usuario' })
 export class Usuario {
@@ -23,7 +23,7 @@ export class Usuario {
   password: string;
 
   // Relación con Rol: cada usuario tiene un rol
-//   @ManyToOne(() => Rol, (rol) => rol.usuarios, { eager: true })
-//   @JoinColumn({ name: 'rol_idrol' })
-//   rol: Rol;
+  //   @ManyToOne(() => Rol, (rol) => rol.usuarios, { eager: true })
+  //   @JoinColumn({ name: 'rol_idrol' })
+  //   rol: Rol;
 }
