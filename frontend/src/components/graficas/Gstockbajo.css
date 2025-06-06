@@ -1,0 +1,6 @@
+.gstockbajo-container {
+  max-width: 10px;      /* Limita el ancho */
+  max-height: 100px;     /* Limita el alto */
+  margin: 10 auto;        /* Centra horizontalmente */
+  padding: 10px;         /* Opcional, para separar del borde */
+}

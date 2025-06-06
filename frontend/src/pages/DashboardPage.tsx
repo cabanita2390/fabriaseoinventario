@@ -3,7 +3,7 @@ import '../styles/home.css';
 import Labelstack from '../components/LabelStack/Labelstack';
 import MovimientoList from '../components/Entradalist/EntradaList';
 import Home from '../components/Home'; 
-
+import Gstockbajo from '../components/graficas/Gstockbajo'
 type Props = {};
 
 function DashboardPage({}: Props) {
@@ -16,6 +16,7 @@ function DashboardPage({}: Props) {
 
       <div className="grafico-div">
         <h1>Gráficas</h1>
+           <Gstockbajo/>
       </div>
 
       <div className="lista-div">
