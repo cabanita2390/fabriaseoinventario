@@ -10,7 +10,7 @@ export class Rol {
   @Column({ length: 50, unique: true })
   nombre: string;
 
-  //   // Relación inversa: un rol puede tener muchos usuarios
-  //   @OneToMany(() => Usuario, (usuario) => usuario.rol)
-  //   usuarios: Usuario[];
+  // Relación inversa: un rol puede tener muchos usuarios
+  @OneToMany(() => Usuario, (usuario) => usuario.rol)
+  usuarios: Usuario[];
 }
