@@ -5,18 +5,20 @@ export const SidebarContainer = styled.aside<{ isCollapsed: boolean; isMobileMen
   width: ${({ isCollapsed }) => (isCollapsed ? '60px' : '240px')};
   background-color: ${({ theme }) => theme.colors.primary};
   color: white;
-  height: 100vh;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: width 0.3s ease;
+  overflow-y: auto;
+  min-height: 100vh;
+  position: relative;
 
   @media (max-width: 768px) {
     position: fixed;
     top: 0;
     left: ${({ isMobileMenuOpen }) => (isMobileMenuOpen ? '0' : '-100%')};
     z-index: 1000;
+    height: 100vh; // En móvil sí se mantiene a pantalla completa
     transition: left 0.3s ease;
   }
 `;
