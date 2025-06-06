@@ -6,13 +6,28 @@ function Labelstack() {
   const [stockBajo, setStockBajo] = useState<number | null>(null);
 
   useEffect(() => {
-    // Simulación de petición (en el futuro reemplazar por fetch)
-    const timeout = setTimeout(() => {
-      setMovimientos(6);    // Aquí simulas que viene null
-      setStockBajo(5);         // Este sí tiene valor
-    }, );
+    // Función para generar número aleatorio entero entre min y max (incluidos)
+    const randomInt = (min: number, max: number) =>
+      Math.floor(Math.random() * (max - min + 1)) + min;
 
-    return () => clearTimeout(timeout);
+    // Simulación "petición" para movimientos (cada 2 segundos, rango 0-15)
+    const movimientosInterval = setInterval(() => {
+      const nuevoValor = randomInt(0, 15);
+      setMovimientos(nuevoValor);
+      console.log("Movimientos actualizados:", nuevoValor);
+    }, 2000);
+
+    // Simulación "petición" para stock bajo (cada 3 segundos, rango 0-10)
+    const stockBajoInterval = setInterval(() => {
+      const nuevoValor = randomInt(0, 10);
+      setStockBajo(nuevoValor);
+      console.log("Stock bajo actualizado:", nuevoValor);
+    }, 3000);
+
+    return () => {
+      clearInterval(movimientosInterval);
+      clearInterval(stockBajoInterval);
+    };
   }, []);
 
   return (
