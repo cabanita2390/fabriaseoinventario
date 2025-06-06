@@ -36,16 +36,15 @@ function MovimientoList() {
       {hayError ? (
         <p>Error</p>
       ) : (
-        <ul>
-          {movimientos.map((mov, index) => (
-            <li key={index} className={`movimiento-item ${mov.tipo.toLowerCase()}`}>
-            //cambiar la interfas por una mas lienal para una vista mas optima 
-              <span><strong>Fecha:</strong> {mov.fecha}</span>
-              <span><strong>{mov.tipo}:</strong> {mov.producto}</span>
-              <span><strong>Cantidad:</strong> {mov.cantidad}</span>
-            </li>
-          ))}
-        </ul>
+          <ul>
+  {movimientos.map((mov, index) => (
+    <li key={index} className={`movimiento-item ${mov.tipo.toLowerCase()}`}>
+      <span>
+        <strong>{mov.fecha}</strong> | {mov.tipo}: <strong>{mov.producto}</strong> | Cantidad: <strong>{mov.cantidad}</strong>
+      </span>
+    </li>
+  ))}
+</ul>
       )}
     </div>
   );
