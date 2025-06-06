@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import WelcomePage from '../pages/WelcomePage';
 import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
-import ProductosPage from '../pages/ProductosPage';
+import ProductosPage from '../pages/Productos/ProductosPage';
 
 const AppRoutes = () => {
   return (

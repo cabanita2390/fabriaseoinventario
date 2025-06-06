@@ -1,5 +1,5 @@
-import '../styles/home.css';
-import Home from '../components/Home'; 
+import '../../styles/home.css';
+import Home from '../../components/Home';
 
 type Props = {};
 
