@@ -13,6 +13,7 @@ import { MovimientoModule } from './movimiento/movimiento.module';
 import { UsuarioModule } from './usuario/usuario.module';
 import { RolModule } from './rol/rol.module';
 import { ProductoModule } from './producto/producto.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -53,6 +54,8 @@ import { ProductoModule } from './producto/producto.module';
     RolModule,
 
     ProductoModule,
+
+    DashboardModule,
   
   ],
   controllers: [AppController],
