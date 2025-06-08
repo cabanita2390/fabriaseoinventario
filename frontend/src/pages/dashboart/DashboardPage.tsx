@@ -1,9 +1,9 @@
 import React from 'react';
-import '../styles/home.css';
-import Labelstack from '../components/LabelStack/Labelstack';
-import MovimientoList from '../components/Entradalist/EntradaList';
-import Home from '../components/Home'; 
-import Gstockbajo from '../components/graficas/Gstockbajo'
+import '../../styles/home.css';
+import Labelstack from '../../components/LabelStack/Labelstack';
+import MovimientoList from '../../components/Entradalist/EntradaList';
+import Home from '../../components/Home'; 
+import Gstockbajo from '../../components/graficas/Gstockbajo'
 type Props = {};
 
 function DashboardPage({}: Props) {
