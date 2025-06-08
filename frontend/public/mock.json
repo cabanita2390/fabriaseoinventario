@@ -1,0 +1,34 @@
+{
+  "ultimosMovimientos": [
+    {
+      "id": 6,
+      "tipo": "INGRESO",
+      "cantidad": 50,
+      "fechaMovimiento": "2025-06-05T19:36:49.903Z",
+      "descripcion": "Ingreso inicial",
+      "producto": {
+        "id": 1,
+        "nombre": "Aceite de Oliva"
+      },
+      "bodega": {
+        "id": 1,
+        "nombre": "Bodega Central"
+      }
+    },
+    {
+      "id": 5,
+      "tipo": "SALIDA",
+      "cantidad": 20,
+      "fechaMovimiento": "2025-06-04T14:00:00.000Z",
+      "descripcion": "Venta",
+      "producto": {
+        "id": 2,
+        "nombre": "Harina"
+      },
+      "bodega": {
+        "id": 1,
+        "nombre": "Bodega Central"
+      }
+    }
+  ]
+}

@@ -13,38 +13,51 @@ function MovimientoList() {
   const [hayError, setHayError] = useState(false);
 
   useEffect(() => {
-    // Simulación de datos (más adelante se reemplazará por datos de la BD)
-    const datosMock: Movimiento[] = [
-      { fecha: '2025-06-01', tipo: 'Entrada', producto: 'Producto A', cantidad: 20 },
-      { fecha: '2025-06-02', tipo: 'Salida', producto: 'Producto B', cantidad: 5 },
-      { fecha: '2025-06-03', tipo: 'Entrada', producto: 'Producto C', cantidad: 15 },
-      { fecha: '2025-06-03', tipo: 'Salida', producto: 'Producto A', cantidad: 3 },
-      { fecha: '2025-06-04', tipo: 'Entrada', producto: 'Producto D', cantidad: 50 },
-    ];
+  const obtenerMovimientos = async () => {
+    try {
+      const response = await fetch('/mock.json'); // ✅ así accede correctamente
+      const data = await response.json();
 
-    if (datosMock.length === 0) {
-      setHayError(true);
-    } else {
-      setMovimientos(datosMock);
+      if (!data.ultimosMovimientos || data.ultimosMovimientos.length === 0) {
+        setHayError(true);
+        return;
+      }
+
+      const movimientosTransformados: Movimiento[] = data.ultimosMovimientos.map((mov: any) => ({
+        fecha: mov.fechaMovimiento.split('T')[0],
+        tipo: mov.tipo === 'INGRESO' ? 'Entrada' : 'Salida',
+        producto: mov.producto.nombre,
+        cantidad: mov.cantidad,
+      }));
+
+      setMovimientos(movimientosTransformados);
       setHayError(false);
+    } catch (error) {
+      console.error('Error al cargar mock.json:', error);
+      setHayError(true);
     }
-  }, []);
+  };
+
+  obtenerMovimientos();
+}, []);
 
   return (
     <div className="movimiento-list">
       <h2>Movimientos recientes</h2>
       {hayError ? (
-        <p>Error</p>
+        <p>Error al cargar los movimientos.</p>
       ) : (
-          <ul>
-  {movimientos.map((mov, index) => (
-    <li key={index} className={`movimiento-item ${mov.tipo.toLowerCase()}`}>
-      <span>
-        <strong>{mov.fecha}</strong> | {mov.tipo}: <strong>{mov.producto}</strong> | Cantidad: <strong>{mov.cantidad}</strong>
-      </span>
-    </li>
-  ))}
-</ul>
+        <ul>
+          {movimientos.map((mov, index) => (
+            <li key={index} className={`movimiento-item ${mov.tipo.toLowerCase()}`}>
+              <span>
+                <strong>{mov.fecha}</strong> | {mov.tipo}:{' '}
+                <strong>{mov.producto}</strong> | Cantidad:{' '}
+                <strong>{mov.cantidad}</strong>
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
