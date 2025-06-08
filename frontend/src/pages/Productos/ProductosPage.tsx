@@ -1,9 +1,9 @@
 import '../../styles/home.css';
 import Home from '../../components/Home';
 
-type Props = {};
 
-function ProductosPage({}: Props) {
+
+function ProductosPage() {
 return (
     <div>
       <Home></Home>

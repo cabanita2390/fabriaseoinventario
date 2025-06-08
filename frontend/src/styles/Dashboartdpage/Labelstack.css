@@ -16,12 +16,12 @@
   
 }
 
-.label-titulo {
+.label-Movimientos {
   width: 300px;
   height: 100px;
   
   border-radius: 20px;
- 
+  background-color: #9ab9e8;
   padding: 10px;
   font-size: 16px;
   color: #333;
@@ -39,7 +39,7 @@
   height: 100px;
   
   border-radius: 20px;
-  background-color: #dae4f3;
+  background-color: #9ab9e8;
   padding: 10px;
   font-size: 16px;
   color: #333;

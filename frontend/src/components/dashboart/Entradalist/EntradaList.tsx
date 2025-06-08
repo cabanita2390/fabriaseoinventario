@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import '../../styles/Dashboartdpage/MovimientoList.css';
+import '../../../styles/Dashboartdpage/MovimientoList.css';
 
 interface Movimiento {
   fecha: string;
@@ -15,7 +15,7 @@ function MovimientoList() {
   useEffect(() => {
   const obtenerMovimientos = async () => {
     try {
-      const response = await fetch('/mock.json'); // ✅ así accede correctamente
+      const response = await fetch('/mock.json');
       const data = await response.json();
 
       if (!data.ultimosMovimientos || data.ultimosMovimientos.length === 0) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import '../../styles/Dashboartdpage/Labelstack.css';
+import '../../../styles/Dashboartdpage/Labelstack.css';
 
 function Labelstack() {
   const [movimientos, setMovimientos] = useState<number | null>(null);
@@ -32,7 +32,7 @@ function Labelstack() {
 
   return (
     <div className="labelstack-container">
-      <label className="label-titulo">
+      <label className="label-Movimientos">
         Movimientos de hoy: <span className="datos">{movimientos ?? 0}</span>
       </label>
       <label className="label-stock-bajo">
