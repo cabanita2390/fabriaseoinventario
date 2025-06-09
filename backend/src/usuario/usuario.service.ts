@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/usuario/usuario.service.ts
 import {
   Injectable,
@@ -50,7 +52,8 @@ export class UsuarioService {
 
     // 1.3) Crear la entidad Usuario
     const usuarioEntity = this.usuarioRepo.create({
-      nombre: dto.nombre,
+      username: dto.username,
+      nombre: dto.nombre ?? dto.username,
       email: dto.email,
       password: passwordHash,
       rol: rolPorDefecto,
@@ -61,7 +64,10 @@ export class UsuarioService {
       guardado = await this.usuarioRepo.save(usuarioEntity);
     } catch (error) {
       // Código 23505 = email duplicado
-      if (error instanceof QueryFailedError && (error as any).code === '23505') {
+      if (
+        error instanceof QueryFailedError &&
+        (error as any).code === '23505'
+      ) {
         throw new BadRequestException(
           `Ya existe un usuario con el email = ${dto.email}`,
         );
@@ -135,7 +141,10 @@ export class UsuarioService {
       await this.usuarioRepo.save(entidad);
     } catch (error) {
       // 23505 = email duplicado
-      if (error instanceof QueryFailedError && (error as any).code === '23505') {
+      if (
+        error instanceof QueryFailedError &&
+        (error as any).code === '23505'
+      ) {
         throw new BadRequestException(
           `Ya existe un usuario con el email = ${dto.email}`,
         );
@@ -167,5 +176,13 @@ export class UsuarioService {
       throw new NotFoundException(`Usuario con id ${id} no encontrado`);
     }
     await this.usuarioRepo.remove(entidad);
+  }
+
+  /** Devuelve el usuario (con hash) o null si no existe */
+  async findByUsernameWithPassword(username: string): Promise<Usuario | null> {
+    return this.usuarioRepo.findOne({
+      where: { username },
+      relations: ['rol'],
+    });
   }
 }

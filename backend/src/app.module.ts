@@ -14,6 +14,7 @@ import { UsuarioModule } from './usuario/usuario.module';
 import { RolModule } from './rol/rol.module';
 import { ProductoModule } from './producto/producto.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
         database: config.get<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true, // solo en desarrollo
+        // dropSchema: true, 
       }),
     }),
 
@@ -56,6 +58,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ProductoModule,
 
     DashboardModule,
+
+    AuthModule,
   
   ],
   controllers: [AppController],

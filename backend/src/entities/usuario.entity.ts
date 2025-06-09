@@ -13,10 +13,13 @@ export class Usuario {
   @PrimaryGeneratedColumn({ name: 'idusuario' })
   id: number;
 
+  @Column({ unique: true })
+  username: string; // <-- campo para login
+
   @Column({ length: 100 })
   nombre: string;
 
-  @Column({ length: 100, unique: true })
+  @Column({ length: 100, unique: true, nullable: true })
   email: string;
 
   @Column({ length: 255 })
