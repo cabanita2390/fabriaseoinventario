@@ -5,6 +5,7 @@ import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/dashboart/DashboardPage';
 import ProductosPage from '../pages/Productos/ProductosPage';
 import MovimientosPage from '../pages/Movimientos/MovimientosPage';
+import Reportespage from '../pages/Reportes/Reportespage';
 
 const AppRoutes = () => {
   return (
@@ -14,6 +15,7 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/productos" element={<ProductosPage />} />
       <Route path="/movimientos" element={< MovimientosPage/>} />
+      <Route path='/reportes' element={< Reportespage/>} />
     </Routes>
   );
 };

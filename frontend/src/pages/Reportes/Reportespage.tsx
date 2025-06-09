@@ -1,13 +1,13 @@
 import React from 'react'
 import Home from '../../components/Home'; 
-function Reportes() {
+function Reportespage() {
   return (
     <div>
       <Home>
-        
+      
       </Home>
     </div>
   )
 }
 
-export default Reportes
+export default Reportespage

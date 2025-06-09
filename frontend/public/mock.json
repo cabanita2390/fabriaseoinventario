@@ -1,5 +1,22 @@
 {
   "ultimosMovimientos": [
+
+    {
+      "id": 5,
+      "tipo": "SALIDA",
+      "cantidad": 20,
+      "fechaMovimiento": "2025-06-04T14:00:00.000Z",
+      "descripcion": "Venta",
+      "producto": {
+        "id": 2,
+        "nombre": "Harina"
+      },
+      "bodega": {
+        "id": 1,
+        "nombre": "Bodega Central"
+      }
+    },
+
     {
       "id": 6,
       "tipo": "INGRESO",
@@ -30,5 +47,7 @@
         "nombre": "Bodega Central"
       }
     }
+
+    
   ]
 }

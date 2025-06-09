@@ -1,8 +1,12 @@
 import React from 'react'
 import'../../styles/Movimientos/movimientos.css';
+import Filtro from './Filtro';
 function Tabla() {
   return (
     <div>
+        <div>
+            <Filtro/>
+        </div>
             <table className="tabla-inventario">
                 <thead>
                     <tr>
