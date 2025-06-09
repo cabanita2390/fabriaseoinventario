@@ -18,15 +18,9 @@ const options = {
   maintainAspectRatio: false,
   plugins: {
     legend: { position: 'top' as const },
-    title: { display: true, text: 'Productos con bajo stock (Simulado)' },
+    title: { display: true, text: 'Productos con bajo stock' },
   },
 };
-
-const allProducts = [
-  'Manzanas', 'Naranjas', 'Leche', 'Huevos', 'Queso',
-  'Pan', 'Arroz', 'Fideos', 'Aceite', 'Azúcar',
-  'Café', 'Té', 'Harina', 'Yogur', 'Galletas',
-];
 
 const barColors = [
   'rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)',
@@ -35,41 +29,42 @@ const barColors = [
   'rgba(60, 179, 113, 0.6)',
 ];
 
-function getRandomProductNames(count: number) {
-  const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
-}
-
-function randomIntFromInterval(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+interface Producto {
+  nombre: string;
+  totalStock: number;
 }
 
 function Gstockbajo() {
   const [data, setData] = useState<ChartData<'bar'>>({
-    labels: ['Stock'],
+    labels: [],
     datasets: [],
   });
 
-  const updateData = () => {
-    const selectedProducts = getRandomProductNames(6);
-    const updatedDatasets = selectedProducts.map((product, index) => ({
-      label: product,
-      data: [randomIntFromInterval(0, 50)],
-      backgroundColor: barColors[index % barColors.length],
-    }));
-
-    setData({
-      labels: ['Stock'],
-      datasets: updatedDatasets,
-    });
-  };
-
   useEffect(() => {
-    updateData();
-    const interval = setInterval(updateData, 60000); // 60 segundos
+  fetch('/mock.json')
+    .then((res) => res.json())
+    .then((mockData) => {
+      const productos: Producto[] = mockData.top5ProductosMasBajoStock;
 
-    return () => clearInterval(interval);
-  }, []);
+      const updatedDataset = [
+        {
+          label: 'Stock',
+          data: productos.map((p) => p.totalStock),
+          backgroundColor: productos.map(
+            (_, index) => barColors[index % barColors.length]
+          ),
+        },
+      ];
+
+      setData({
+        labels: productos.map((p) => p.nombre),
+        datasets: updatedDataset,
+      });
+    })
+    .catch((err) => {
+      console.error('Error al cargar mock.json:', err);
+    });
+}, []);
 
   return (
     <div

@@ -12,7 +12,7 @@ function Home({ children }: HomeProps) {
 
   const routeTitles: Record<string, string> = {
     '/dashboard': 'Dashboard',
-    '/productos': 'Gestión de Productos',
+    '/productos': 'Gestión de insumos ',
     '/movimientos': 'Movimientos',
     '/reportes': 'Reportes',
     '/gestion': 'Gestión',

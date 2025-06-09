@@ -1,50 +1,56 @@
-import React from 'react'
-import'../../styles/Movimientos/movimientos.css';
+import React from 'react';
+import '../../styles/Movimientos/movimientos.css';
 import Filtro from './Filtro';
+import DataTable from '../ui/DataTable'; // Asegúrate de que la ruta sea correcta
+
+
 function Tabla() {
+  // Definición de columnas
+  const columns = [
+    { header: 'ID', accessor: 'id' },
+    { header: 'Nombre', accessor: 'nombre' },
+    { header: 'Tipo', accessor: 'tipo' },
+    { header: 'Estado', accessor: 'estado' },
+    { header: 'Presentación', accessor: 'presentacion' },
+    { header: 'UM', accessor: 'unidad_medida' },
+    { header: 'Proveedor', accessor: 'proveedor' },
+    { header: 'Inventario', accessor: 'inventario' },
+  ];
+
+  // Datos de ejemplo (esto normalmente vendría de una API o estado)
+  const data = [
+    {
+      id: 1,
+      nombre: 'Producto A',
+      tipo: 'Insumo',
+      estado: 'Activo',
+      presentacion: 'Caja',
+      unidad_medida: 'Unidad',
+      proveedor: 'Proveedor X',
+      inventario: 25,
+    },
+  ];
+
+  // Funciones de acción
+  const handleEdit = (row: any) => {
+    console.log('Editar', row);
+    // Aquí va la lógica para editar
+  };
+
+  const handleDelete = (row: any) => {
+    console.log('Eliminar', row);
+    // Aquí va la lógica para eliminar
+  };
+
   return (
     <div>
-        <div>
-            <Filtro/>
-        </div>
-            <table className="tabla-inventario">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Tipo</th>
-                        <th>Estado</th>
-                        <th>Presentación</th>
-                        <th>UM</th>
-                        <th>Proveedor</th>
-                        <th>Inventario</th>
-                        <th>Modificar/eliminar </th>
-                        
-                    </tr>
-                </thead>
-            <tbody>
-              {/* Fila de ejemplo */}
-                    <tr>
-                        <td>1</td>
-                        <td>Producto A</td>
-                        <td>Insumo</td>
-                        <td>Activo</td>
-                        <td>Caja</td>
-                        <td>Unidad</td>
-                        <td>Proveedor X</td>
-                        <td>25</td>
-                        <td>
-                        <div className="acciones">
-                        <button className="btn-icono modificar" title="Modificar">✏️</button>
-                        <button className="btn-icono eliminar" title="Eliminar">🗑️</button>
-                        </div>
-                        </td>
+      <div>
+        <Filtro />
+      </div>
 
-                    </tr>
-            </tbody>
-        </table>
-        </div>
-  )
+      <DataTable columns={columns} data={data} onEdit={handleEdit} onDelete={handleDelete} />
+    </div>
+  );
 }
 
-export default Tabla
+export default Tabla;
