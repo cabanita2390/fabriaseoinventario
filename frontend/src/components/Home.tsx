@@ -15,8 +15,12 @@ function Home({ children }: HomeProps) {
     '/productos': 'Gestión de Productos',
     '/movimientos': 'Movimientos',
     '/reportes': 'Reportes',
-    '/gestion': 'Gestión',  
-
+    '/gestion': 'Gestión',
+    '/gestion/bodegas': 'Gestión de Bodegas',
+    '/gestion/unidades': 'Gestión de Unidades de Medida',
+    '/gestion/presentacion': 'Gestión de Presentación',
+    '/gestion/usuarios': 'Gestión de Usuarios',
+    '/gestion/proveedores': 'Gestión de Proveedores',
   };
 
   const pageTitle = routeTitles[location.pathname] || ''; // si no está en el mapa, no muestra nada
