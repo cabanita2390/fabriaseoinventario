@@ -36,7 +36,7 @@ function Labelstack() {
         Movimientos de hoy: <span className="datos">{movimientos ?? 0}</span>
       </label>
       <label className="label-stock-bajo">
-        Número de productos en stock bajo: <span className="datos">{stockBajo ?? 0}</span>
+        productos en stock bajo: <span className="datos">{stockBajo ?? 0}</span>
       </label>
     </div>
   );
