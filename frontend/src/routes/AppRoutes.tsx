@@ -12,6 +12,7 @@ import UsuariosPage from '../pages/UsuariosPage';
 import ProveedoresPage from '../pages/ProveedoresPage';
 import MovimientosPage from '../pages/Movimientos/MovimientosPage';
 import Reportespage from '../pages/Reportes/Reportespage';
+import InventarioPage from '../pages/Inventario/InventarioPage';
 
 const AppRoutes = () => {
   return (
@@ -20,6 +21,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/productos" element={<ProductosPage />} />
+      <Route path="/Inventario" element={<InventarioPage />} />
       <Route path="/movimientos" element={< MovimientosPage/>} />
       <Route path='/reportes' element={< Reportespage/>} />
       <Route path="/gestion" element={<ManagementPage />} />

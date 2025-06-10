@@ -110,3 +110,17 @@
 .btn-icono.eliminar:hover {
   background-color: #931520;
 }
+.btn-exportar {
+  padding: 8px 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-exportar:hover {
+  background-color: #0056b3;
+}

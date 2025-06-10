@@ -68,6 +68,10 @@ const Sidebar = () => {
             <FaBoxOpen />
             {!isCollapsed && <span>Productos</span>}
           </NavItem>
+          <NavItem as={NavLink} to="/Inventario" className={({ isActive }) => (isActive ? 'active' : '')}>
+            <FaBoxOpen />
+            {!isCollapsed && <span>Inventario</span>}
+          </NavItem>
           <NavItem as={NavLink} to="/movimientos" className={({ isActive }) => (isActive ? 'active' : '')}>
             <FaExchangeAlt />
             {!isCollapsed && <span>Movimientos</span>}
