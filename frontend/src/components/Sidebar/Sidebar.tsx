@@ -19,8 +19,9 @@ import {
   LogoutSection,
   LogoSection,
 } from '../../styles/Sidebar.css';
-import { NavLink, useNavigate } from 'react-router-dom'; // añadimos useNavigate
-import logoFabriAseo from '../../assets/logo-fabriaseo.png'; // logo
+import { NavLink, useNavigate } from 'react-router-dom'; 
+import logoFabriAseo from '../../assets/logo-fabriaseo.png'; 
+import { Link } from 'react-router-dom';
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -36,7 +37,6 @@ const Sidebar = () => {
     // Borrar datos del usuario
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    // También puedes usar localStorage.clear() si quieres borrar todo
 
     // Redirigir al login
     navigate('/login');
@@ -64,9 +64,9 @@ const Sidebar = () => {
             <FaHome />
             {!isCollapsed && <span>Dashboard</span>}
           </NavItem>
-          <NavItem as={NavLink} to="/productos" className={({ isActive }) => (isActive ? 'active' : '')}>
+          <NavItem as={NavLink} to="/insumos" className={({ isActive }) => (isActive ? 'active' : '')}>
             <FaBoxOpen />
-            {!isCollapsed && <span>Productos</span>}
+            {!isCollapsed && <span>Insumos</span>}
           </NavItem>
           <NavItem as={NavLink} to="/Inventario" className={({ isActive }) => (isActive ? 'active' : '')}>
             <FaBoxOpen />

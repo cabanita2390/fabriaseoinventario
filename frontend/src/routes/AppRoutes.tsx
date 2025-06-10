@@ -3,16 +3,15 @@ import { Routes, Route } from 'react-router-dom';
 import WelcomePage from '../pages/WelcomePage';
 import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/dashboart/DashboardPage';
-import ProductosPage from '../pages/ProductosPage';
+import InsumosPage from '../pages/Insumos/InsumosPage'; 
 import ManagementPage from '../pages/ManagementPage';
-import BodegasPage from '../pages/BodegasPage';
-import UnidadesPage from '../pages/UnidadesPage';
-import PresentacionPage from '../pages/PresentacionPage';
-import UsuariosPage from '../pages/UsuariosPage';
-import ProveedoresPage from '../pages/ProveedoresPage';
+import BodegasPage from '../pages/Gestion/BodegasPage';
+import UnidadesPage from '../pages/Gestion/UnidadesPage';
+import PresentacionPage from '../pages/Gestion/PresentacionPage';
+import UsuariosPage from '../pages/Gestion/UsuariosPage';
+import ProveedoresPage from '../pages/Gestion/ProveedoresPage';
 import MovimientosPage from '../pages/Movimientos/MovimientosPage';
 import Reportespage from '../pages/Reportes/Reportespage';
-import InventarioPage from '../pages/Inventario/InventarioPage';
 
 const AppRoutes = () => {
   return (
@@ -20,10 +19,9 @@ const AppRoutes = () => {
       <Route path="/" element={<WelcomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/productos" element={<ProductosPage />} />
-      <Route path="/Inventario" element={<InventarioPage />} />
-      <Route path="/movimientos" element={< MovimientosPage/>} />
-      <Route path='/reportes' element={< Reportespage/>} />
+      <Route path="/insumos" element={<InsumosPage />} />
+      <Route path="/movimientos" element={<MovimientosPage />} />
+      <Route path='/reportes' element={<Reportespage />} />
       <Route path="/gestion" element={<ManagementPage />} />
       <Route path="/gestion/bodegas" element={<BodegasPage />} />
       <Route path="/gestion/unidades" element={<UnidadesPage />} />
