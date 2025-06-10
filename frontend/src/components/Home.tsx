@@ -21,6 +21,7 @@ function Home({ children }: HomeProps) {
     '/gestion/presentacion': 'Gestión de Presentación',
     '/gestion/usuarios': 'Gestión de Usuarios',
     '/gestion/proveedores': 'Gestión de Proveedores',
+    '/Inventario':'inventario'
   };
 
   const pageTitle = routeTitles[location.pathname] || ''; // si no está en el mapa, no muestra nada

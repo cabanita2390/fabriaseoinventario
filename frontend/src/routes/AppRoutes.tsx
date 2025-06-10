@@ -12,7 +12,7 @@ import UsuariosPage from '../pages/Gestion/UsuariosPage';
 import ProveedoresPage from '../pages/Gestion/ProveedoresPage';
 import MovimientosPage from '../pages/Movimientos/MovimientosPage';
 import Reportespage from '../pages/Reportes/Reportespage';
-
+import InventarioPage from '../pages/Inventario/InventarioPage';
 const AppRoutes = () => {
   return (
     <Routes>
@@ -28,6 +28,7 @@ const AppRoutes = () => {
       <Route path="/gestion/presentacion" element={<PresentacionPage />} />
       <Route path="/gestion/usuarios" element={<UsuariosPage />} />
       <Route path="/gestion/proveedores" element={<ProveedoresPage />} />
+      <Route path="/Inventario" element={<InventarioPage/>}/>
     </Routes>
   );
 };
