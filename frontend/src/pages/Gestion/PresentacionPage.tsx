@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import Home from '../components/Home';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
-import Modal from '../components/ui/Modal';
-import DataTable from '../components/ui/DataTable';
-import { ModalFooter } from '../styles/ui/Modal.css';
-import { Header } from '../styles/Productos.css';
+import Home from '../../components/Home';
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
+import Modal from '../../components/ui/Modal';
+import DataTable from '../../components/ui/DataTable';
+import { ModalFooter } from '../../styles/ui/Modal.css';
+import { Header } from '../../styles/Insumos.css';
 import Swal from 'sweetalert2';
 
 const initialForm = {
@@ -13,11 +13,11 @@ const initialForm = {
   nombre: '',
 };
 
-const UnidadesPage = () => {
+const PresentacionPage = () => {
   const [form, setForm] = useState(initialForm);
   const [data, setData] = useState([
-    { codigo: '0010', nombre: 'Litro' },
-    { codigo: '0020', nombre: 'Kilogramo' },
+    { codigo: '0010', nombre: 'Garrafa' },
+    { codigo: '0020', nombre: 'Galón' },
   ]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -70,7 +70,7 @@ const UnidadesPage = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         setData(data.filter((item) => item.codigo !== row.codigo));
-        Swal.fire('Eliminado', 'La unidad ha sido eliminada.', 'success');
+        Swal.fire('Eliminado', 'La presentación ha sido eliminada.', 'success');
       }
     });
   };
@@ -86,7 +86,7 @@ const UnidadesPage = () => {
             setShowModal(true);
           }}
         >
-          Agregar Unidad
+          Agregar Presentación
         </Button>
       </Header>
 
@@ -95,7 +95,7 @@ const UnidadesPage = () => {
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
           <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>
-            {isEditMode ? 'Editar Unidad' : 'Agregar Unidad'}
+            {isEditMode ? 'Editar Presentación' : 'Agregar Presentación'}
           </h2>
 
           <Input label="Código" name="codigo" value={form.codigo} onChange={handleChange} disabled />
@@ -111,4 +111,4 @@ const UnidadesPage = () => {
   );
 };
 
-export default UnidadesPage;
+export default PresentacionPage;
