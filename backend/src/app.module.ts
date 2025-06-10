@@ -35,7 +35,7 @@ import { AuthModule } from './auth/auth.module';
         database: config.get<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true, // solo en desarrollo
-        // dropSchema: true, 
+        dropSchema: true, 
       }),
     }),
 
