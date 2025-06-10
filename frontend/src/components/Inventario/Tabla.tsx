@@ -20,7 +20,7 @@ const data = [
 function Tabla() {
   return (
     <div>
-      <h2>Lista de Productos</h2>
+      
       <DataTable columns={columns} data={data} />
     </div>
   );
