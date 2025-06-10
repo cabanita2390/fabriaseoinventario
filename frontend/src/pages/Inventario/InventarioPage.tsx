@@ -6,7 +6,11 @@ function InventarioPage() {
   return (
     <div>
         <Home>
-         <Tabla/>
+          <div>
+            
+            <Tabla/>
+          </div>
+         
         </Home>
     </div>
   )

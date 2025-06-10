@@ -53,13 +53,14 @@ const DataTable = ({ columns, data, onEdit, onDelete }: DataTableProps) => {
             {columns.map((col) => (
               <th key={col.accessor}>{col.header}</th>
             ))}
-            <th>Modificar / Eliminar</th>
+            {/* Solo muestra la columna si hay acciones definidas */}
+            {(onEdit || onDelete) && <th>Modificar / Eliminar</th>}
           </tr>
         </thead>
         <tbody>
           {data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length + 1} style={{ textAlign: 'center' }}>
+              <td colSpan={columns.length + (onEdit || onDelete ? 1 : 0)} style={{ textAlign: 'center' }}>
                 No hay datos disponibles
               </td>
             </tr>
@@ -69,16 +70,23 @@ const DataTable = ({ columns, data, onEdit, onDelete }: DataTableProps) => {
                 {columns.map((col) => (
                   <td key={col.accessor}>{row[col.accessor]}</td>
                 ))}
-                <td>
-                  <ActionButtons>
-                    <button className="edit" onClick={() => onEdit?.(row)}>
-                      <FiEdit size={16} />
-                    </button>
-                    <button className="delete" onClick={() => onDelete?.(row)}>
-                      <FiTrash2 size={16} />
-                    </button>
-                  </ActionButtons>
-                </td>
+                {/* Solo muestra los botones si `onEdit` o `onDelete` están definidos */}
+                {(onEdit || onDelete) && (
+                  <td>
+                    <ActionButtons>
+                      {onEdit && (
+                        <button className="edit" onClick={() => onEdit(row)}>
+                          <FiEdit size={16} />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button className="delete" onClick={() => onDelete(row)}>
+                          <FiTrash2 size={16} />
+                        </button>
+                      )}
+                    </ActionButtons>
+                  </td>
+                )}
               </tr>
             ))
           )}
@@ -87,5 +95,6 @@ const DataTable = ({ columns, data, onEdit, onDelete }: DataTableProps) => {
     </TableWrapper>
   );
 };
+
 
 export default DataTable;
