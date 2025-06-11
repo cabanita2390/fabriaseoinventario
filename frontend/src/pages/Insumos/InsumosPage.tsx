@@ -4,10 +4,12 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
-import DataTable from '../../components/ui/DataTable';
+import Tabla from "../../components/Movimientos/Tabla";
+// import DataTable from '../../components/ui/DataTable';
 import { ModalFooter } from '../../styles/ui/Modal.css';
-import { Header } from '../../styles/Insumos.css';
+import { Header, ButtonGroup,ButtonContainer,StyledButton } from '../../styles/Insumos.css';
 import Swal from 'sweetalert2';
+import '../../styles/Insumos/Insumos.css'
 
 const initialForm = {
   codigo: '',
@@ -104,37 +106,42 @@ const InsumosPage = () => {
 
   return (
     <Home>
+      <div>
       {/* MATERIA PRIMA */}
-      <Header>
-        <h2>Materia Prima</h2>
-        <div className="button-group">
-          <Button onClick={() => handleOpenModal('Materia Prima')}>Ingreso Materia Prima</Button>
-          <Button onClick={() => handleOpenModal('Salida de Materia Prima')}>Salida de Materia Prima</Button>
-        </div>
+        <Header className="p1">
+              <ButtonGroup>
+  <ButtonContainer>
+    <h3>Materia Prima</h3>
+    <div className="button-wrapper">
+      <StyledButton onClick={() => handleOpenModal('Ingreso de materia prima')}>Ingreso Materia Prima</StyledButton>
+      <StyledButton onClick={() => handleOpenModal('Salida de materia prima')}>Salida Materia Prima</StyledButton>
+    </div>
+  </ButtonContainer>
+
+  <ButtonContainer>
+    <h3>Envases</h3>
+    <div className="button-wrapper">
+      <StyledButton onClick={() => handleOpenModal('Ingreso de Envase')}>Ingreso Envase</StyledButton>
+      <StyledButton onClick={() => handleOpenModal('Salida de Envase')}>Salida Envase</StyledButton>
+    </div>
+  </ButtonContainer>
+
+  <ButtonContainer>
+    <h3>Etiquetas</h3>
+    <div className="button-wrapper">
+      <StyledButton onClick={() => handleOpenModal('Ingreso de Etiqueta')}>Ingreso Etiqueta</StyledButton>
+      <StyledButton onClick={() => handleOpenModal('Salida de Etiqueta')}>Salida Etiqueta</StyledButton>
+    </div>
+  </ButtonContainer>
+</ButtonGroup>
+
+            
+
       </Header>
 
-      <DataTable columns={columnas} data={materiaPrima} onEdit={(row) => handleEdit(row, 'Materia Prima')} onDelete={(row) => handleDelete(row, 'Materia Prima')} />
 
-      {/* ENVASE */}
-      <Header>
-        <h2>Envase</h2>
-        <div className="button-group">
-          <Button onClick={() => handleOpenModal('Ingreso de Envase')}>Ingreso de Envase</Button>
-          <Button onClick={() => handleOpenModal('Salida de Envase')}>Salida de Envase</Button>
-        </div>
-      </Header>
-      <DataTable columns={columnas} data={insumos} onEdit={(row) => handleEdit(row, 'Envase')} onDelete={(row) => handleDelete(row, 'Envase')} />
 
-      {/* ETIQUETAS */}
-      <Header>
-        <h2>Etiquetas</h2>
-        <div className="button-group">
-          <Button onClick={() => handleOpenModal('Ingreso de Etiqueta')}>Ingreso de Etiqueta</Button>
-          <Button onClick={() => handleOpenModal('Salida de Etiqueta')}>Salida de Etiqueta</Button>
-        </div>
-      </Header>
-      <DataTable columns={columnas} data={etiquetas} onEdit={(row) => handleEdit(row, 'Etiqueta')} onDelete={(row) => handleDelete(row, 'Etiqueta')} />
-
+      
       {/* MODAL */}
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
@@ -155,6 +162,14 @@ const InsumosPage = () => {
           </ModalFooter>
         </Modal>
       )}
+
+      </div>
+
+        <div className='p2'>
+        <h1>Movimientos</h1>
+       <Tabla mostrarFiltro={false} mostrarExportar={false} /> {/* Aquí la tabla sin el filtro */}
+       </div>
+
     </Home>
   );
 };

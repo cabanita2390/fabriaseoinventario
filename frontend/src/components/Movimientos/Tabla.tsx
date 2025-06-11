@@ -72,8 +72,9 @@ const filtros: FieldConfig[] = [
   { tipo: 'date', id: 'fechaFin', label: 'Fecha fin' },
 ];
 
-function Tabla() {
+function Tabla({ mostrarFiltro = true,mostrarExportar = true  }: { mostrarFiltro?: boolean, mostrarExportar?: boolean  }) {
   const [data, setData] = useState(sampleData);
+
 
   // Filtra por fecha de inicio y fin
   const handleBuscar = (values: Record<string, string>) => {
@@ -90,7 +91,7 @@ function Tabla() {
   
 
   // Exporta los datos a CSV
-  const exportToCSV = () => {
+ const exportToCSV = () => {
     const headers = columns.map(c => c.header).join(',');
     const rows = data.map(row =>
       columns.map(c => `"${row[c.accessor as keyof RowData]}"`).join(',')
@@ -109,20 +110,19 @@ function Tabla() {
   return (
     <div>
       {/* Botón de exportación */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <div></div>
-        <button className="btn-exportar" onClick={exportToCSV}>Exportar CSV</button>
-      </div>
+      {mostrarExportar && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div></div>
+          <button className="btn-exportar" onClick={exportToCSV}>Exportar CSV</button>
+        </div>
+      )}
 
-      {/* Filtro de fechas */}
-      <Filtro fields={filtros} onSearch={handleBuscar} />
+
+      {/* Filtro opcional */}
+      {mostrarFiltro && <Filtro fields={filtros} onSearch={handleBuscar ?? (() => {})} />}
 
       {/* Tabla de datos */}
-      <DataTable
-        columns={columns}
-        data={data}
-        
-      />
+      <DataTable columns={columns} data={data} />
     </div>
   );
 }

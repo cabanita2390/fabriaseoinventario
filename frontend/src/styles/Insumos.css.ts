@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-
+import Button from '../components/ui/Button';
 export const Header = styled.div`
   display: flex;
   justify-content: space-between;
@@ -11,10 +11,6 @@ export const Header = styled.div`
     margin: 1rem 0;
   }
 
-  .button-group {
-    display: flex;
-    gap: 0.5rem;
-  }
 `;
 
 export const Table = styled.table`
@@ -27,3 +23,56 @@ export const Table = styled.table`
     text-align: left;
   }
 `;
+
+
+export const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: space-between; /* Los coloca en los extremos */
+  gap: 40px; /* Mayor separación entre los grupos */
+  width: 100%;
+  padding: 20px;
+`;
+
+
+export const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: column; /* Mantiene el h3 arriba */
+  align-items: center;
+  padding: 15px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  width: 30%;
+  
+  h3 {
+    margin-bottom: 10px;
+    text-align: center;
+  }
+`;
+
+export const ButtonWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap; /* Mantiene los botones en fila y ajusta en pantallas pequeñas */
+`;
+
+
+
+export const StyledButton = styled(Button)`
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  border: none;
+  
+  &:nth-child(1) { background-color: #ff5733; } /* Rojo */
+  &:nth-child(2) { background-color: #33c1ff; } /* Azul */
+  &:nth-child(3) { background-color: #33ff77; } /* Verde */
+  &:nth-child(4) { background-color: #ff33e3; } /* Rosa */
+`;
+
+
+
+
