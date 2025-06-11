@@ -10,8 +10,8 @@ import {
 
 export enum TipoProducto {
   MATERIA_PRIMA = 'MATERIA_PRIMA',
-  INSUMO = 'INSUMO',
-  ENVASE = 'ENVASE',
+  MATERIAL_DE_ENVASE = 'MATERIAL_DE_ENVASE',
+  ETIQUETAS = 'ETIQUETAS',
 }
 
 export enum EstadoProducto {
@@ -32,7 +32,7 @@ export class CreateProductoDto {
   @IsOptional()
   @IsString()
   @MaxLength(45)
-  subtipoInsumo?: string;
+  subtipoInsumo?: string | undefined;
 
   @IsNotEmpty()
   @IsEnum(EstadoProducto)

@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, QueryFailedError } from 'typeorm';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import { Producto } from '../entities/producto.entity';
@@ -26,37 +27,63 @@ export class ProductoService {
   ) {}
 
   async create(dto: CreateProductoDto): Promise<Producto> {
-    // 1) Validar existencia de FK
+    // Validar FK Presentacion
     const pres = await this.presRepo.findOne({
       where: { id: dto.presentacion_idpresentacion },
     });
     if (!pres) {
       throw new BadRequestException(
-        `No existe una presentacion con id = ${dto.presentacion_idpresentacion}`,
+        `No existe presentacion con id = ${dto.presentacion_idpresentacion}`,
       );
     }
 
+    // Validar FK UnidadMedida
     const um = await this.umRepo.findOne({
       where: { id: dto.unidadmedida_idunidadmedida },
     });
     if (!um) {
       throw new BadRequestException(
-        `No existe una unidad de medida con id = ${dto.unidadmedida_idunidadmedida}`,
+        `No existe unidad de medida con id = ${dto.unidadmedida_idunidadmedida}`,
       );
     }
 
-    // Prepara la entidad. Al usar { eager: true } en las relaciones,
-    // TypeORM esperará que existan las entidades referidas con esos IDs.
-    const entidad = this.productoRepo.create({
-      nombre: dto.nombre,
-      tipoProducto: dto.tipoProducto,
-      subtipoInsumo: dto.subtipoInsumo,
-      estado: dto.estado,
-      presentacion: { id: dto.presentacion_idpresentacion },
-      unidadMedida: { id: dto.unidadmedida_idunidadmedida },
-      // proveedor: { id: dto.proveedor_idproveedor },
-    });
-    return this.productoRepo.save(entidad);
+    // Validar FK Proveedor (opcional)
+    let prov: Proveedor | undefined;
+    if (dto.proveedor_idproveedor) {
+      const found = await this.provRepo.findOne({
+        where: { id: dto.proveedor_idproveedor },
+      });
+      if (!found) {
+        throw new BadRequestException(
+          `No existe proveedor con id = ${dto.proveedor_idproveedor}`,
+        );
+      }
+      prov = found;
+    }
+
+    // Crear instancia manualmente para evitar problemas de tipeo
+    const entidad = new Producto();
+    entidad.nombre = dto.nombre;
+    entidad.tipoProducto = dto.tipoProducto;
+    entidad.subtipoInsumo = dto.subtipoInsumo ?? ''; // si no viene, dejar cadena vacía
+    entidad.estado = dto.estado;
+    entidad.presentacion = { id: pres.id } as Presentacion;
+    entidad.unidadMedida = { id: um.id } as UnidadMedida;
+    entidad.proveedor = prov ? ({ id: prov.id } as Proveedor) : undefined;
+
+    try {
+      return await this.productoRepo.save(entidad);
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        (error as any).code === '23503'
+      ) {
+        throw new BadRequestException(
+          'Violación de llave foránea al crear Producto',
+        );
+      }
+      throw error;
+    }
   }
 
   async findAll(): Promise<Producto[]> {
@@ -72,24 +99,45 @@ export class ProductoService {
   }
 
   async update(id: number, dto: UpdateProductoDto): Promise<Producto> {
-    const entidad = await this.productoRepo.preload({
-      id,
-      ...dto,
-      // Si llegan claves relacionadas, TypeORM las convertirá a relaciones internas
-      ...(dto.presentacion_idpresentacion && {
-        presentacion: { id: dto.presentacion_idpresentacion },
-      }),
-      ...(dto.unidadmedida_idunidadmedida && {
-        unidadMedida: { id: dto.unidadmedida_idunidadmedida },
-      }),
-      ...(dto.proveedor_idproveedor && {
-        proveedor: { id: dto.proveedor_idproveedor },
-      }),
-    });
+    // Construir datos a actualizar manualmente
+    const patch: Partial<Producto> = { id };
+    if (dto.nombre !== undefined) patch.nombre = dto.nombre;
+    if (dto.tipoProducto !== undefined) patch.tipoProducto = dto.tipoProducto;
+    if (dto.subtipoInsumo !== undefined)
+      patch.subtipoInsumo = dto.subtipoInsumo;
+    if (dto.estado !== undefined) patch.estado = dto.estado;
+    if (dto.presentacion_idpresentacion) {
+      patch.presentacion = {
+        id: dto.presentacion_idpresentacion,
+      } as Presentacion;
+    }
+    if (dto.unidadmedida_idunidadmedida) {
+      patch.unidadMedida = {
+        id: dto.unidadmedida_idunidadmedida,
+      } as UnidadMedida;
+    }
+    if (dto.proveedor_idproveedor) {
+      patch.proveedor = { id: dto.proveedor_idproveedor } as Proveedor;
+    }
+
+    const entidad = await this.productoRepo.preload(patch as any);
     if (!entidad) {
       throw new NotFoundException(`Producto con id ${id} no encontrado`);
     }
-    return this.productoRepo.save(entidad);
+
+    try {
+      return await this.productoRepo.save(entidad);
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        (error as any).code === '23503'
+      ) {
+        throw new BadRequestException(
+          'Violación de llave foránea al actualizar Producto',
+        );
+      }
+      throw error;
+    }
   }
 
   async remove(id: number): Promise<void> {

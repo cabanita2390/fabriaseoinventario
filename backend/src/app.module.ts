@@ -15,6 +15,7 @@ import { RolModule } from './rol/rol.module';
 import { ProductoModule } from './producto/producto.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -60,6 +61,8 @@ import { AuthModule } from './auth/auth.module';
     DashboardModule,
 
     AuthModule,
+
+    SeedModule,
   
   ],
   controllers: [AppController],
