@@ -20,8 +20,11 @@ export class Producto {
   @Column({ length: 100 })
   nombre: string;
 
-  @Column({ type: 'enum', enum: ['MATERIA_PRIMA', 'INSUMO', 'ENVASE'] })
-  tipoProducto: 'MATERIA_PRIMA' | 'INSUMO' | 'ENVASE';
+  @Column({
+    type: 'enum',
+    enum: ['MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'],
+  })
+  tipoProducto: 'MATERIA_PRIMA' | 'MATERIAL_DE_ENVASE' | 'ETIQUETAS';
 
   @Column({ type: 'varchar', length: 45, nullable: true })
   subtipoInsumo: string; // opcional, si aplica
@@ -37,9 +40,12 @@ export class Producto {
   @JoinColumn({ name: 'unidadmedida_idunidadmedida' })
   unidadMedida: UnidadMedida;
 
-  @ManyToOne(() => Proveedor, (pr) => pr.productos, { eager: true })
+  @ManyToOne(() => Proveedor, (pr) => pr.productos, {
+    eager: true,
+    nullable: true,
+  })
   @JoinColumn({ name: 'proveedor_idproveedor' })
-  proveedor: Proveedor;
+  proveedor?: Proveedor;
 
   @OneToMany(() => Movimiento, (mov) => mov.producto)
   movimientos: Movimiento[];
