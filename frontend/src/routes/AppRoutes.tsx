@@ -5,6 +5,7 @@ import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/dashboart/DashboardPage';
 import InsumosPage from '../pages/Insumos/InsumosPage'; 
 import ManagementPage from '../pages/ManagementPage';
+import ProductosBasePage from '../pages/Gestion/ProductosBasePage';
 import BodegasPage from '../pages/Gestion/BodegasPage';
 import UnidadesPage from '../pages/Gestion/UnidadesPage';
 import PresentacionPage from '../pages/Gestion/PresentacionPage';
@@ -23,13 +24,13 @@ const AppRoutes = () => {
       <Route path="/movimientos" element={<MovimientosPage />} />
       <Route path='/reportes' element={<Reportespage />} />
       <Route path="/gestion" element={<ManagementPage />} />
-      <Route path="/gestion/insumos" element={<InsumosPage />} />
+      <Route path="/gestion/productos" element={<ProductosBasePage />} />
       <Route path="/gestion/bodegas" element={<BodegasPage />} />
       <Route path="/gestion/unidades" element={<UnidadesPage />} />
       <Route path="/gestion/presentacion" element={<PresentacionPage />} />
       <Route path="/gestion/usuarios" element={<UsuariosPage />} />
       <Route path="/gestion/proveedores" element={<ProveedoresPage />} />
-      <Route path="/Inventario" element={<InventarioPage/>}/>
+      <Route path="/inventario" element={<InventarioPage/>}/>
     </Routes>
   );
 };
