@@ -6,28 +6,22 @@ function Labelstack() {
   const [stockBajo, setStockBajo] = useState<number | null>(null);
 
   useEffect(() => {
-    // Función para generar número aleatorio entero entre min y max (incluidos)
-    const randomInt = (min: number, max: number) =>
-      Math.floor(Math.random() * (max - min + 1)) + min;
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/mock.json'); // o desde el backend real
+        const data = await res.json();
 
-    // Simulación "petición" para movimientos (cada 2 segundos, rango 0-15)
-    const movimientosInterval = setInterval(() => {
-      const nuevoValor = randomInt(0, 15);
-      setMovimientos(nuevoValor);
-      console.log("Movimientos actualizados:", nuevoValor);
-    }, 2000);
+        // Suponiendo que el JSON tiene las propiedades así:
+        // { "totalMovimientosHoy": 10, "productosBajoStock": [8] }
 
-    // Simulación "petición" para stock bajo (cada 3 segundos, rango 0-10)
-    const stockBajoInterval = setInterval(() => {
-      const nuevoValor = randomInt(0, 10);
-      setStockBajo(nuevoValor);
-      console.log("Stock bajo actualizado:", nuevoValor);
-    }, 3000);
-
-    return () => {
-      clearInterval(movimientosInterval);
-      clearInterval(stockBajoInterval);
+        setMovimientos(data.totalMovimientosHoy ?? 0);
+        setStockBajo(data.productosBajoStock?.length ?? 0);
+      } catch (error) {
+        console.error("Error al cargar los datos del mock:", error);
+      }
     };
+
+    fetchData();
   }, []);
 
   return (
