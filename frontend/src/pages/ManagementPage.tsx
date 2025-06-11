@@ -6,9 +6,9 @@ import { useNavigate } from 'react-router-dom';
 
 const sections = [
     {
-    title: 'Insumos',
-    description: 'Gestiona los insumos',
-    path: '/gestion/insumos',
+    title: 'Productos',
+    description: 'Gestiona los productos',
+    path: '/gestion/productos',
   },
   {
     title: 'Bodegas',

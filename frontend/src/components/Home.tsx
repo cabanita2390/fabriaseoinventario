@@ -16,13 +16,13 @@ function Home({ children }: HomeProps) {
     '/movimientos': 'Movimientos',
     '/reportes': 'Reportes',
     '/gestion': 'Gestión',
-    '/gestion/insumos': 'Gestión de Insumos',
+    '/gestion/productos': 'Gestión de Productos',
     '/gestion/bodegas': 'Gestión de Bodegas',
     '/gestion/unidades': 'Gestión de Unidades de Medida',
     '/gestion/presentacion': 'Gestión de Presentación',
     '/gestion/usuarios': 'Gestión de Usuarios',
     '/gestion/proveedores': 'Gestión de Proveedores',
-    '/Inventario':'inventario'
+    '/inventario': 'Inventario'
   };
 
   const pageTitle = routeTitles[location.pathname] || ''; 
