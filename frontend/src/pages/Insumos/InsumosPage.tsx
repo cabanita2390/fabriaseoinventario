@@ -113,24 +113,24 @@ const InsumosPage = () => {
   <ButtonContainer>
     <h3>Materia Prima</h3>
     <div className="button-wrapper">
-      <StyledButton onClick={() => handleOpenModal('Ingreso de materia prima')}>Ingreso Materia Prima</StyledButton>
-      <StyledButton onClick={() => handleOpenModal('Salida de materia prima')}>Salida Materia Prima</StyledButton>
+      <StyledButton onClick={() => handleOpenModal('Ingreso de materia prima')}>Ingreso </StyledButton>
+      <StyledButton onClick={() => handleOpenModal('Salida de materia prima')}>Salida </StyledButton>
     </div>
   </ButtonContainer>
 
   <ButtonContainer>
     <h3>Envases</h3>
     <div className="button-wrapper">
-      <StyledButton onClick={() => handleOpenModal('Ingreso de Envase')}>Ingreso Envase</StyledButton>
-      <StyledButton onClick={() => handleOpenModal('Salida de Envase')}>Salida Envase</StyledButton>
+      <StyledButton onClick={() => handleOpenModal('Ingreso de Envase')}>Ingreso </StyledButton>
+      <StyledButton onClick={() => handleOpenModal('Salida de Envase')}>Salida </StyledButton>
     </div>
   </ButtonContainer>
 
   <ButtonContainer>
     <h3>Etiquetas</h3>
     <div className="button-wrapper">
-      <StyledButton onClick={() => handleOpenModal('Ingreso de Etiqueta')}>Ingreso Etiqueta</StyledButton>
-      <StyledButton onClick={() => handleOpenModal('Salida de Etiqueta')}>Salida Etiqueta</StyledButton>
+      <StyledButton onClick={() => handleOpenModal('Ingreso de Etiqueta')}>Ingreso </StyledButton>
+      <StyledButton onClick={() => handleOpenModal('Salida de Etiqueta')}>Salida </StyledButton>
     </div>
   </ButtonContainer>
 </ButtonGroup>
