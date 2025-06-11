@@ -2,9 +2,19 @@ import styled from 'styled-components';
 
 export const Header = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  flex-wrap: wrap; 
+  margin-bottom: 1rem;
+
+  h2 {
+    margin: 1rem 0;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 0.5rem;
+  }
 `;
 
 export const Table = styled.table`

@@ -107,21 +107,31 @@ const InsumosPage = () => {
       {/* MATERIA PRIMA */}
       <Header>
         <h2>Materia Prima</h2>
-        <Button onClick={() => handleOpenModal('Materia Prima')}>Agregar</Button>
+        <div className="button-group">
+          <Button onClick={() => handleOpenModal('Materia Prima')}>Ingreso Materia Prima</Button>
+          <Button onClick={() => handleOpenModal('Salida de Materia Prima')}>Salida de Materia Prima</Button>
+        </div>
       </Header>
+
       <DataTable columns={columnas} data={materiaPrima} onEdit={(row) => handleEdit(row, 'Materia Prima')} onDelete={(row) => handleDelete(row, 'Materia Prima')} />
 
-      {/* INSUMOS */}
+      {/* ENVASE */}
       <Header>
-        <h2>Insumos</h2>
-        <Button onClick={() => handleOpenModal('Insumo')}>Agregar</Button>
+        <h2>Envase</h2>
+        <div className="button-group">
+          <Button onClick={() => handleOpenModal('Ingreso de Envase')}>Ingreso de Envase</Button>
+          <Button onClick={() => handleOpenModal('Salida de Envase')}>Salida de Envase</Button>
+        </div>
       </Header>
-      <DataTable columns={columnas} data={insumos} onEdit={(row) => handleEdit(row, 'Insumo')} onDelete={(row) => handleDelete(row, 'Insumo')} />
+      <DataTable columns={columnas} data={insumos} onEdit={(row) => handleEdit(row, 'Envase')} onDelete={(row) => handleDelete(row, 'Envase')} />
 
       {/* ETIQUETAS */}
       <Header>
         <h2>Etiquetas</h2>
-        <Button onClick={() => handleOpenModal('Etiqueta')}>Agregar</Button>
+        <div className="button-group">
+          <Button onClick={() => handleOpenModal('Ingreso de Etiqueta')}>Ingreso de Etiqueta</Button>
+          <Button onClick={() => handleOpenModal('Salida de Etiqueta')}>Salida de Etiqueta</Button>
+        </div>
       </Header>
       <DataTable columns={columnas} data={etiquetas} onEdit={(row) => handleEdit(row, 'Etiqueta')} onDelete={(row) => handleDelete(row, 'Etiqueta')} />
 
@@ -132,17 +142,14 @@ const InsumosPage = () => {
             {isEditMode ? `Editar ${tipoActual}` : `Agregar ${tipoActual}`}
           </h2>
 
-          <Input label="Código" name="codigo" value={form.codigo} onChange={handleChange} disabled={isEditMode} />
           <Select label="Nombre del Insumo" name="nombre" value={form.nombre} onChange={handleChange} options={['Insumo A', 'Insumo B']} />
-          <Input label="Cantidad" name="cantidad" value={form.cantidad} onChange={handleChange} type="number" />
-          <Select label="Tipo" name="tipo" value={form.tipo} onChange={handleChange} options={["Entrada", "Salida"]} />
-          <Select label="Estado" name="estado" value={form.estado} onChange={handleChange} options={["Activo", "Inactivo"]} />
-          <Input label="Descripción" name="descripcion" value={form.descripcion} onChange={handleChange} />
           <Select label="Presentación" name="presentacion" value={form.presentacion} onChange={handleChange} options={["Botella", "Caja", "Bolsa"]} />
           <Select label="Unidad de Medida" name="unidad" value={form.unidad} onChange={handleChange} options={["Litros", "Gramos", "Unidades"]} />
+          <Input label="Cantidad" name="cantidad" value={form.cantidad} onChange={handleChange} type="number" />
+          <Select label="Estado" name="estado" value={form.estado} onChange={handleChange} options={["Activo", "Inactivo"]} />
+          <Input label="Descripción" name="descripcion" value={form.descripcion} onChange={handleChange} />
           <Select label="Proveedor" name="proveedor" value={form.proveedor} onChange={handleChange} options={["Proveedor A", "Proveedor B"]} />
           <Select label="Bodega" name="bodega" value={form.bodega} onChange={handleChange} options={["Bodega 1", "Bodega 2"]} />
-
           <ModalFooter>
             <Button onClick={handleSave}>Guardar</Button>
           </ModalFooter>

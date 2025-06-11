@@ -5,6 +5,11 @@ import { ManagementContainer } from '../styles/Management/ManagementPage.css';
 import { useNavigate } from 'react-router-dom';
 
 const sections = [
+    {
+    title: 'Insumos',
+    description: 'Gestiona los insumos',
+    path: '/gestion/insumos',
+  },
   {
     title: 'Bodegas',
     description: 'Gestiona las bodegas',

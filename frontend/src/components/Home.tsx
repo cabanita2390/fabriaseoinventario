@@ -16,6 +16,7 @@ function Home({ children }: HomeProps) {
     '/movimientos': 'Movimientos',
     '/reportes': 'Reportes',
     '/gestion': 'Gestión',
+    '/gestion/insumos': 'Gestión de Insumos',
     '/gestion/bodegas': 'Gestión de Bodegas',
     '/gestion/unidades': 'Gestión de Unidades de Medida',
     '/gestion/presentacion': 'Gestión de Presentación',
@@ -24,7 +25,7 @@ function Home({ children }: HomeProps) {
     '/Inventario':'inventario'
   };
 
-  const pageTitle = routeTitles[location.pathname] || ''; // si no está en el mapa, no muestra nada
+  const pageTitle = routeTitles[location.pathname] || ''; 
 
   return (
     <div className="container">
