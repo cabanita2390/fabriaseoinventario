@@ -22,7 +22,7 @@ function Home({ children }: HomeProps) {
     '/gestion/presentacion': 'Gestión de Presentación',
     '/gestion/usuarios': 'Gestión de Usuarios',
     '/gestion/proveedores': 'Gestión de Proveedores',
-    '/inventario': 'Inventario'
+    '/Inventario': 'Inventario'
   };
 
   const pageTitle = routeTitles[location.pathname] || ''; 

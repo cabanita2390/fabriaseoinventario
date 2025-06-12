@@ -86,17 +86,209 @@
     { "fecha": "2025-06-20", "nombre": "Producto E", "cantidad": 100 }
   ],
 
-  "movimiento":[{
-  "tipo": "Salida de Etiqueta",
-  "producto": "Producto B",
-  "cantidad": 333,
-  "fecha": "2025-06-12",
-  "descripcion": "señal ",
-  "unidad": "Gramos",
-  "proveedor": "Proveedor B",
-  "bodega": "Bodega 1"
-}
+  "movimiento": [
+    {
+      "tipo": "Devolución",
+      "producto": "Producto D",
+      "cantidad": 397,
+      "fecha": "2025-04-21",
+      "descripcion": "verificación",
+      "unidad": "Kilogramos",
+      "proveedor": "Proveedor B",
+      "bodega": "Bodega 2"
+    },
+    {
+      "tipo": "Devolución",
+      "producto": "Producto B",
+      "cantidad": 666,
+      "fecha": "2025-01-29",
+      "descripcion": "reposición",
+      "unidad": "Litros",
+      "proveedor": "Proveedor C",
+      "bodega": "Bodega Central"
+    },
+    {
+      "tipo": "Salida de Etiqueta",
+      "producto": "Producto D",
+      "cantidad": 284,
+      "fecha": "2024-07-15",
+      "descripcion": "verificación",
+      "unidad": "Gramos",
+      "proveedor": "Proveedor D",
+      "bodega": "Bodega Central"
+    },
+    {
+      "tipo": "Ajuste de Inventario",
+      "producto": "Producto C",
+      "cantidad": 303,
+      "fecha": "2025-01-09",
+      "descripcion": "traslado",
+      "unidad": "Litros",
+      "proveedor": "Proveedor A",
+      "bodega": "Bodega 2"
+    },
+    {
+      "tipo": "Salida de Etiqueta",
+      "producto": "Producto B",
+      "cantidad": 993,
+      "fecha": "2024-08-29",
+      "descripcion": "verificación",
+      "unidad": "Unidades",
+      "proveedor": "Proveedor C",
+      "bodega": "Bodega Central"
+    },
+    {
+      "tipo": "Entrada de Producto",
+      "producto": "Producto B",
+      "cantidad": 79,
+      "fecha": "2024-04-23",
+      "descripcion": "verificación",
+      "unidad": "Kilogramos",
+      "proveedor": "Proveedor D",
+      "bodega": "Bodega 2"
+    },
+    {
+      "tipo": "Devolución",
+      "producto": "Producto B",
+      "cantidad": 143,
+      "fecha": "2024-09-08",
+      "descripcion": "control",
+      "unidad": "Unidades",
+      "proveedor": "Proveedor A",
+      "bodega": "Bodega 2"
+    },
+    {
+      "tipo": "Ajuste de Inventario",
+      "producto": "Producto B",
+      "cantidad": 963,
+      "fecha": "2024-11-06",
+      "descripcion": "señal",
+      "unidad": "Unidades",
+      "proveedor": "Proveedor D",
+      "bodega": "Bodega Norte"
+    },
+    {
+      "tipo": "Entrada de Producto",
+      "producto": "Producto C",
+      "cantidad": 249,
+      "fecha": "2024-08-17",
+      "descripcion": "control",
+      "unidad": "Unidades",
+      "proveedor": "Proveedor D",
+      "bodega": "Bodega 1"
+    },
+    {
+      "tipo": "Ajuste de Inventario",
+      "producto": "Producto B",
+      "cantidad": 279,
+      "fecha": "2024-10-01",
+      "descripcion": "traslado",
+      "unidad": "Litros",
+      "proveedor": "Proveedor C",
+      "bodega": "Bodega Norte"
+    },
+    {
+      "tipo": "Salida de Etiqueta",
+      "producto": "Producto B",
+      "cantidad": 729,
+      "fecha": "2025-02-13",
+      "descripcion": "etiquetado",
+      "unidad": "Litros",
+      "proveedor": "Proveedor B",
+      "bodega": "Bodega 2"
+    },
+    {
+      "tipo": "Entrada de Producto",
+      "producto": "Producto B",
+      "cantidad": 439,
+      "fecha": "2025-04-12",
+      "descripcion": "señal",
+      "unidad": "Gramos",
+      "proveedor": "Proveedor D",
+      "bodega": "Bodega Central"
+    },
+    {
+      "tipo": "Ajuste de Inventario",
+      "producto": "Producto A",
+      "cantidad": 948,
+      "fecha": "2024-07-16",
+      "descripcion": "reposición",
+      "unidad": "Gramos",
+      "proveedor": "Proveedor A",
+      "bodega": "Bodega Norte"
+    },
+    {
+      "tipo": "Salida de Etiqueta",
+      "producto": "Producto D",
+      "cantidad": 238,
+      "fecha": "2024-06-21",
+      "descripcion": "control",
+      "unidad": "Gramos",
+      "proveedor": "Proveedor B",
+      "bodega": "Bodega 2"
+    },
+    {
+      "tipo": "Ajuste de Inventario",
+      "producto": "Producto C",
+      "cantidad": 515,
+      "fecha": "2024-04-10",
+      "descripcion": "verificación",
+      "unidad": "Litros",
+      "proveedor": "Proveedor C",
+      "bodega": "Bodega 1"
+    },
+    {
+      "tipo": "Devolución",
+      "producto": "Producto B",
+      "cantidad": 423,
+      "fecha": "2024-11-01",
+      "descripcion": "reposición",
+      "unidad": "Unidades",
+      "proveedor": "Proveedor A",
+      "bodega": "Bodega 2"
+    },
+    {
+      "tipo": "Salida de Etiqueta",
+      "producto": "Producto D",
+      "cantidad": 552,
+      "fecha": "2025-06-10",
+      "descripcion": "etiquetado",
+      "unidad": "Unidades",
+      "proveedor": "Proveedor D",
+      "bodega": "Bodega Norte"
+    },
+    {
+      "tipo": "Devolución",
+      "producto": "Producto C",
+      "cantidad": 589,
+      "fecha": "2025-05-12",
+      "descripcion": "traslado",
+      "unidad": "Gramos",
+      "proveedor": "Proveedor C",
+      "bodega": "Bodega Central"
+    },
+    {
+      "tipo": "Devolución",
+      "producto": "Producto D",
+      "cantidad": 402,
+      "fecha": "2024-07-03",
+      "descripcion": "señal",
+      "unidad": "Unidades",
+      "proveedor": "Proveedor C",
+      "bodega": "Bodega Norte"
+    },
+    {
+      "tipo": "Entrada de Producto",
+      "producto": "Producto A",
+      "cantidad": 184,
+      "fecha": "2025-02-27",
+      "descripcion": "señal",
+      "unidad": "Unidades",
+      "proveedor": "Proveedor A",
+      "bodega": "Bodega 2"
+    }
   ]
+
 
 
 }
