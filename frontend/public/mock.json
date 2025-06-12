@@ -84,6 +84,18 @@
     { "fecha": "2025-06-18", "nombre": "Producto C", "cantidad": 17 },
     { "fecha": "2025-06-19", "nombre": "Producto B", "cantidad": 25 },
     { "fecha": "2025-06-20", "nombre": "Producto E", "cantidad": 100 }
+  ],
+
+  "movimiento":[{
+  "tipo": "Salida de Etiqueta",
+  "producto": "Producto B",
+  "cantidad": 333,
+  "fecha": "2025-06-12",
+  "descripcion": "señal ",
+  "unidad": "Gramos",
+  "proveedor": "Proveedor B",
+  "bodega": "Bodega 1"
+}
   ]
 
 
