@@ -1,75 +1,76 @@
 import styled from 'styled-components';
 import Button from '../components/ui/Button';
-export const Header = styled.div`
+export const Home = styled.main`
+  padding: 1rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap; 
-  margin-bottom: 1rem;
-
-  h2 {
-    margin: 1rem 0;
-  }
-
+  flex-direction: column;
+  gap: 2rem;
 `;
 
-export const Table = styled.table`
+export const Header = styled.header`
+  margin-bottom: 2rem;
   width: 100%;
-  border-collapse: collapse;
-
-  th, td {
-    padding: 0.75rem;
-    border: 1px solid #ccc;
-    text-align: left;
-  }
 `;
 
-
+/* --- Agrupadores de botones --- */
 export const ButtonGroup = styled.div`
   display: flex;
-  justify-content: space-between; /* Los coloca en los extremos */
-  gap: 20px; /* Mayor separación entre los grupos */
-  width: 100%;
-  padding: 10px ;
+  flex-wrap: wrap;
+  gap: 20px; /* separación entre cada Card */
+  justify-content: space-between;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
 `;
 
-
-export const ButtonContainer = styled.div`
-  display: flex;
-  flex-direction: column; /* Mantiene el h3 arriba */
-  align-items: center;
-  padding: 15px ;
+export const ButtonContainer = styled.article`
+  flex: 1 1 30%;       /* crece, encoge, base 30% */
+  min-width: 250px;    /* evita que se encoja demasiado */
+  background: #f9f9f9;
   border: 2px solid #ccc;
   border-radius: 8px;
-  background-color: #f9f9f9;
-  width: 30%;
+  padding: 1.5rem;
+  display: flex;       /* Usa flex para organizar el contenido */
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
   h3 {
-    margin-bottom: 10px;
+    margin: 0;
     text-align: center;
   }
 `;
 
+/* Contenedor específico para los botones */
 export const ButtonWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap; /* Mantiene los botones en fila y ajusta en pantallas pequeñas */
+  display: flex;             /* define un contenedor flexible */
+  flex-direction: row;       /* alinea los elementos en fila horizontal */
+  flex-wrap: nowrap;         /* con ellos en la misma línea */
+  gap: 10px;                 /* espacio entre botones */
+  justify-content: center;   /* centra el grupo en el contenedor */
 `;
-
 
 
 export const StyledButton = styled(Button)`
-  
-  padding: 10px ;
-  font-size: 16px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
   border-radius: 5px;
-  color: white;
-  cursor: pointer;
+  background: #33c1ff;
+  color: #fff;
   border: none;
-  background-color: #33c1ff;  
-  
+  cursor: pointer;
+  transition: background 0.25s;
+
+  /* Evita que el botón se expanda */
+  width: auto;
+  flex: 0 0 auto;
+
+  &:hover {
+    background: #25a4de;
+  }
+  &:disabled {
+    background: #b0dffc;
+    cursor: not-allowed;
+  }
 `;
-
-
-
-
