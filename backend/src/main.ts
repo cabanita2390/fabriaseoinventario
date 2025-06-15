@@ -18,6 +18,8 @@ async function bootstrap() {
   // Atrapa todos los QueryFailedError y los convierte en 400
   // app.useGlobalFilters(new QueryFailedFilter());
 
+  console.log(`🚀 App corriendo en puerto ${process.env.PORT}`);
+
   await app.listen(process.env.PORT || 3000);
 }
 bootstrap();
