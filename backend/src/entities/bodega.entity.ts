@@ -10,7 +10,7 @@ export class Bodega {
   @Column({ length: 100 })
   nombre: string;
 
-  @Column({ length: 200 })
+  @Column({ length: 200, nullable: true })
   ubicacion: string;
 
   // Relación inversa: una bodega puede tener muchos inventarios

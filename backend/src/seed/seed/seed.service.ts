@@ -2,6 +2,7 @@
 // src/seed/seed.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Bodega } from 'src/entities/bodega.entity';
 import { Presentacion } from 'src/entities/presentacion.entity';
 import { Producto } from 'src/entities/producto.entity';
 import { UnidadMedida } from 'src/entities/unidadmedida.entity';
@@ -1460,6 +1461,9 @@ export class SeedService {
 
     @InjectRepository(Producto)
     private readonly productoRepo: Repository<Producto>,
+
+    @InjectRepository(Bodega)
+    private readonly bodegaRepo: Repository<Bodega>,
   ) {}
 
   async seedMateriasPrimas(): Promise<{ message: string }> {
@@ -1523,5 +1527,28 @@ export class SeedService {
     }
 
     return { message: 'Seed de Materias Primas completado' };
+  }
+
+  async seedBodegas(): Promise<{ message: string }> {
+    // 1) Define tu array con nombre + ubicación:
+    const bodegas = [
+      { nombre: 'Bodega Fabriaseo', ubicacion: 'Calle 1 no 25-46, Sogamoso' },
+      { nombre: 'Bodega 2' },
+    ];
+
+    // 2) Itera e inserta sólo si no existe:
+    for (const { nombre, ubicacion } of bodegas) {
+      let bodega = await this.bodegaRepo.findOne({ where: { nombre } });
+      if (!bodega) {
+        // Crea con nombre + ubicacion
+        bodega = this.bodegaRepo.create({ nombre, ubicacion });
+        await this.bodegaRepo.save(bodega);
+        this.logger.log(`Bodega creada: ${nombre}`);
+      } else {
+        this.logger.log(`Bodega ya existe: ${nombre}`);
+      }
+    }
+
+    return { message: 'Seed de Bodegas completado' };
   }
 }
