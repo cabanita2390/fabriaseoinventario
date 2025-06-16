@@ -18,11 +18,13 @@ export const ButtonGroup = styled.div`
   flex-wrap: wrap;
   gap: 20px; /* separación entre cada Card */
   justify-content: space-between;
+  margin-top: 10px; /* Agrega un pequeño espacio arriba */
 
   @media (max-width: 768px) {
     justify-content: center;
   }
 `;
+
 
 export const ButtonContainer = styled.article`
   flex: 1 1 30%;       /* crece, encoge, base 30% */
