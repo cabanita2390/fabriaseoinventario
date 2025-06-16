@@ -1,105 +1,150 @@
-import React, { useState } from 'react';
-import {
-  FaBars,
-  FaHome,
-  FaBoxOpen,
-  FaExchangeAlt,
-  FaChartBar,
-  FaCog,
-  FaChevronLeft,
-  FaChevronRight,
+import React, { useState, useEffect } from 'react';
+import { 
+  FaHome, 
+  FaBoxOpen, 
+  FaExchangeAlt, 
+  FaChartBar, 
+  FaCog, 
   FaSignOutAlt,
+  FaBars,
+  FaTimes
 } from 'react-icons/fa';
-import {
-  SidebarContainer,
-  NavSection,
-  NavItem,
-  CollapseButton,
+import { 
+  SidebarContainer, 
+  NavSection, 
+  NavItem, 
+  LogoSection, 
+  LogoutButton,
   HamburgerButton,
-  LogoutSection,
-  LogoSection,
+  CloseButton,
+  Overlay
 } from '../../styles/Sidebar.css';
-import { NavLink, useNavigate } from 'react-router-dom'; 
-import logoFabriAseo from '../../assets/logo-fabriaseo.png'; 
-import { Link } from 'react-router-dom';
+import { NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
+import logoFabriAseo from '../../assets/logo-fabriaseo.png';
+import { Tooltip } from '../Sidebar/Tooltip';
 
-const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+interface MenuItem {
+  to: string;
+  icon: React.ReactNode;
+  text: string;
+}
 
-  const navigate = useNavigate(); // para redirigir al login
+interface SidebarProps {
+  children?: never;
+}
 
-  const toggleCollapse = () => setIsCollapsed(!isCollapsed);
-  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+const Sidebar: React.FC<SidebarProps> = () => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  //  función para cerrar sesión
   const handleLogout = () => {
-    // Borrar datos del usuario
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-
-    // Redirigir al login
     navigate('/login');
   };
 
+  // Controla el estado expandido/colapsado del sidebar
+  const isExpanded = isHovered || isMobileOpen;
+
+  useEffect(() => {
+    // Actualiza las clases del body y del contenido principal
+    if (isMobileOpen) {
+      document.body.classList.add('no-scroll');
+      document.body.classList.add('sidebar-expanded');
+      document.body.classList.remove('sidebar-collapsed');
+    } else {
+      document.body.classList.remove('no-scroll');
+      
+      if (isHovered) {
+        document.body.classList.add('sidebar-expanded');
+        document.body.classList.remove('sidebar-collapsed');
+      } else {
+        document.body.classList.add('sidebar-collapsed');
+        document.body.classList.remove('sidebar-expanded');
+      }
+    }
+
+    // Para desktop: actualiza las clases cuando cambia el hover
+    if (!isMobileOpen) {
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) {
+        if (isHovered) {
+          mainContent.classList.add('sidebar-expanded');
+          mainContent.classList.remove('sidebar-collapsed');
+        } else {
+          mainContent.classList.add('sidebar-collapsed');
+          mainContent.classList.remove('sidebar-expanded');
+        }
+      }
+    }
+  }, [isHovered, isMobileOpen]);
+
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [location]);
+
+  const menuItems: MenuItem[] = [
+    { to: "/dashboard", icon: <FaHome />, text: "Dashboard" },
+    { to: "/insumos", icon: <FaBoxOpen />, text: "Insumos" },
+    { to: "/inventario", icon: <FaBoxOpen />, text: "Inventario" },
+    { to: "/movimientos", icon: <FaExchangeAlt />, text: "Movimientos" },
+    { to: "/reportes", icon: <FaChartBar />, text: "Reportes" },
+    { to: "/gestion", icon: <FaCog />, text: "Gestión" },
+  ];
+
   return (
     <>
-      <HamburgerButton onClick={toggleMobileMenu}>
-        <FaBars />
+      <HamburgerButton onClick={() => setIsMobileOpen(true)}>
+        <FaBars size={20} />
       </HamburgerButton>
 
-      <SidebarContainer isCollapsed={isCollapsed} isMobileMenuOpen={isMobileMenuOpen}>
-        {/* Sección del logo */}
+      <Overlay $isVisible={isMobileOpen} onClick={() => setIsMobileOpen(false)} />
+
+      <SidebarContainer 
+        $isExpanded={isExpanded}
+        $isMobileOpen={isMobileOpen}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <CloseButton onClick={() => setIsMobileOpen(false)}>
+          <FaTimes size={20} />
+        </CloseButton>
+
         <LogoSection>
-          {!isCollapsed ? (
-            <img src={logoFabriAseo} alt="FabriAseo Logo" />
-          ) : (
-            <FaCog size={24} />
-          )}
+          <Link to="/dashboard">
+            {isExpanded ? (
+              <img src={logoFabriAseo} alt="FabriAseo Logo" className="logo-expanded" />
+            ) : (
+              <img src={logoFabriAseo} alt="FabriAseo" className="logo-collapsed" />
+            )}
+          </Link>
         </LogoSection>
 
-        {/* Navegación */}
         <NavSection>
-          <NavItem as={NavLink} to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <FaHome />
-            {!isCollapsed && <span>Dashboard</span>}
-          </NavItem>
-          <NavItem as={NavLink} to="/insumos" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <FaBoxOpen />
-            {!isCollapsed && <span>Insumos</span>}
-          </NavItem>
-          <NavItem as={NavLink} to="/Inventario" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <FaBoxOpen />
-            {!isCollapsed && <span>Inventario</span>}
-          </NavItem>
-          <NavItem as={NavLink} to="/movimientos" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <FaExchangeAlt />
-            {!isCollapsed && <span>Movimientos</span>}
-          </NavItem>
-          <NavItem as={NavLink} to="/reportes" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <FaChartBar />
-            {!isCollapsed && <span>Reportes</span>}
-          </NavItem>
-          <NavItem as={NavLink} to="/gestion" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <FaCog />
-            {!isCollapsed && <span>Gestión</span>}
-          </NavItem>
+          {menuItems.map((item) => (
+            <Tooltip key={item.to} content={item.text} disabled={isExpanded} position="right">
+              <NavItem 
+                to={item.to}
+                $isExpanded={isExpanded}
+              >
+                {item.icon}
+                {isExpanded && <span>{item.text}</span>}
+              </NavItem>
+            </Tooltip>
+          ))}
         </NavSection>
 
-        {/* Cerrar sesión y colapsar */}
-        <LogoutSection>
-          <div
-            onClick={handleLogout} // redirige y limpia localStorage
-            style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}
+        <Tooltip content="Cerrar sesión" disabled={isExpanded} position="right">
+          <LogoutButton 
+            onClick={handleLogout}
+            $isExpanded={isExpanded}
           >
             <FaSignOutAlt />
-            {!isCollapsed && <span>Cerrar sesión</span>}
-          </div>
-
-          <CollapseButton onClick={toggleCollapse}>
-            {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
-          </CollapseButton>
-        </LogoutSection>
+            {isExpanded && <span>Cerrar sesión</span>}
+          </LogoutButton>
+        </Tooltip>
       </SidebarContainer>
     </>
   );

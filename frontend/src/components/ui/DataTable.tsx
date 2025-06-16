@@ -8,24 +8,24 @@ interface Column {
   accessor: string;
 }
 
-interface DataTableProps {
+interface DataTableProps<T extends object> {
   columns: Column[];
-  data: Record<string, any>[];
-  onEdit?: (row: Record<string, any>) => void;
-  onDelete?: (row: Record<string, any>) => void;
+  data: T[];
+  onEdit?: (row: T) => void;
+  onDelete?: (row: T) => void;
 }
 
 const ActionButtons = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
 
   button {
     background-color: transparent;
     border: none;
     cursor: pointer;
-    padding: 0.3rem;
+    padding: 0.4rem;
     border-radius: 4px;
 
     &:hover {
@@ -44,7 +44,12 @@ const ActionButtons = styled.div`
   }
 `;
 
-const DataTable = ({ columns, data, onEdit, onDelete }: DataTableProps) => {
+const DataTable = <T extends object>({ 
+  columns, 
+  data, 
+  onEdit, 
+  onDelete 
+}: DataTableProps<T>) => {
   return (
     <TableWrapper>
       <StyledTable>
@@ -53,8 +58,7 @@ const DataTable = ({ columns, data, onEdit, onDelete }: DataTableProps) => {
             {columns.map((col) => (
               <th key={col.accessor}>{col.header}</th>
             ))}
-            {/* Solo muestra la columna si hay acciones definidas */}
-            {(onEdit || onDelete) && <th>Modificar / Eliminar</th>}
+            {(onEdit || onDelete) && <th className="action-header">Modificar / Eliminar</th>}
           </tr>
         </thead>
         <tbody>
@@ -68,9 +72,8 @@ const DataTable = ({ columns, data, onEdit, onDelete }: DataTableProps) => {
             data.map((row, index) => (
               <tr key={index}>
                 {columns.map((col) => (
-                  <td key={col.accessor}>{row[col.accessor]}</td>
+                  <td key={col.accessor}>{(row as any)[col.accessor]}</td>
                 ))}
-                {/* Solo muestra los botones si `onEdit` o `onDelete` están definidos */}
                 {(onEdit || onDelete) && (
                   <td>
                     <ActionButtons>
@@ -95,6 +98,5 @@ const DataTable = ({ columns, data, onEdit, onDelete }: DataTableProps) => {
     </TableWrapper>
   );
 };
-
 
 export default DataTable;
