@@ -10,4 +10,9 @@ export class SeedController {
   async seedMateriasPrimas() {
     return this.seedService.seedMateriasPrimas();
   }
+
+  @Post('bodegas')
+  async seedBodegas() {
+    return this.seedService.seedBodegas();
+  }
 }
