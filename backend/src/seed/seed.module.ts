@@ -5,11 +5,12 @@ import { Presentacion } from 'src/entities/presentacion.entity';
 import { UnidadMedida } from 'src/entities/unidadmedida.entity';
 import { Producto } from 'src/entities/producto.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Bodega } from 'src/entities/bodega.entity';
 
 @Module({
   imports: [
     // Registra aquí todas las entidades que usas en SeedService
-    TypeOrmModule.forFeature([Presentacion, UnidadMedida, Producto]),
+    TypeOrmModule.forFeature([Presentacion, UnidadMedida, Producto, Bodega]),
   ],
   providers: [SeedService],
   controllers: [SeedController],

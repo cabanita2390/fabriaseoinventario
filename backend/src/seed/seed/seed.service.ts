@@ -2,6 +2,7 @@
 // src/seed/seed.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Bodega } from 'src/entities/bodega.entity';
 import { Presentacion } from 'src/entities/presentacion.entity';
 import { Producto } from 'src/entities/producto.entity';
 import { UnidadMedida } from 'src/entities/unidadmedida.entity';
@@ -709,6 +710,746 @@ export class SeedService {
       PRESENTACION: 'paquete x 3160 unidades',
       TIPO_PRODUCTO: 'MATERIAL_DE_ENVASE',
     },
+    {
+      PRODUCTO: 'TROPICLOR BLANQUEADOR ',
+      PRESENTACION: 'Envase x 500 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'TROPICLOR BLANQUEADOR ',
+      PRESENTACION: 'Envase x 1 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'TROPICLOR BLANQUEADOR ',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'TROPICLOR BLANQUEADOR ',
+      PRESENTACION: 'galon x 3,8 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'TROPICLOR BLANQUEADOR ',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LAVALOZA LIQUIDO',
+      PRESENTACION: 'Envase x 500 ml Disp',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LAVALOZA LIQUIDO',
+      PRESENTACION: 'Envase x 850 ml Disp ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LAVALOZA LIQUIDO',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LAVALOZA LIQUIDO',
+      PRESENTACION: 'galon x 4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LAVALOZA LIQUIDO',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LIMPIAVIDRIOS',
+      PRESENTACION: 'Envase Rep X 500 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LIMPIAVIDRIOS',
+      PRESENTACION: 'Spray x 500 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LIMPIAVIDRIOS',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LIMPIAVIDRIOS',
+      PRESENTACION: 'galon x 4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LIMPIAVIDRIOS',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LUSTRAMUEBLES',
+      PRESENTACION: 'Envase x 130 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LUSTRAMUEBLES',
+      PRESENTACION: 'Envase x 240 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LUSTRAMUEBLES',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LUSTRAMUEBLES',
+      PRESENTACION: 'galon x 4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LUSTRAMUEBLES',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'DESENGRASANTE',
+      PRESENTACION: 'Envase x 450 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'DESENGRASANTE',
+      PRESENTACION: 'Envase x 810 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'DESENGRASANTE',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'DESENGRASANTE',
+      PRESENTACION: 'galon x 4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'DESENGRASANTE',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LIMPIADOR  DE TEXTILES ',
+      PRESENTACION: 'Envase x 500 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LIMPIADOR  DE TEXTILES ',
+      PRESENTACION: 'galon x 4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LIMPIADOR  DE TEXTILES ',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 500 ml fragancia baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 500 ml fragancia popurry',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 500 ml fragancia canela',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 500 ml fragancia manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 810 ml fragancia baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x  810 ml fragancia popurry',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x  810  ml fragancia canela',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x  810 ml fragancia manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 2000 ml fragancia baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 2000 ml fragancia popurry',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 2000 ml fragancia canela',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 2000 ml fragancia manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 4000 ml fragancia baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 4000 ml fragancia popurry',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 4000 ml fragancia canela',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'Envase x 4000 ml fragancia manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA BLANCA',
+      PRESENTACION: 'UNIDAD',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 500 ml fragancia baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 500 ml fragancia popurry',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 500 ml fragancia canela',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 500 ml fragancia manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 810 ml fragancia baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x  810 ml fragancia popurry',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x  810  ml fragancia canela',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x  810 ml fragancia manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 2000 ml fragancia baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 2000 ml fragancia popurry',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 2000 ml fragancia canela',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 2000 ml fragancia manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 4000 ml fragancia baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 4000 ml fragancia popurry',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 4000 ml fragancia canela',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Envase x 4000 ml fragancia manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA EMULSIONADA ROJA',
+      PRESENTACION: 'Enva 20 litros',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA AUTOBRILLANTE',
+      PRESENTACION: 'Envase x 500 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA AUTOBRILLANTE',
+      PRESENTACION: 'Envase x 810 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA AUTOBRILLANTE',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA AUTOBRILLANTE',
+      PRESENTACION: 'galon x 4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CERA AUTOBRILLANTE',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SELLADOR PISOS',
+      PRESENTACION: 'Envase x 500 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SELLADOR PISOS',
+      PRESENTACION: 'Envase x 810 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SELLADOR PISOS',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SELLADOR PISOS',
+      PRESENTACION: 'galon x 4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SELLADOR PISOS',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 150  ml PNO',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 150  ml CANELA',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 150  ml BABY',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 150  ml FLORES',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 500  ml PNO',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 500  ml CANELA',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 500  ml BABY',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 500  ml FLORES',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 2 l   PNO',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 2 l   CANELA',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 2 l   BABY',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 2 l FLORES',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x  4l   PNO',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 4 l   CANELA',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 4 l   BABY',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'Envase x 4l FLORES',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: ' MULTIUSOS',
+      PRESENTACION: 'garrafa 20 l',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON INDUSTRIAL TROPIDEX',
+      PRESENTACION: 'Envase 2 L',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON INDUSTRIAL TROPIDEX',
+      PRESENTACION: 'Galón x 4  L',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON INDUSTRIAL TROPIDEX',
+      PRESENTACION: 'Garrafa x 5 galones',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LIMPIADOR DE JUNTAS COMO EL MURIATICO ',
+      PRESENTACION: 'Envase x 500 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LIMPIADOR DE JUNTAS COMO EL MURIATICO ',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 500 ml avena',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 500 ml baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 500 ml kiwy',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 500 ml manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 1000 ml avena',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 1000 ml baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 1000 ml kiwy',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 1000 ml manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 2l avena',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 2l baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 2ll kiwy',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 2l manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 4l avena',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 4l baby',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 4l kiwy',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'Envase x 4l manzana',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON LIQUIDO MANOS FORMULA MEJORADA ',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON ROPA LIQUIDO',
+      PRESENTACION: 'Envase x 1 L',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON ROPA LIQUIDO',
+      PRESENTACION: 'envase x 2 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON ROPA LIQUIDO',
+      PRESENTACION: 'Galón  3.8 l',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON ROPA LIQUIDO',
+      PRESENTACION: 'Garrafa. 20 l',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON INDUSTRIAL - TROPIREY ',
+      PRESENTACION: 'Galón  4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON INDUSTRIAL - TROPIREY ',
+      PRESENTACION: 'Garrafa. 20 l',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LLANTINA ABRILLANTADOR ',
+      PRESENTACION: 'Spray x 500 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LLANTINA ABRILLANTADOR ',
+      PRESENTACION: 'galon x 2 l',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LLANTINA ABRILLANTADOR ',
+      PRESENTACION: 'galon x 4  l',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'LLANTINA ABRILLANTADOR ',
+      PRESENTACION: 'Garrafa x 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SILICONA CON FRAGANCIA',
+      PRESENTACION: 'Envase x 120 ml spray ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SILICONA CON FRAGANCIA',
+      PRESENTACION: 'Envase x 240 ml spray ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SILICONA CON FRAGANCIA',
+      PRESENTACION: 'envase 810 ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SILICONA CON FRAGANCIA',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SILICONA CON FRAGANCIA',
+      PRESENTACION: 'galon x 4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'SILICONA CON FRAGANCIA',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON INDUSTRIAL ESPUMA ACTIVA ',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON INDUSTRIAL ESPUMA ACTIVA ',
+      PRESENTACION: 'galon x 4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'JABON INDUSTRIAL ESPUMA ACTIVA ',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CREOLINA INDUSTRIAL  CONCENTRADA',
+      PRESENTACION: 'Envase x 120 ml ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CREOLINA INDUSTRIAL  CONCENTRADA',
+      PRESENTACION: 'Envase x 240 ml ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CREOLINA INDUSTRIAL  CONCENTRADA',
+      PRESENTACION: 'Envase x 500 ml',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CREOLINA INDUSTRIAL  CONCENTRADA',
+      PRESENTACION: 'Medio Galón x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'CREOLINA INDUSTRIAL  CONCENTRADA',
+      PRESENTACION: 'Galón x 4 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'ALCOHOL INDUSTRIAL',
+      PRESENTACION: 'Envase x 500 ml ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'ALCOHOL INDUSTRIAL',
+      PRESENTACION: 'Envase x 1000 cm3 + pistola ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'ALCOHOL INDUSTRIAL',
+      PRESENTACION: 'galon x 2l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'ALCOHOL INDUSTRIAL',
+      PRESENTACION: 'galon x 4  l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'ALCOHOL INDUSTRIAL',
+      PRESENTACION: 'garrafa 20 l ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'DESTAPADOR DE CAÑERIAS no controlado ',
+      PRESENTACION: 'Tarrina x 250 grs',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'DESTAPADOR DE CAÑERIAS no controlado ',
+      PRESENTACION: 'Tarrina x 1 kilo ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'HIPOCLORITO DE SODIO',
+      PRESENTACION: 'Galón x 3,8 l',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'HIPOCLORITO DE SODIO',
+      PRESENTACION: 'garrafa x 5 galones',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'DESMANCHADOR OXIGENADO ',
+      PRESENTACION: 'Galón x 3,8 l',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'DESMANCHADOR OXIGENADO ',
+      PRESENTACION: 'garrafa x 5 galones',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'ACIDO MURIATICO INDUSTRIAL ',
+      PRESENTACION: 'Galon X 5 K ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
+    {
+      PRODUCTO: 'ACIDO MURIATICO INDUSTRIAL ',
+      PRESENTACION: 'Garrafa X 22.7 KILOS ',
+      TIPO_PRODUCTO: 'ETIQUETAS',
+    },
   ];
 
   constructor(
@@ -720,11 +1461,14 @@ export class SeedService {
 
     @InjectRepository(Producto)
     private readonly productoRepo: Repository<Producto>,
+
+    @InjectRepository(Bodega)
+    private readonly bodegaRepo: Repository<Bodega>,
   ) {}
 
   async seedMateriasPrimas(): Promise<{ message: string }> {
     // 2.1 Upsert Presentaciones
-    console.log('Prueba');
+    console.log('Prueba de carga seeder');
     const presentaciones = Array.from(
       new Set(this.rows.map((r) => r.PRESENTACION.trim())),
     );
@@ -746,8 +1490,16 @@ export class SeedService {
       um = await this.umRepo.save(um);
     }
 
+    // 0) Dedupe filas por PRODUCTO
+    const uniqueRows = Array.from(
+      new Map(
+        this.rows.map((r) => [r.PRODUCTO.trim().toUpperCase(), r]),
+      ).values(),
+    );
+
     // 2.3) Crear Productos
-    for (const row of this.rows) {
+    // for (const row of this.rows) {
+    for (const row of uniqueRows) {
       const pres = presMap.get(row.PRESENTACION.trim());
       if (!pres) continue;
 
@@ -775,5 +1527,28 @@ export class SeedService {
     }
 
     return { message: 'Seed de Materias Primas completado' };
+  }
+
+  async seedBodegas(): Promise<{ message: string }> {
+    // 1) Define tu array con nombre + ubicación:
+    const bodegas = [
+      { nombre: 'Bodega Fabriaseo', ubicacion: 'Calle 1 no 25-46, Sogamoso' },
+      { nombre: 'Bodega 2' },
+    ];
+
+    // 2) Itera e inserta sólo si no existe:
+    for (const { nombre, ubicacion } of bodegas) {
+      let bodega = await this.bodegaRepo.findOne({ where: { nombre } });
+      if (!bodega) {
+        // Crea con nombre + ubicacion
+        bodega = this.bodegaRepo.create({ nombre, ubicacion });
+        await this.bodegaRepo.save(bodega);
+        this.logger.log(`Bodega creada: ${nombre}`);
+      } else {
+        this.logger.log(`Bodega ya existe: ${nombre}`);
+      }
+    }
+
+    return { message: 'Seed de Bodegas completado' };
   }
 }

@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule, ConfigService  } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PresentacionModule } from './presentacion/presentacion.module';
 import { UnidadmedidaModule } from './unidadmedida/unidadmedida.module';
@@ -19,7 +19,6 @@ import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
-    
     // 1) Cargar el módulo de configuración
     ConfigModule.forRoot({ isGlobal: true }),
 
@@ -29,14 +28,19 @@ import { SeedModule } from './seed/seed.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        host: config.get<string>('DB_HOST'),
-        port: config.get<number>('DB_PORT'),      // ConfigService convierte a number si tu .env declara DB_PORT=5432
-        username: config.get<string>('DB_USER'),
-        password: config.get<string>('DB_PASS'),
-        database: config.get<string>('DB_NAME'),
-        autoLoadEntities: true,
+        url: config.get<string>('DATABASE_URL'),
+        // host: config.get<string>('DB_HOST'),
+        // port: config.get<number>('DB_PORT'),      // ConfigService convierte a number si tu .env declara DB_PORT=5432
+        // username: config.get<string>('DB_USER'),
+        // password: config.get<string>('DB_PASS'),
+        // database: config.get<string>('DB_NAME'),
+        // autoLoadEntities: true,
         synchronize: true, // solo en desarrollo
-        dropSchema: true, 
+        // dropSchema: true,
+        ssl: {
+          rejectUnauthorized: false,
+        },
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
       }),
     }),
 
@@ -63,7 +67,6 @@ import { SeedModule } from './seed/seed.module';
     AuthModule,
 
     SeedModule,
-  
   ],
   controllers: [AppController],
   providers: [AppService],
