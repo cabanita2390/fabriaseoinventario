@@ -42,4 +42,14 @@ export const StyledTable = styled.table`
     border: none;
     cursor: pointer;
   }
+
+  /* Nuevos estilos agregados */
+  th.action-header {
+    text-align: center;
+  }
+
+  td:last-child, th.action-header {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 `;

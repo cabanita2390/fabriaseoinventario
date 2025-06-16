@@ -38,7 +38,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const isDashboard = location.pathname === '/dashboard';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -47,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
   };
 
   // Controla el estado expandido/colapsado del sidebar
-  const isExpanded = isDashboard || isHovered || isMobileOpen;
+  const isExpanded = isHovered || isMobileOpen;
 
   useEffect(() => {
     // Actualiza las clases del body y del contenido principal
@@ -58,7 +57,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
     } else {
       document.body.classList.remove('no-scroll');
       
-      if (isDashboard || isHovered) {
+      if (isHovered) {
         document.body.classList.add('sidebar-expanded');
         document.body.classList.remove('sidebar-collapsed');
       } else {
@@ -71,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
     if (!isMobileOpen) {
       const mainContent = document.querySelector('.main-content');
       if (mainContent) {
-        if (isDashboard || isHovered) {
+        if (isHovered) {
           mainContent.classList.add('sidebar-expanded');
           mainContent.classList.remove('sidebar-collapsed');
         } else {
@@ -80,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         }
       }
     }
-  }, [isDashboard, isHovered, isMobileOpen]);
+  }, [isHovered, isMobileOpen]);
 
   useEffect(() => {
     setIsMobileOpen(false);

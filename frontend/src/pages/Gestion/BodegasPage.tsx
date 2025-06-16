@@ -1,31 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Home from '../../components/Home';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import { ModalFooter } from '../../styles/ui/Modal.css';
-import { Header } from '../../styles/Insumos.css';
+import { Header } from '../../styles/Gestion/Gestion.css';
 import Swal from 'sweetalert2';
 
-const initialForm = {
-  codigo: '',
+type Bodega = {
+  id: string;
+  nombre: string;
+  ubicacion: string;
+};
+
+const initialForm: Bodega = {
+  id: '',
   nombre: '',
+  ubicacion: ''
 };
 
 const BodegasPage = () => {
-  const [form, setForm] = useState(initialForm);
-  const [data, setData] = useState([
-    { codigo: '0012', nombre: 'Bodega 1' },
-    { codigo: '0024', nombre: 'Bodega 2' },
-  ]);
+  const [form, setForm] = useState<Bodega>(initialForm);
+  const [data, setData] = useState<Bodega[]>([]);
+   const [fullData, setFullData] = useState<Bodega[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
   const columns = [
-    { header: 'Código', accessor: 'codigo' },
+    { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
+    { header: 'Ubicación', accessor: 'ubicacion' }
   ];
+
+
+  // Carga los datos desde mock.json
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/Gestion.mock.json');
+        const json = await response.json();
+        setData(json.bodegas || []);
+        setFullData(json.bodegas || []);
+      } catch (error) {
+        console.error("Error al cargar las bodegas:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -33,44 +55,42 @@ const BodegasPage = () => {
 
   const handleSave = () => {
     if (!form.nombre.trim()) {
-      Swal.fire('Campo obligatorio', 'El nombre de la bodega es requerido', 'warning');
+      Swal.fire('Error', 'El nombre es obligatorio', 'warning');
       return;
     }
 
     try {
-      if (isEditMode) {
-        setData(data.map((item) => (item.codigo === form.codigo ? form : item)));
-      } else {
-        const newCodigo = `${data.length + 1}`.padStart(4, '0');
-        setData([...data, { ...form, codigo: newCodigo }]);
-      }
-      setForm(initialForm);
+      const newData = isEditMode
+        ? data.map(item => item.id === form.id ? form : item)
+        : [...data, { ...form, id: `${Date.now()}`.slice(-4) }];
+      
+      setData(newData);
+      Swal.fire('Éxito', 'Bodega guardada correctamente', 'success');
       setShowModal(false);
-      setIsEditMode(false);
-      Swal.fire('¡Guardado!', 'La bodega fue registrada correctamente', 'success');
+      setForm(initialForm);
     } catch (error) {
-      Swal.fire('¡Error!', 'Ocurrió un error al guardar.', 'error');
+      Swal.fire('Error', 'No se pudo guardar', 'error');
     }
   };
 
-  const handleEdit = (row: any) => {
+  const handleEdit = (row: Bodega) => {
     setForm(row);
     setIsEditMode(true);
     setShowModal(true);
   };
 
-  const handleDelete = (row: any) => {
+  const handleDelete = (row: Bodega) => {
     Swal.fire({
       title: '¿Eliminar bodega?',
-      text: 'Esta acción no se puede deshacer.',
+      text: 'No podrás revertir esto',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Eliminar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        setData(data.filter((item) => item.codigo !== row.codigo));
-        Swal.fire('Eliminado', 'La bodega ha sido eliminada.', 'success');
+        setData(data.filter(item => item.id !== row.id));
+        Swal.fire('Eliminada', 'La bodega ha sido eliminada', 'success');
       }
     });
   };
@@ -78,8 +98,7 @@ const BodegasPage = () => {
   return (
     <Home>
       <Header>
-        <div />
-        <Button
+        <Button 
           onClick={() => {
             setForm(initialForm);
             setIsEditMode(false);
@@ -90,20 +109,35 @@ const BodegasPage = () => {
         </Button>
       </Header>
 
-      <DataTable columns={columns} data={data} onEdit={handleEdit} onDelete={handleDelete} />
+      <DataTable<Bodega>
+        columns={columns}
+        data={data}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
 
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
-          <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>
-            {isEditMode ? 'Editar Bodega' : 'Agregar Bodega'}
+          <h2 style={{ textAlign: 'center' }}>
+            {isEditMode ? 'Editar Bodega' : 'Nueva Bodega'}
           </h2>
-
-          <Input label="Código" name="codigo" value={form.codigo} onChange={handleChange} disabled />
-          <Input label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} />
+          <Input 
+            label="Nombre *" 
+            name="nombre" 
+            value={form.nombre} 
+            onChange={handleChange} 
+            required 
+          />
+          <Input 
+            label="Ubicación" 
+            name="ubicacion" 
+            value={form.ubicacion} 
+            onChange={handleChange} 
+          />
 
           <ModalFooter>
             <Button onClick={handleSave}>Guardar</Button>
-            <Button onClick={() => setShowModal(false)}>Cerrar</Button>
+            <Button onClick={() => setShowModal(false)}>Cancelar</Button>
           </ModalFooter>
         </Modal>
       )}

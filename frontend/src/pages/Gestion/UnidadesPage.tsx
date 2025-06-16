@@ -1,31 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Home from '../../components/Home';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import { ModalFooter } from '../../styles/ui/Modal.css';
-import { Header } from '../../styles/Insumos.css';
+import { Header } from '../../styles/Gestion/Gestion.css';
 import Swal from 'sweetalert2';
 
-const initialForm = {
-  codigo: '',
+type UnidadMedida = {
+  id: string;
+  nombre: string;
+};
+
+const initialForm: UnidadMedida = {
+  id: '',
   nombre: '',
 };
 
 const UnidadesPage = () => {
-  const [form, setForm] = useState(initialForm);
-  const [data, setData] = useState([
-    { codigo: '0010', nombre: 'Litro' },
-    { codigo: '0020', nombre: 'Kilogramo' },
-  ]);
+  const [form, setForm] = useState<UnidadMedida>(initialForm);
+  const [data, setData] = useState<UnidadMedida[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
   const columns = [
-    { header: 'Código', accessor: 'codigo' },
+    { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
   ];
+
+  // Cargar datos desde JSON
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/Gestion.mock.json');
+        const json = await response.json();
+        setData(json.unidadmedida || []);
+      } catch (error) {
+        console.error("Error cargando unidades:", error);
+        Swal.fire('Error', 'No se pudieron cargar las unidades', 'error');
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -33,44 +50,42 @@ const UnidadesPage = () => {
 
   const handleSave = () => {
     if (!form.nombre.trim()) {
-      Swal.fire('Campo obligatorio', 'El nombre es requerido', 'warning');
+      Swal.fire('Error', 'Nombre es obligatorio', 'warning');
       return;
     }
 
     try {
-      if (isEditMode) {
-        setData(data.map((item) => (item.codigo === form.codigo ? form : item)));
-      } else {
-        const newCodigo = `${data.length + 1}`.padStart(4, '0');
-        setData([...data, { ...form, codigo: newCodigo }]);
-      }
-      setForm(initialForm);
+      const newData = isEditMode
+        ? data.map(item => item.id === form.id ? form : item)
+        : [...data, { ...form, id: `${Date.now()}`.slice(-4) }];
+      
+      setData(newData);
+      Swal.fire('Éxito', 'Unidad guardada correctamente', 'success');
       setShowModal(false);
-      setIsEditMode(false);
-      Swal.fire('¡Guardado!', 'La unidad fue registrada correctamente', 'success');
-    } catch {
-      Swal.fire('¡Error!', 'Ocurrió un error al guardar.', 'error');
+      setForm(initialForm);
+    } catch (error) {
+      Swal.fire('Error', 'No se pudo guardar', 'error');
     }
   };
 
-  const handleEdit = (row: any) => {
+  const handleEdit = (row: UnidadMedida) => {
     setForm(row);
     setIsEditMode(true);
     setShowModal(true);
   };
 
-  const handleDelete = (row: any) => {
+  const handleDelete = (row: UnidadMedida) => {
     Swal.fire({
       title: '¿Eliminar unidad?',
-      text: 'Esta acción no se puede deshacer.',
+      text: 'Esta acción no se puede deshacer',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Eliminar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        setData(data.filter((item) => item.codigo !== row.codigo));
-        Swal.fire('Eliminado', 'La unidad ha sido eliminada.', 'success');
+        setData(data.filter(item => item.id !== row.id));
+        Swal.fire('Eliminada', 'La unidad ha sido eliminada', 'success');
       }
     });
   };
@@ -78,7 +93,6 @@ const UnidadesPage = () => {
   return (
     <Home>
       <Header>
-        <div />
         <Button
           onClick={() => {
             setForm(initialForm);
@@ -90,7 +104,12 @@ const UnidadesPage = () => {
         </Button>
       </Header>
 
-      <DataTable columns={columns} data={data} onEdit={handleEdit} onDelete={handleDelete} />
+      <DataTable<UnidadMedida>
+        columns={columns}
+        data={data}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
 
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
@@ -98,12 +117,16 @@ const UnidadesPage = () => {
             {isEditMode ? 'Editar Unidad' : 'Agregar Unidad'}
           </h2>
 
-          <Input label="Código" name="codigo" value={form.codigo} onChange={handleChange} disabled />
-          <Input label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} />
-
+          <Input 
+            label="Nombre *" 
+            name="nombre" 
+            value={form.nombre} 
+            onChange={handleChange} 
+            required 
+          />
           <ModalFooter>
             <Button onClick={handleSave}>Guardar</Button>
-            <Button onClick={() => setShowModal(false)}>Cerrar</Button>
+            <Button onClick={() => setShowModal(false)}>Cancelar</Button>
           </ModalFooter>
         </Modal>
       )}

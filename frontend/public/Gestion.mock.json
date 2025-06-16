@@ -1,0 +1,26 @@
+{
+  "productos": [
+    { "id": 1, "nombre": "Producto A", "tipoProducto": "Materia Prima", "subtipo": null, "estado": "Activo", "presentacion": "Caja","unidadmedida": "Kilogramo" },
+    { "id": 2, "nombre": "Producto B", "tipoProducto": "Insumo", "subtipo": null, "estado": "Activo", "presentacion": "Paquete","unidadmedida": "Unidad" }
+  ],
+  "bodegas": [
+    { "id": 1, "nombre": "Bodega 1", "ubicacion": "Calle 1" },
+    { "id": 2, "nombre": "Bodega 2", "ubicacion": "Calle 2" }
+  ],
+  "unidadmedida": [
+    { "id": 1, "nombre": "KG" },
+    { "id": 2, "nombre": "Unidad" }
+  ],
+  "presentacion": [
+    { "id": 1, "nombre": "Presentación A" },
+    { "id": 2, "nombre": "Presentación B" }
+  ],
+  "usuarios": [
+    { "id": 1, "nombre": "Usuario A", "email": "usuarioa@example.com","contraseña": "password123","fechaCreacion": "2023-01-01", "id_rol": 1,"estado": "Activo" },
+    { "id": 2, "nombre": "Usuario B", "email": "usuariob@example.com","contraseña": "password456","fechaCreacion": "2023-01-02", "id_rol": 2,"estado": "Activo" }
+  ],
+  "proveedores": [
+    { "id": 1, "nombre": "Proveedor A","email": "proveedora@example.com","telefono": "3012345678","direccion": "Calle 123", "estado": "Activo" },
+    { "id": 2, "nombre": "Proveedor B","email": "proveedorb@example.com","telefono": "3012345678","direccion": "Calle 123", "estado": "Activo" }
+  ]
+}
