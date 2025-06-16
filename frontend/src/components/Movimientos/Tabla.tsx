@@ -39,19 +39,33 @@ function Tabla({ mostrarFiltro = true, mostrarExportar = true }: { mostrarFiltro
   const [fullData, setFullData] = useState<RowData[]>([]); // Para mantener todos los datos originales
 
   // Carga los datos desde mock.json
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/mock.json');
-        const json = await response.json();
-        setData(json.movimiento || []);
-        setFullData(json.movimiento || []);
-      } catch (error) {
-        console.error("Error al cargar los movimientos:", error);
-      }
-    };
-    fetchData();
-  }, []);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/movimiento');
+      const json = await response.json();
+
+      const movimientos: RowData[] = json.map((mov: any) => ({
+        tipo: mov.tipo === 'INGRESO' ? 'Entrada' : 'Salida',
+        producto: mov.producto?.nombre || '',
+        cantidad: mov.cantidad,
+        fecha: mov.fechaMovimiento.split('T')[0],
+        descripcion: mov.descripcion || '',
+        unidad: mov.producto?.unidadMedida?.nombre || '',
+        proveedor: mov.producto?.proveedor?.nombre || '', // puede venir null
+        bodega: mov.bodega?.nombre || '',
+      }));
+
+      setData(movimientos);
+      setFullData(movimientos);
+    } catch (error) {
+      console.error("Error al cargar los movimientos:", error);
+    }
+  };
+
+  fetchData();
+}, []);
+
 
   // Filtra por rango de fechas
   const handleBuscar = (values: Record<string, string>) => {

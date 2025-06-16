@@ -15,7 +15,8 @@ function MovimientoList() {
   useEffect(() => {
   const obtenerMovimientos = async () => {
     try {
-      const response = await fetch('/mock.json');
+      const response = await fetch('http://localhost:3000/dashboard');
+      console.log('respuesta: ', response)
       const data = await response.json();
 
       if (!data.ultimosMovimientos || data.ultimosMovimientos.length === 0) {

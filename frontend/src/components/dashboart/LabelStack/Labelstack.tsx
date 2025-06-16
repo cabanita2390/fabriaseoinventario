@@ -8,7 +8,7 @@ function Labelstack() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('/mock.json'); // o desde el backend real
+        const res = await fetch('http://localhost:3000/dashboard'); // o desde el backend real
         const data = await res.json();
 
         // Suponiendo que el JSON tiene las propiedades así:

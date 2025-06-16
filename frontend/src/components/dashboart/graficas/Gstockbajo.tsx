@@ -41,7 +41,7 @@ function Gstockbajo() {
   });
 
   useEffect(() => {
-  fetch('/mock.json')
+  fetch('http://localhost:3000/dashboard')
     .then((res) => res.json())
     .then((mockData) => {
       const productos: Producto[] = mockData.top5ProductosMasBajoStock;
