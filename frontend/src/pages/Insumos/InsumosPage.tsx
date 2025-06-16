@@ -7,7 +7,7 @@ import Tabla from "../../components/Movimientos/Tabla";
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, ButtonGroup, ButtonContainer, ButtonWrapper, StyledButton } from '../../styles/Insumos.css';
 import Swal from 'sweetalert2';
-import '../../styles/Insumos/Insumos.css';
+
 
 // Tipado del formulario
 interface FormState {
@@ -189,13 +189,6 @@ function InsumosPage() {
           options={["seleccione una opcion","Producto A", "Producto B"]}
         />
 
-        <Select
-            label="Unidad de Medida"
-            name="unidad"
-            value={form.unidad}
-            onChange={handleChange}
-            options={["seleccione una opcion", "Litros", "Gramos", "Unidades"]}
-        />
         <Input
             label="Cantidad"
             name="cantidad"
@@ -220,7 +213,7 @@ function InsumosPage() {
             name="unidad"
             value={form.unidad} // Vacío por defecto
             onChange={handleChange}
-            options={["seleccione una opcion","Litros", "Gramos", "Unidades"]}
+            options={["seleccione una opcion", "KG", "Unidades"]}
         />
 
         <Select
@@ -246,7 +239,8 @@ function InsumosPage() {
 
       {/* TABLA */}
       <section>
-        <h1>Movimientos</h1>
+          <h1 style={{ marginBottom: '20px' }}>Movimientos</h1>
+
         <Tabla mostrarFiltro={false} mostrarExportar={false} />
       </section>
     </Home>
