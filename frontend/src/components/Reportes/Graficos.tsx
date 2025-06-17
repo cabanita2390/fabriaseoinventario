@@ -19,13 +19,20 @@ const Graficos = () => {
   const [data, setData] = useState<Movimiento[]>([]);
   const [allData, setAllData] = useState<Movimiento[]>([]); // Conserva los datos completos
 
-  useEffect(() => {
+useEffect(() => {
   const fetchData = async () => {
     try {
-      const res = await fetch('/mock.json');
+      const res = await fetch('http://localhost:3000/movimiento');
       const json = await res.json();
-      setAllData(json.movimientosPorProducto);
-      setData(json.movimientosPorProducto);
+
+      const movimientos: Movimiento[] = json.map((mov: any) => ({
+        fecha: mov.fechaMovimiento.split('T')[0],
+        nombre: mov.producto?.nombre || '',
+        cantidad: mov.cantidad || 0,
+      }));
+
+      setAllData(movimientos);
+      setData(movimientos);
     } catch (error) {
       console.error("Error cargando movimientos:", error);
     }
