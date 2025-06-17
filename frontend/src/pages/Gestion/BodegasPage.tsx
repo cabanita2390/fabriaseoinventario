@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Home from '../../components/Home';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import { ModalFooter } from '../../styles/ui/Modal.css';
-import { Header } from '../../styles/Gestion/Gestion.css';
+import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
+import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
 type Bodega = {
@@ -22,9 +24,10 @@ const initialForm: Bodega = {
 };
 
 const BodegasPage = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState<Bodega>(initialForm);
   const [data, setData] = useState<Bodega[]>([]);
-   const [fullData, setFullData] = useState<Bodega[]>([]);
+  const [fullData, setFullData] = useState<Bodega[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -34,22 +37,21 @@ const BodegasPage = () => {
     { header: 'Ubicación', accessor: 'ubicacion' } 
   ];
 
-
-  // Carga los datos desde mock.json
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/bodega');
-      const bodegas = await response.json(); 
-      setData(bodegas); 
-      setFullData(bodegas);
-    } catch (error) {
-      console.error("Error al cargar las bodegas:", error);
-      Swal.fire('Error', 'No se pudieron cargar las bodegas', 'error');
-    }
-  };
-  fetchData();
-}, []);
+  // Carga los datos desde el backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/bodega');
+        const bodegas = await response.json();
+        setData(bodegas);
+        setFullData(bodegas);
+      } catch (error) {
+        console.error("Error al cargar las bodegas:", error);
+        Swal.fire('Error', 'No se pudieron cargar las bodegas', 'error');
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({
@@ -67,7 +69,7 @@ useEffect(() => {
     try {
       const newData = isEditMode
         ? data.map(item => (item.id === form.id ? form : item))
-        : [...data, { ...form, id: Date.now() }]; 
+        : [...data, { ...form, id: Date.now() }]; // ID numérico
       
       setData(newData);
       setFullData(newData);
@@ -104,15 +106,20 @@ useEffect(() => {
   return (
     <Home>
       <Header>
-        <Button 
-          onClick={() => {
-            setForm(initialForm);
-            setIsEditMode(false);
-            setShowModal(true);
-          }}
-        >
-          Agregar Bodega
-        </Button>
+        <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+          <BackButton onClick={() => navigate('/gestion')}>
+            <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
+          </BackButton>
+          <Button 
+            onClick={() => {
+              setForm(initialForm);
+              setIsEditMode(false);
+              setShowModal(true);
+            }}
+          >
+            Agregar Bodega
+          </Button>
+        </div>
       </Header>
 
      <DataTable<Bodega>
@@ -137,7 +144,7 @@ useEffect(() => {
           <Input 
             label="Ubicación" 
             name="ubicacion" 
-            value={form.ubicacion || ''}  
+            value={form.ubicacion || ''} // Maneja null
             onChange={handleChange} 
           />
 

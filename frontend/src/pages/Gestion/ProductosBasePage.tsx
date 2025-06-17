@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Home from '../../components/Home';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import { ModalFooter } from '../../styles/ui/Modal.css';
-import { Header } from '../../styles/Gestion/Gestion.css';
+import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
+import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-import SearchBar from '../../components/ui/Searchbar';
 
 type Presentacion = {
   id: number;
@@ -52,29 +53,18 @@ const initialForm: ProductoForm = {
 };
 
 const ProductosBasePage = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState<ProductoForm>(initialForm);
   const [data, setData] = useState<Producto[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [filtro, setFiltro] = useState('');
 
-  // Preparamos los datos para la tabla
-  const tableData = data
-  .filter(item => {
-    const texto = filtro.toLowerCase();
-    return (
-      item.nombre.toLowerCase().includes(texto) ||
-      item.tipoProducto.toLowerCase().includes(texto) ||
-      item.presentacion.nombre.toLowerCase().includes(texto) ||
-      item.unidadMedida.nombre.toLowerCase().includes(texto)
-    );
-  })
-  .map(item => ({
+  // Preparamos los datos para la tabla (versión única)
+  const tableData = data.map(item => ({
     ...item,
     presentacion: item.presentacion.nombre,
     unidadMedida: item.unidadMedida.nombre
   }));
-
 
   const columns = [
     { header: 'ID', accessor: 'id' },
@@ -123,11 +113,11 @@ const ProductosBasePage = () => {
         subtipoInsumo: form.subtipoInsumo,
         estado: form.estado,
         presentacion: {
-          id: 1, // Esto debería venir de un selector en el formulario
+          id: 1,
           nombre: form.presentacion
         },
         unidadMedida: {
-          id: 1, // Esto debería venir de un selector en el formulario
+          id: 1,
           nombre: form.unidad
         },
         proveedor: form.proveedor
@@ -147,7 +137,6 @@ const ProductosBasePage = () => {
   };
 
   const handleEdit = (row: any) => {
-    // Buscamos el producto original en los datos para obtener la estructura completa
     const originalProduct = data.find(p => p.id === row.id);
     if (!originalProduct) return;
 
@@ -184,17 +173,21 @@ const ProductosBasePage = () => {
   return (
     <Home>
       <Header>
-        <Button
-          onClick={() => {
-            setForm(initialForm);
-            setIsEditMode(false);
-            setShowModal(true);
-          }}
-        >
-          Agregar Producto
-        </Button>
+        <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+          <BackButton onClick={() => navigate('/gestion')}>
+            <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
+          </BackButton>
+          <Button
+            onClick={() => {
+              setForm(initialForm);
+              setIsEditMode(false);
+              setShowModal(true);
+            }}
+          >
+            Agregar Producto
+          </Button>
+        </div>
       </Header>
-      <SearchBar onSearch={setFiltro} placeholder="Buscar productos..." />
 
       <DataTable
         columns={columns}
