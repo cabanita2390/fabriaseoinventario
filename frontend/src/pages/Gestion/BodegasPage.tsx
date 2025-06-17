@@ -29,9 +29,9 @@ const BodegasPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
 
   const columns = [
-    { header: 'ID', accessor: 'id' },          // ✅ Coincide con Bodega.id (number)
-    { header: 'Nombre', accessor: 'nombre' },  // ✅ Coincide con Bodega.nombre
-    { header: 'Ubicación', accessor: 'ubicacion' } // ✅ Coincide con Bodega.ubicacion
+    { header: 'ID', accessor: 'id' },          
+    { header: 'Nombre', accessor: 'nombre' },  
+    { header: 'Ubicación', accessor: 'ubicacion' } 
   ];
 
 
@@ -40,8 +40,8 @@ useEffect(() => {
   const fetchData = async () => {
     try {
       const response = await fetch('http://localhost:3000/bodega');
-      const bodegas = await response.json(); // ⬅️ No uses .bodegas (no existe)
-      setData(bodegas); // ✅ Guarda el array directamente
+      const bodegas = await response.json(); 
+      setData(bodegas); 
       setFullData(bodegas);
     } catch (error) {
       console.error("Error al cargar las bodegas:", error);
@@ -67,7 +67,7 @@ useEffect(() => {
     try {
       const newData = isEditMode
         ? data.map(item => (item.id === form.id ? form : item))
-        : [...data, { ...form, id: Date.now() }]; // ⬅️ ID numérico (ej: 171234567890)
+        : [...data, { ...form, id: Date.now() }]; 
       
       setData(newData);
       setFullData(newData);
@@ -117,7 +117,7 @@ useEffect(() => {
 
      <DataTable<Bodega>
         columns={columns}
-        data={data}           // ✅ data es Bodega[]
+        data={data}          
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
