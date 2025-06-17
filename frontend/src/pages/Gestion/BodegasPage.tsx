@@ -9,15 +9,16 @@ import { Header } from '../../styles/Gestion/Gestion.css';
 import Swal from 'sweetalert2';
 
 type Bodega = {
-  id: string;
+  id: number;  
   nombre: string;
-  ubicacion: string;
+  ubicacion: string | null; 
 };
 
+
 const initialForm: Bodega = {
-  id: '',
+  id: 0,              
   nombre: '',
-  ubicacion: ''
+  ubicacion: null     
 };
 
 const BodegasPage = () => {
@@ -28,29 +29,33 @@ const BodegasPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
 
   const columns = [
-    { header: 'ID', accessor: 'id' },
-    { header: 'Nombre', accessor: 'nombre' },
-    { header: 'Ubicación', accessor: 'ubicacion' }
+    { header: 'ID', accessor: 'id' },          // ✅ Coincide con Bodega.id (number)
+    { header: 'Nombre', accessor: 'nombre' },  // ✅ Coincide con Bodega.nombre
+    { header: 'Ubicación', accessor: 'ubicacion' } // ✅ Coincide con Bodega.ubicacion
   ];
 
 
   // Carga los datos desde mock.json
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/Gestion.mock.json');
-        const json = await response.json();
-        setData(json.bodegas || []);
-        setFullData(json.bodegas || []);
-      } catch (error) {
-        console.error("Error al cargar las bodegas:", error);
-      }
-    };
-    fetchData();
-  }, []);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/bodega');
+      const bodegas = await response.json(); // ⬅️ No uses .bodegas (no existe)
+      setData(bodegas); // ✅ Guarda el array directamente
+      setFullData(bodegas);
+    } catch (error) {
+      console.error("Error al cargar las bodegas:", error);
+      Swal.fire('Error', 'No se pudieron cargar las bodegas', 'error');
+    }
+  };
+  fetchData();
+}, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value || null, // Convierte "" (vacío) → null
+    });
   };
 
   const handleSave = () => {
@@ -61,10 +66,11 @@ const BodegasPage = () => {
 
     try {
       const newData = isEditMode
-        ? data.map(item => item.id === form.id ? form : item)
-        : [...data, { ...form, id: `${Date.now()}`.slice(-4) }];
+        ? data.map(item => (item.id === form.id ? form : item))
+        : [...data, { ...form, id: Date.now() }]; // ⬅️ ID numérico (ej: 171234567890)
       
       setData(newData);
+      setFullData(newData);
       Swal.fire('Éxito', 'Bodega guardada correctamente', 'success');
       setShowModal(false);
       setForm(initialForm);
@@ -109,9 +115,9 @@ const BodegasPage = () => {
         </Button>
       </Header>
 
-      <DataTable<Bodega>
+     <DataTable<Bodega>
         columns={columns}
-        data={data}
+        data={data}           // ✅ data es Bodega[]
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -131,7 +137,7 @@ const BodegasPage = () => {
           <Input 
             label="Ubicación" 
             name="ubicacion" 
-            value={form.ubicacion} 
+            value={form.ubicacion || ''}  
             onChange={handleChange} 
           />
 
