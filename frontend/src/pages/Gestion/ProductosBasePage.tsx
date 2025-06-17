@@ -7,6 +7,7 @@ import DataTable from '../../components/ui/DataTable';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header } from '../../styles/Gestion/Gestion.css';
 import Swal from 'sweetalert2';
+import SearchBar from '../../components/ui/Searchbar';
 
 type Presentacion = {
   id: number;
@@ -55,13 +56,25 @@ const ProductosBasePage = () => {
   const [data, setData] = useState<Producto[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [filtro, setFiltro] = useState('');
 
   // Preparamos los datos para la tabla
-  const tableData = data.map(item => ({
+  const tableData = data
+  .filter(item => {
+    const texto = filtro.toLowerCase();
+    return (
+      item.nombre.toLowerCase().includes(texto) ||
+      item.tipoProducto.toLowerCase().includes(texto) ||
+      item.presentacion.nombre.toLowerCase().includes(texto) ||
+      item.unidadMedida.nombre.toLowerCase().includes(texto)
+    );
+  })
+  .map(item => ({
     ...item,
-    presentacion: item.presentacion.nombre, // Convertimos a string
-    unidadMedida: item.unidadMedida.nombre  // Convertimos a string
+    presentacion: item.presentacion.nombre,
+    unidadMedida: item.unidadMedida.nombre
   }));
+
 
   const columns = [
     { header: 'ID', accessor: 'id' },
@@ -181,6 +194,7 @@ const ProductosBasePage = () => {
           Agregar Producto
         </Button>
       </Header>
+      <SearchBar onSearch={setFiltro} placeholder="Buscar productos..." />
 
       <DataTable
         columns={columns}
