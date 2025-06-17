@@ -8,49 +8,77 @@ import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header } from '../../styles/Gestion/Gestion.css';
 import Swal from 'sweetalert2';
 
-type Producto = {
-  id: string;
+type Presentacion = {
+  id: number;
   nombre: string;
-  presentacion: string;
-  unidad: string;
-  proveedor: string;
-  tipoProducto?: string;
-  estado?: string;
 };
 
-const initialForm: Producto = {
-  id: '',
+type UnidadMedida = {
+  id: number;
+  nombre: string;
+};
+
+type Producto = {
+  id: number;
+  nombre: string;
+  tipoProducto: string;
+  subtipoInsumo: string | null;
+  estado: string;
+  presentacion: Presentacion;
+  unidadMedida: UnidadMedida;
+  proveedor: string | null;
+};
+
+type ProductoForm = {
+  id?: number;
+  nombre: string;
+  tipoProducto: string;
+  subtipoInsumo: string | null;
+  estado: string;
+  presentacion: string;
+  unidad: string;
+  proveedor: string | null;
+};
+
+const initialForm: ProductoForm = {
   nombre: '',
+  tipoProducto: 'MATERIA_PRIMA',
+  subtipoInsumo: null,
+  estado: 'ACTIVO',
   presentacion: '',
   unidad: '',
-  proveedor: '',
-  tipoProducto: 'Insumo',
-  estado: 'Activo'
+  proveedor: null
 };
 
 const ProductosBasePage = () => {
-  const [form, setForm] = useState<Producto>(initialForm);
+  const [form, setForm] = useState<ProductoForm>(initialForm);
   const [data, setData] = useState<Producto[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // Preparamos los datos para la tabla
+  const tableData = data.map(item => ({
+    ...item,
+    presentacion: item.presentacion.nombre, // Convertimos a string
+    unidadMedida: item.unidadMedida.nombre  // Convertimos a string
+  }));
 
   const columns = [
     { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
     { header: 'Presentación', accessor: 'presentacion' },
-    { header: 'Unidad', accessor: 'unidad' },
-    { header: 'Proveedor', accessor: 'proveedor' },
+    { header: 'Unidad', accessor: 'unidadMedida' },
     { header: 'Tipo', accessor: 'tipoProducto' },
     { header: 'Estado', accessor: 'estado' }
   ];
 
-  // Cargar datos desde JSON
+  // Cargar datos desde la API
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/Gestion.mock.json');
-        const json = await response.json();
-        setData(json.productos || []);
+        const response = await fetch('http://localhost:3000/producto');
+        const productos = await response.json();
+        setData(productos);
       } catch (error) {
         console.error("Error cargando productos:", error);
         Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
@@ -60,25 +88,41 @@ const ProductosBasePage = () => {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({ 
+      ...form, 
+      [e.target.name]: e.target.value 
+    });
   };
 
   const handleSave = () => {
-    const { nombre, presentacion, unidad, proveedor } = form;
+    const { nombre, presentacion, unidad } = form;
 
-    if (!nombre || !presentacion || !unidad || !proveedor) {
+    if (!nombre || !presentacion || !unidad) {
       Swal.fire('Campos obligatorios', 'Completa todos los campos', 'warning');
       return;
     }
 
     try {
-      const newData = isEditMode
-        ? data.map(item => item.id === form.id ? form : item)
-        : [...data, { 
-            ...form, 
-            id: `P${(data.length + 1).toString().padStart(3, '0')}`,
-            estado: 'Activo'
-          }];
+      const newProduct: Producto = {
+        id: isEditMode && form.id ? form.id : Date.now(),
+        nombre: form.nombre,
+        tipoProducto: form.tipoProducto,
+        subtipoInsumo: form.subtipoInsumo,
+        estado: form.estado,
+        presentacion: {
+          id: 1, // Esto debería venir de un selector en el formulario
+          nombre: form.presentacion
+        },
+        unidadMedida: {
+          id: 1, // Esto debería venir de un selector en el formulario
+          nombre: form.unidad
+        },
+        proveedor: form.proveedor
+      };
+
+      const newData = isEditMode && form.id
+        ? data.map(item => item.id === form.id ? newProduct : item)
+        : [...data, newProduct];
       
       setData(newData);
       Swal.fire('¡Guardado!', 'Producto registrado correctamente', 'success');
@@ -89,13 +133,26 @@ const ProductosBasePage = () => {
     }
   };
 
-  const handleEdit = (row: Producto) => {
-    setForm(row);
+  const handleEdit = (row: any) => {
+    // Buscamos el producto original en los datos para obtener la estructura completa
+    const originalProduct = data.find(p => p.id === row.id);
+    if (!originalProduct) return;
+
+    setForm({
+      id: originalProduct.id,
+      nombre: originalProduct.nombre,
+      tipoProducto: originalProduct.tipoProducto,
+      subtipoInsumo: originalProduct.subtipoInsumo,
+      estado: originalProduct.estado,
+      presentacion: originalProduct.presentacion.nombre,
+      unidad: originalProduct.unidadMedida.nombre,
+      proveedor: originalProduct.proveedor
+    });
     setIsEditMode(true);
     setShowModal(true);
   };
 
-  const handleDelete = (row: Producto) => {
+  const handleDelete = (row: any) => {
     Swal.fire({
       title: '¿Eliminar producto?',
       text: 'Esta acción no se puede deshacer',
@@ -125,9 +182,9 @@ const ProductosBasePage = () => {
         </Button>
       </Header>
 
-      <DataTable<Producto>
+      <DataTable
         columns={columns}
-        data={data}
+        data={tableData}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -145,6 +202,15 @@ const ProductosBasePage = () => {
             onChange={handleChange} 
             required 
           />
+          
+          <Input 
+            label="Tipo de Producto *" 
+            name="tipoProducto" 
+            value={form.tipoProducto} 
+            onChange={handleChange} 
+            required 
+          />
+          
           <Input 
             label="Presentación *" 
             name="presentacion" 
@@ -152,17 +218,26 @@ const ProductosBasePage = () => {
             onChange={handleChange} 
             required 
           />
+          
           <Input 
-            label="Unidad *" 
+            label="Unidad de Medida *" 
             name="unidad" 
             value={form.unidad} 
             onChange={handleChange} 
             required 
           />
+          
           <Input 
-            label="Proveedor *" 
+            label="Proveedor" 
             name="proveedor" 
-            value={form.proveedor} 
+            value={form.proveedor || ''} 
+            onChange={handleChange} 
+          />
+          
+          <Input 
+            label="Estado *" 
+            name="estado" 
+            value={form.estado} 
             onChange={handleChange} 
             required 
           />
