@@ -11,15 +11,15 @@ import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
 type Bodega = {
-  id: string;
+  id: number;  
   nombre: string;
-  ubicacion: string;
+  ubicacion: string | null; 
 };
 
 const initialForm: Bodega = {
-  id: '',
+  id: 0,              
   nombre: '',
-  ubicacion: ''
+  ubicacion: null     
 };
 
 const BodegasPage = () => {
@@ -36,23 +36,27 @@ const BodegasPage = () => {
     { header: 'Ubicación', accessor: 'ubicacion' }
   ];
 
-  // Carga los datos desde mock.json
+  // Carga los datos desde el backend
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/Gestion.mock.json');
-        const json = await response.json();
-        setData(json.bodegas || []);
-        setFullData(json.bodegas || []);
+        const response = await fetch('http://localhost:3000/bodega');
+        const bodegas = await response.json();
+        setData(bodegas);
+        setFullData(bodegas);
       } catch (error) {
         console.error("Error al cargar las bodegas:", error);
+        Swal.fire('Error', 'No se pudieron cargar las bodegas', 'error');
       }
     };
     fetchData();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value || null, // Convierte "" (vacío) → null
+    });
   };
 
   const handleSave = () => {
@@ -63,10 +67,11 @@ const BodegasPage = () => {
 
     try {
       const newData = isEditMode
-        ? data.map(item => item.id === form.id ? form : item)
-        : [...data, { ...form, id: `${Date.now()}`.slice(-4) }];
+        ? data.map(item => (item.id === form.id ? form : item))
+        : [...data, { ...form, id: Date.now() }]; // ID numérico
       
       setData(newData);
+      setFullData(newData);
       Swal.fire('Éxito', 'Bodega guardada correctamente', 'success');
       setShowModal(false);
       setForm(initialForm);
@@ -138,7 +143,7 @@ const BodegasPage = () => {
           <Input 
             label="Ubicación" 
             name="ubicacion" 
-            value={form.ubicacion} 
+            value={form.ubicacion || ''} // Maneja null
             onChange={handleChange} 
           />
 
