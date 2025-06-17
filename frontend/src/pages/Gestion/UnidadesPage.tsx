@@ -1,44 +1,54 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Home from '../../components/Home';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import { ModalFooter } from '../../styles/ui/Modal.css';
-import { Header } from '../../styles/Gestion/Gestion.css';
+import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
+import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
 type UnidadMedida = {
-  id: string;
+  id: number;
   nombre: string;
 };
 
 const initialForm: UnidadMedida = {
-  id: '',
+  id: 0,
   nombre: '',
 };
 
 const UnidadesPage = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState<UnidadMedida>(initialForm);
   const [data, setData] = useState<UnidadMedida[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const columns = [
     { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
   ];
 
-  // Cargar datos desde JSON
+  // Cargar datos desde el backend
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const response = await fetch('/Gestion.mock.json');
-        const json = await response.json();
-        setData(json.unidadmedida || []);
+        const response = await fetch('http://localhost:3000/unidadmedida');
+        if (!response.ok) {
+          throw new Error('Error al cargar las unidades de medida');
+        }
+        const unidades = await response.json();
+        setData(unidades);
       } catch (error) {
         console.error("Error cargando unidades:", error);
-        Swal.fire('Error', 'No se pudieron cargar las unidades', 'error');
+        Swal.fire('Error', 'No se pudieron cargar las unidades de medida', 'error');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
@@ -48,23 +58,53 @@ const UnidadesPage = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.nombre.trim()) {
-      Swal.fire('Error', 'Nombre es obligatorio', 'warning');
+      Swal.fire('Campo obligatorio', 'El nombre es requerido', 'warning');
       return;
     }
 
+    setIsLoading(true);
     try {
-      const newData = isEditMode
-        ? data.map(item => item.id === form.id ? form : item)
-        : [...data, { ...form, id: `${Date.now()}`.slice(-4) }];
-      
-      setData(newData);
-      Swal.fire('Éxito', 'Unidad guardada correctamente', 'success');
-      setShowModal(false);
+      let response;
+      if (isEditMode) {
+        // Actualizar unidad existente
+        response = await fetch(`http://localhost:3000/unidadmedida/${form.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(form),
+        });
+      } else {
+        // Crear nueva unidad
+        response = await fetch('http://localhost:3000/unidadmedida', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(form),
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error('Error al guardar la unidad');
+      }
+
+      // Recargar los datos después de guardar
+      const updatedResponse = await fetch('http://localhost:3000/unidadmedida');
+      const updatedData = await updatedResponse.json();
+      setData(updatedData);
+
+      Swal.fire('¡Guardado!', 'La unidad fue registrada correctamente', 'success');
       setForm(initialForm);
+      setShowModal(false);
+      setIsEditMode(false);
     } catch (error) {
-      Swal.fire('Error', 'No se pudo guardar', 'error');
+      console.error('Error:', error);
+      Swal.fire('¡Error!', 'Ocurrió un error al guardar la unidad', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -74,45 +114,75 @@ const UnidadesPage = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (row: UnidadMedida) => {
-    Swal.fire({
+  const handleDelete = async (row: UnidadMedida) => {
+    const result = await Swal.fire({
       title: '¿Eliminar unidad?',
-      text: 'Esta acción no se puede deshacer',
+      text: 'Esta acción no se puede deshacer.',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setData(data.filter(item => item.id !== row.id));
-        Swal.fire('Eliminada', 'La unidad ha sido eliminada', 'success');
-      }
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
     });
+
+    if (result.isConfirmed) {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`http://localhost:3000/unidadmedida/${row.id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al eliminar la unidad');
+        }
+
+        // Actualizar los datos después de eliminar
+        const updatedResponse = await fetch('http://localhost:3000/unidadmedida');
+        const updatedData = await updatedResponse.json();
+        setData(updatedData);
+
+        Swal.fire('Eliminado', 'La unidad ha sido eliminada.', 'success');
+      } catch (error) {
+        console.error('Error:', error);
+        Swal.fire('Error', 'No se pudo eliminar la unidad', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   return (
     <Home>
       <Header>
-        <Button
-          onClick={() => {
-            setForm(initialForm);
-            setIsEditMode(false);
-            setShowModal(true);
-          }}
-        >
-          Agregar Unidad
-        </Button>
+        <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+          <BackButton onClick={() => navigate('/gestion')}>
+            <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
+          </BackButton>
+          <Button
+            onClick={() => {
+              setForm(initialForm);
+              setIsEditMode(false);
+              setShowModal(true);
+            }}
+            disabled={isLoading}
+          >
+            Agregar Unidad
+          </Button>
+        </div>
       </Header>
 
-      <DataTable<UnidadMedida>
-        columns={columns}
-        data={data}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {isLoading ? (
+        <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando...</div>
+      ) : (
+        <DataTable<UnidadMedida>
+          columns={columns}
+          data={data}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
 
       {showModal && (
-        <Modal onClose={() => setShowModal(false)}>
+        <Modal onClose={() => !isLoading && setShowModal(false)}>
           <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>
             {isEditMode ? 'Editar Unidad' : 'Agregar Unidad'}
           </h2>
@@ -123,10 +193,15 @@ const UnidadesPage = () => {
             value={form.nombre} 
             onChange={handleChange} 
             required 
+            disabled={isLoading}
           />
           <ModalFooter>
-            <Button onClick={handleSave}>Guardar</Button>
-            <Button onClick={() => setShowModal(false)}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading ? 'Guardando...' : 'Guardar'}
+            </Button>
+            <Button onClick={() => !isLoading && setShowModal(false)} disabled={isLoading}>
+              Cerrar
+            </Button>
           </ModalFooter>
         </Modal>
       )}
