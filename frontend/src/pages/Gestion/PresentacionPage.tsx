@@ -5,7 +5,7 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import { ModalFooter } from '../../styles/ui/Modal.css';
-import { Header } from '../../styles/Gestion/Gestion.css';
+import { Header } from '../../styles/Insumos.css';
 import Swal from 'sweetalert2';
 
 const initialForm = {

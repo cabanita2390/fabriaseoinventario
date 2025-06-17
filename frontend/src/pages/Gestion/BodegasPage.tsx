@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Home from '../../components/Home';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import { ModalFooter } from '../../styles/ui/Modal.css';
-import { Header } from '../../styles/Gestion/Gestion.css';
+import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
+import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
 type Bodega = {
@@ -21,9 +23,10 @@ const initialForm: Bodega = {
 };
 
 const BodegasPage = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState<Bodega>(initialForm);
   const [data, setData] = useState<Bodega[]>([]);
-   const [fullData, setFullData] = useState<Bodega[]>([]);
+  const [fullData, setFullData] = useState<Bodega[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -32,7 +35,6 @@ const BodegasPage = () => {
     { header: 'Nombre', accessor: 'nombre' },
     { header: 'Ubicación', accessor: 'ubicacion' }
   ];
-
 
   // Carga los datos desde mock.json
   useEffect(() => {
@@ -98,15 +100,20 @@ const BodegasPage = () => {
   return (
     <Home>
       <Header>
-        <Button 
-          onClick={() => {
-            setForm(initialForm);
-            setIsEditMode(false);
-            setShowModal(true);
-          }}
-        >
-          Agregar Bodega
-        </Button>
+        <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+          <BackButton onClick={() => navigate('/gestion')}>
+            <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
+          </BackButton>
+          <Button 
+            onClick={() => {
+              setForm(initialForm);
+              setIsEditMode(false);
+              setShowModal(true);
+            }}
+          >
+            Agregar Bodega
+          </Button>
+        </div>
       </Header>
 
       <DataTable<Bodega>

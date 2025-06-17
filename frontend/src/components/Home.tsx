@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Sidebar from './Sidebar/Sidebar';
 import { useLocation } from 'react-router-dom';
@@ -22,18 +21,18 @@ function Home({ children }: HomeProps) {
     '/gestion/presentacion': 'Gestión de Presentación',
     '/gestion/usuarios': 'Gestión de Usuarios',
     '/gestion/proveedores': 'Gestión de Proveedores',
-    '/Inventario': 'Inventario'
+    '/inventario': 'Inventario'
   };
 
-  const pageTitle = routeTitles[location.pathname] || ''; 
+  const pageTitle = routeTitles[location.pathname] || '';
 
   return (
     <div className="container">
       <Sidebar />
-      <div className="main">
-        {pageTitle && <h1>{pageTitle}</h1>}
+      <main className="main-content">
+        {pageTitle && <h1 className="page-title">{pageTitle}</h1>}
         {children}
-      </div>
+      </main>
     </div>
   );
 }
