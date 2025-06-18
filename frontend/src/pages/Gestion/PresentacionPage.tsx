@@ -5,6 +5,7 @@ import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
+import SearchBar from '../../components/ui/Searchbar';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -24,6 +25,7 @@ const PresentacionPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<Presentacion>(initialForm);
   const [data, setData] = useState<Presentacion[]>([]);
+  const [filtro, setFiltro] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -32,7 +34,10 @@ const PresentacionPage = () => {
     { header: 'Nombre', accessor: 'nombre' },
   ];
 
-  // Cargar datos desde el backend
+  const datosFiltrados = data.filter((presentacion) =>
+    presentacion.nombre.toLowerCase().includes(filtro)
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -59,17 +64,15 @@ const PresentacionPage = () => {
 
     try {
       if (isEditMode) {
-        // Actualizar presentación existente
         setData(data.map((item) => (item.id === form.id ? form : item)));
       } else {
-        // Crear nueva presentación
         const newPresentacion = {
           ...form,
-          id: Date.now() // ID temporal hasta que se guarde en el backend
+          id: Date.now()
         };
         setData([...data, newPresentacion]);
       }
-      
+
       setForm(initialForm);
       setShowModal(false);
       setIsEditMode(false);
@@ -105,6 +108,12 @@ const PresentacionPage = () => {
     <Home>
       <Header>
         <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+
+          <SearchBar
+        onSearch={setFiltro}
+        placeholder="Buscar presentación..."
+        className="search-bar-container"
+      />
           <BackButton onClick={() => navigate('/gestion')}>
             <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
           </BackButton>
@@ -120,11 +129,13 @@ const PresentacionPage = () => {
         </div>
       </Header>
 
-      <DataTable 
-        columns={columns} 
-        data={data} 
-        onEdit={handleEdit} 
-        onDelete={handleDelete} 
+      
+
+      <DataTable
+        columns={columns}
+        data={datosFiltrados}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
 
       {showModal && (
@@ -133,11 +144,11 @@ const PresentacionPage = () => {
             {isEditMode ? 'Editar Presentación' : 'Agregar Presentación'}
           </h2>
 
-          <Input 
-            label="Nombre *" 
-            name="nombre" 
-            value={form.nombre} 
-            onChange={handleChange} 
+          <Input
+            label="Nombre *"
+            name="nombre"
+            value={form.nombre}
+            onChange={handleChange}
             required
           />
 

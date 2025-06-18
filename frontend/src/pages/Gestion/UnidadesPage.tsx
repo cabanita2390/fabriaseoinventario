@@ -5,6 +5,7 @@ import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
+import SearchBar from '../../components/ui/Searchbar';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -24,6 +25,7 @@ const UnidadesPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<UnidadMedida>(initialForm);
   const [data, setData] = useState<UnidadMedida[]>([]);
+  const [filtro, setFiltro] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,15 +35,16 @@ const UnidadesPage = () => {
     { header: 'Nombre', accessor: 'nombre' },
   ];
 
-  // Cargar datos desde el backend
+  const unidadesFiltradas = data.filter((unidad) =>
+    unidad.nombre.toLowerCase().includes(filtro)
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const response = await fetch('http://localhost:3000/unidadmedida');
-        if (!response.ok) {
-          throw new Error('Error al cargar las unidades de medida');
-        }
+        if (!response.ok) throw new Error('Error al cargar las unidades de medida');
         const unidades = await response.json();
         setData(unidades);
       } catch (error) {
@@ -68,33 +71,23 @@ const UnidadesPage = () => {
     try {
       let response;
       if (isEditMode) {
-        // Actualizar unidad existente
         response = await fetch(`http://localhost:3000/unidadmedida/${form.id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         });
       } else {
-        // Crear nueva unidad
         response = await fetch('http://localhost:3000/unidadmedida', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         });
       }
 
-      if (!response.ok) {
-        throw new Error('Error al guardar la unidad');
-      }
+      if (!response.ok) throw new Error('Error al guardar la unidad');
 
-      // Recargar los datos después de guardar
-      const updatedResponse = await fetch('http://localhost:3000/unidadmedida');
-      const updatedData = await updatedResponse.json();
-      setData(updatedData);
+      const updated = await fetch('http://localhost:3000/unidadmedida');
+      setData(await updated.json());
 
       Swal.fire('¡Guardado!', 'La unidad fue registrada correctamente', 'success');
       setForm(initialForm);
@@ -130,15 +123,10 @@ const UnidadesPage = () => {
         const response = await fetch(`http://localhost:3000/unidadmedida/${row.id}`, {
           method: 'DELETE',
         });
+        if (!response.ok) throw new Error('Error al eliminar la unidad');
 
-        if (!response.ok) {
-          throw new Error('Error al eliminar la unidad');
-        }
-
-        // Actualizar los datos después de eliminar
-        const updatedResponse = await fetch('http://localhost:3000/unidadmedida');
-        const updatedData = await updatedResponse.json();
-        setData(updatedData);
+        const updated = await fetch('http://localhost:3000/unidadmedida');
+        setData(await updated.json());
 
         Swal.fire('Eliminado', 'La unidad ha sido eliminada.', 'success');
       } catch (error) {
@@ -154,6 +142,8 @@ const UnidadesPage = () => {
     <Home>
       <Header>
         <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+
+          <SearchBar onSearch={setFiltro} placeholder="Buscar unidad de medida..." className="search-bar-container" />
           <BackButton onClick={() => navigate('/gestion')}>
             <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
           </BackButton>
@@ -170,12 +160,14 @@ const UnidadesPage = () => {
         </div>
       </Header>
 
+      
+
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando...</div>
       ) : (
         <DataTable<UnidadMedida>
           columns={columns}
-          data={data}
+          data={unidadesFiltradas}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
@@ -187,14 +179,15 @@ const UnidadesPage = () => {
             {isEditMode ? 'Editar Unidad' : 'Agregar Unidad'}
           </h2>
 
-          <Input 
-            label="Nombre *" 
-            name="nombre" 
-            value={form.nombre} 
-            onChange={handleChange} 
-            required 
+          <Input
+            label="Nombre *"
+            name="nombre"
+            value={form.nombre}
+            onChange={handleChange}
+            required
             disabled={isLoading}
           />
+
           <ModalFooter>
             <Button onClick={handleSave} disabled={isLoading}>
               {isLoading ? 'Guardando...' : 'Guardar'}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+// import "../../styles/Insumos/searchbar.css"
 interface SearchBarProps {
   onSearch: (texto: string) => void;
   placeholder?: string;
