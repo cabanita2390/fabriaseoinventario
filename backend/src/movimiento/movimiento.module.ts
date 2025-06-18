@@ -4,9 +4,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MovimientoService } from './movimiento.service';
 import { MovimientoController } from './movimiento.controller';
 import { Movimiento } from '../entities/movimiento.entity';
+import { Inventario } from 'src/entities/inventario.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Movimiento])],
+  imports: [TypeOrmModule.forFeature([Movimiento, Inventario])],
   controllers: [MovimientoController],
   providers: [MovimientoService],
 })
