@@ -9,7 +9,7 @@ import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-
+import SearchBar from '../../components/ui/Searchbar';
 type Presentacion = {
   id: number;
   nombre: string;
@@ -58,10 +58,21 @@ const ProductosBasePage = () => {
   const [data, setData] = useState<Producto[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-
+  const [filtro, setFiltro] = useState('');
   // Preparamos los datos para la tabla (versión única)
-  const tableData = data.map(item => ({
+  const tableData = data
+  .filter(item => {
+    const texto = filtro.toLowerCase();
+    return (
+      item.nombre.toLowerCase().includes(texto) ||
+      item.tipoProducto.toLowerCase().includes(texto) ||
+      item.presentacion.nombre.toLowerCase().includes(texto) ||
+      item.unidadMedida.nombre.toLowerCase().includes(texto)
+    );
+  })
+  .map(item => ({
     ...item,
+
     presentacion: item.presentacion.nombre,
     unidadMedida: item.unidadMedida.nombre
   }));
@@ -174,6 +185,7 @@ const ProductosBasePage = () => {
     <Home>
       <Header>
         <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+          <SearchBar onSearch={setFiltro} placeholder="Buscar productos..." />
           <BackButton onClick={() => navigate('/gestion')}>
             <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
           </BackButton>
@@ -188,7 +200,7 @@ const ProductosBasePage = () => {
           </Button>
         </div>
       </Header>
-
+       
       <DataTable
         columns={columns}
         data={tableData}
