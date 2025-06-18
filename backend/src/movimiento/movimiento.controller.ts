@@ -18,6 +18,7 @@ export class MovimientoController {
   @Post()
   create(@Body() createMovimientoDto: CreateMovimientoDto) {
     return this.movimientoService.create(createMovimientoDto);
+    console.log('prueba rama');
   }
 
   @Get()
