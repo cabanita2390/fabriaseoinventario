@@ -1,3 +1,6 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Home from '../../components/Home';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
@@ -7,9 +10,6 @@ import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-import React, { useState, useEffect } from 'react';
-import Home from '../../components/Home';
-import { useNavigate } from 'react-router-dom';
 
 type Bodega = {
   id: number;
@@ -20,7 +20,7 @@ type Bodega = {
 const initialForm: Bodega = {
   id: 0,
   nombre: '',
-  ubicacion: null
+  ubicacion: null,
 };
 
 const BodegasPage = () => {
@@ -35,10 +35,10 @@ const BodegasPage = () => {
   const columns = [
     { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
-    { header: 'Ubicación', accessor: 'ubicacion' }
+    { header: 'Ubicación', accessor: 'ubicacion' },
   ];
 
-  const datosFiltrados = fullData.filter(bodega =>
+  const datosFiltrados = fullData.filter((bodega) =>
     bodega.nombre.toLowerCase().includes(filtro) ||
     (bodega.ubicacion?.toLowerCase().includes(filtro) ?? false)
   );
@@ -59,10 +59,7 @@ const BodegasPage = () => {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value || null
-    });
+    setForm({ ...form, [e.target.name]: e.target.value || null });
   };
 
   const handleSave = async () => {
@@ -72,28 +69,46 @@ const BodegasPage = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/bodega', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre: form.nombre,
-          ubicacion: form.ubicacion || null
-        })
-      });
+  const method = isEditMode ? 'PATCH' : 'POST';
+  const url = isEditMode
+    ? `http://localhost:3000/bodega/${form.id}`
+    : 'http://localhost:3000/bodega';
 
-      if (!response.ok) throw new Error('Error en el servidor');
-      const nuevaBodega = await response.json();
+  const payload = {
+    nombre: form.nombre,
+    ubicacion: form.ubicacion || null,
+  };
 
-      setData(prev => [...prev, nuevaBodega]);
-      setFullData(prev => [...prev, nuevaBodega]);
+  const response = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 
-      Swal.fire('Éxito', 'Bodega registrada correctamente', 'success');
-      setShowModal(false);
-      setForm(initialForm);
-    } catch (error) {
-      console.error("Error al guardar:", error);
-      Swal.fire('Error', 'No se pudo guardar la bodega', 'error');
-    }
+  if (!response.ok) throw new Error('Error en el servidor');
+  const result = await response.json();
+
+  const nuevasBodegas = isEditMode
+    ? fullData.map((b) => (b.id === result.id ? result : b))
+    : [...fullData, result];
+
+  setData(nuevasBodegas);
+  setFullData(nuevasBodegas);
+
+  Swal.fire(
+    isEditMode ? 'Actualizado' : 'Registrado',
+    isEditMode ? 'La bodega fue actualizada correctamente' : 'Bodega registrada correctamente',
+    'success'
+  );
+
+  setForm(initialForm);
+  setShowModal(false);
+  setIsEditMode(false);
+} catch (error) {
+  console.error('Error al guardar:', error);
+  Swal.fire('Error', 'No se pudo guardar la bodega', 'error');
+}
+
   };
 
   const handleEdit = (row: Bodega) => {
@@ -109,20 +124,20 @@ const BodegasPage = () => {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      cancelButtonText: 'Cancelar',
     });
 
     if (!confirm.isConfirmed) return;
 
     try {
       const response = await fetch(`http://localhost:3000/bodega/${row.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       });
 
       if (!response.ok) throw new Error('Error al eliminar');
 
-      setData(prev => prev.filter(item => item.id !== row.id));
-      setFullData(prev => prev.filter(item => item.id !== row.id));
+      setData((prev) => prev.filter((item) => item.id !== row.id));
+      setFullData((prev) => prev.filter((item) => item.id !== row.id));
 
       Swal.fire('Eliminada', 'La bodega ha sido eliminada', 'success');
     } catch (error) {
@@ -134,8 +149,12 @@ const BodegasPage = () => {
   return (
     <Home>
       <Header>
-        <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
-           <SearchBar onSearch={setFiltro} placeholder="Buscar por nombre o ubicación..." className="search-bar-container"/>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginLeft: 'auto' }}>
+          <SearchBar
+            onSearch={setFiltro}
+            placeholder="Buscar por nombre o ubicación..."
+            className="search-bar-container"
+          />
           <BackButton onClick={() => navigate('/gestion')}>
             <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
           </BackButton>
@@ -151,7 +170,6 @@ const BodegasPage = () => {
         </div>
       </Header>
 
-
       <DataTable<Bodega>
         columns={columns}
         data={datosFiltrados}
@@ -162,8 +180,9 @@ const BodegasPage = () => {
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
           <h2 style={{ textAlign: 'center' }}>
-            {isEditMode ? 'Editar Bodega' : 'Nueva Bodega'}
+            {isEditMode ? `Editar Bodega #${form.id}` : 'Nueva Bodega'}
           </h2>
+
           <Input
             label="Nombre *"
             name="nombre"
@@ -189,3 +208,4 @@ const BodegasPage = () => {
 };
 
 export default BodegasPage;
+

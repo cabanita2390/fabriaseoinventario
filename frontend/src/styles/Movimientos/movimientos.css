@@ -1,119 +1,85 @@
-/* Botón de exportar */
-.exportbotton {
+/* Contenedor general del filtro */
+.filtro-container {
   margin-bottom: 20px;
+}
+
+/* Botón de exportación alineado a la derecha */
+.filtro-header {
   text-align: right;
+  margin-bottom: 10px;
 }
 
-.exportbotton button {
-  background-color: #007bff;
-  color: white;
-  padding: 8px 16px;
-  font-size: 14px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.exportbotton button:hover {
-  background-color: #0056b3;
-}
-
-/* Filtros de fecha */
-.filtrofechas {
-  border: 1px solid #ccc;         /* Borde gris claro */
-  border-radius: 5px;             /* Bordes redondeados */
-  padding: 10px;                  /* Espaciado interno */
-  margin-bottom: 20px;
+/* Bloque de filtros y barra de búsqueda */
+.filtro-barra {
   display: flex;
-  align-items: center;
-  gap: 10px;
   flex-wrap: wrap;
-  background-color: #f9f9f9;      /* Opcional: fondo claro */
-}
-.filtrofechas label {
-  font-weight: bold;
-}
-
-.filtrofechas input[type="date"] {
-  padding: 6px 10px;
-  font-size: 14px;
+  gap: 1rem;
+  align-items: flex-end;
+  padding: 16px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
 }
 
-.filtrofechas button {
-  background-color: #28a745;
-  color: white;
-  padding: 8px 14px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+/* Cada campo individual (input o select) */
+.filtro-barra .campo {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 200px;
+  min-width: 160px;
 }
 
-.filtrofechas button:hover {
-  background-color: #1e7e34;
+.filtro-barra .campo-busqueda {
+  flex: 2 1 320px;
 }
 
-/* Tabla */
-.tabla-inventario {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  background-color: #fdfdfd;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.tabla-inventario th,
-.tabla-inventario td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: center;
-}
-
-.tabla-inventario th {
-  background-color:  #f0f0f0;
+/* Etiquetas */
+.filtro-barra label {
   font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 4px;
   color: #333;
 }
 
-.acciones {
+/* Inputs y selects */
+.filtro-barra input,
+.filtro-barra select {
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+}
+
+/* Grupo de botones (buscar, limpiar, etc.) */
+.filtro-barra .grupo-botones {
   display: flex;
-  justify-content: center;
-  gap: 10px;
+  gap: 0.5rem;
+  align-items: center;
 }
 
-/* Botones de íconos */
-.btn-icono {
-  background: none;
+/* Botón buscar */
+.btn-buscar {
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
   border: none;
+  border-radius: 6px;
+  font-weight: 500;
   cursor: pointer;
-  font-size: 18px;
-  padding: 6px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s ease;
 }
 
-.btn-icono.modificar{
-  background-color: #efb711;
+.btn-buscar:hover {
+  background-color: #1e7e34;
 }
 
-.btn-icono.eliminar {
-  background-color: #ef0e21;
-}
-
-.btn-icono.modificar:hover {
-  background-color: #a27d0d;
-}
-
-.btn-icono.eliminar:hover {
-  background-color: #931520;
-}
+/* Botón de exportar */
 .btn-exportar {
-  padding: 8px 14px;
+  padding: 8px 16px;
   background-color: #007bff;
   color: white;
+  font-size: 14px;
   border: none;
   border-radius: 6px;
   font-weight: 500;
@@ -123,4 +89,19 @@
 
 .btn-exportar:hover {
   background-color: #0056b3;
+}
+
+/* Responsive fix en móviles */
+@media (max-width: 600px) {
+  .filtro-barra {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filtro-barra .campo,
+  .filtro-barra .campo-busqueda {
+    flex: 1 1 100%;
+  }
+  .filtro-barra .grupo-botones {
+    justify-content: flex-start;
+  }
 }

@@ -50,7 +50,7 @@ const SECCIONES = [
 
 type Tipo =
   | 'Ingreso de materia prima'
-  | 'Salida de materia prima'
+  | ''
   | 'Ingreso de Envase'
   | 'Salida de Envase'
   | 'Ingreso de Etiqueta'
@@ -121,52 +121,64 @@ function InsumosPage() {
     }));
   };
 
-  const handleSave = () => {
-    if (!form.producto || !form.cantidad || !form.bodega || form.bodega === "seleccione una opcion") {
-      Swal.fire({
-        icon: "warning",
-        title: "Campos incompletos",
-        text: "Por favor, selecciona Producto, Cantidad y Bodega antes de guardar.",
-      });
-      return;
+  const handleSave = async () => {
+  if (
+    !form.producto ||
+    !form.cantidad ||
+    !form.bodega ||
+    form.bodega === "seleccione una opcion"
+  ) {
+    Swal.fire({
+      icon: "warning",
+      title: "Campos incompletos",
+      text: "Por favor, selecciona Producto, Cantidad y Bodega antes de guardar.",
+    });
+    return;
+  }
+
+  try {
+    const payload = {
+      tipo: form.tipo,
+      producto: form.producto.nombre,
+      presentacion: form.presentacionSeleccionada?.nombre || "",
+      unidad: form.producto.unidadMedida?.nombre || "",
+      proveedor: form.producto.proveedor?.nombre || "",
+      cantidad: form.cantidad,
+      fecha: form.fecha,
+      descripcion: form.descripcion,
+      bodega: form.bodega,
+    };
+
+    const response = await fetch("http://localhost:3000/movimientos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en el servidor");
     }
 
-    try {
-      const payload = {
-        tipo: form.tipo,
-        producto: form.producto.nombre,
-        presentacion: form.presentacionSeleccionada?.nombre || "",
-        unidad: form.producto.unidadMedida?.nombre || "",
-        proveedor: form.producto.proveedor?.nombre || "",
-        cantidad: form.cantidad,
-        fecha: form.fecha,
-        descripcion: form.descripcion,
-        bodega: form.bodega,
-      };
+    Swal.fire({
+      icon: "success",
+      title: "Guardado",
+      text: "El movimiento ha sido guardado exitosamente.",
+    });
 
-      const jsonData = JSON.stringify(payload, null, 2);
-      const blob = new Blob([jsonData], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "mock.json";
-      a.click();
+    setShowModal(false);
+    setForm(INIT_FORM);
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Hubo un problema al guardar. Por favor, inténtalo nuevamente.",
+    });
+    console.error("Error al guardar:", error);
+  }
+};
 
-      Swal.fire({
-        icon: "success",
-        title: "Guardado",
-        text: "El movimiento ha sido guardado exitosamente.",
-      });
-
-      setShowModal(false);
-      setForm(INIT_FORM);
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Hubo un problema al guardar.",
-      });
-    }
-  };
 
   const cargarProductos = useCallback(async () => {
   try {
@@ -285,7 +297,7 @@ useEffect(() => {
           <Input label="Unidad de Medida" value={form.producto?.unidadMedida?.nombre || ""} disabled />
           <Input label="Proveedor (opcional)" value={form.producto?.proveedor?.nombre || ""} disabled />
           <Input label="Cantidad" name="cantidad" value={form.cantidad} onChange={handleChange} type="number" />
-          <Input label="Fecha" name="fecha" value={form.fecha} disabled />
+          <Input label="" name="fecha" type="hidden" value={form.fecha} disabled />
           <Input label="Descripción" name="descripcion" value={form.descripcion} onChange={handleChange} />
 
           <Select

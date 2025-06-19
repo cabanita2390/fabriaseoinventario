@@ -4,7 +4,6 @@ import Filtro from './Filtro';
 import DataTable from '../ui/DataTable';
 import { FieldConfig } from '../types/FieldConfig';
 
-// Tipado de fila de datos
 interface RowData {
   tipo: string;
   producto: string;
@@ -16,7 +15,6 @@ interface RowData {
   bodega: string;
 }
 
-// Columnas de la tabla
 const columns = [
   { header: "Tipo", accessor: "tipo" },
   { header: "Producto", accessor: "producto" },
@@ -28,7 +26,6 @@ const columns = [
   { header: "Fecha", accessor: "fecha" },
 ];
 
-// Filtros de búsqueda
 const filtros: FieldConfig[] = [
   { tipo: 'date', id: 'fechaInicio', label: 'Fecha de inicio' },
   { tipo: 'date', id: 'fechaFin', label: 'Fecha fin' },
@@ -36,52 +33,60 @@ const filtros: FieldConfig[] = [
 
 function Tabla({ mostrarFiltro = true, mostrarExportar = true }: { mostrarFiltro?: boolean; mostrarExportar?: boolean }) {
   const [data, setData] = useState<RowData[]>([]);
-  const [fullData, setFullData] = useState<RowData[]>([]); // Para mantener todos los datos originales
+  const [fullData, setFullData] = useState<RowData[]>([]);
+  const [filtroTexto, setFiltroTexto] = useState('');
 
-  // Carga los datos desde mock.json
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/movimiento');
-      const json = await response.json();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/movimiento');
+        const json = await response.json();
 
-      const movimientos: RowData[] = json.map((mov: any) => ({
-        tipo: mov.tipo === 'INGRESO' ? 'Entrada' : 'Salida',
-        producto: mov.producto?.nombre || '',
-        cantidad: mov.cantidad,
-        fecha: mov.fechaMovimiento.split('T')[0],
-        descripcion: mov.descripcion || '',
-        unidad: mov.producto?.unidadMedida?.nombre || '',
-        proveedor: mov.producto?.proveedor?.nombre || '', // puede venir null
-        bodega: mov.bodega?.nombre || '',
-      }));
+        const movimientos: RowData[] = json.map((mov: any) => ({
+          tipo: mov.tipo === 'INGRESO' ? 'Entrada' : 'Salida',
+          producto: mov.producto?.nombre || '',
+          cantidad: mov.cantidad,
+          fecha: mov.fechaMovimiento.split('T')[0],
+          descripcion: mov.descripcion || '',
+          unidad: mov.producto?.unidadMedida?.nombre || '',
+          proveedor: mov.producto?.proveedor?.nombre || '',
+          bodega: mov.bodega?.nombre || '',
+        }));
 
-      setData(movimientos);
-      setFullData(movimientos);
-    } catch (error) {
-      console.error("Error al cargar los movimientos:", error);
-    }
-  };
+        setData(movimientos);
+        setFullData(movimientos);
+      } catch (error) {
+        console.error("Error al cargar los movimientos:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
-  fetchData();
-}, []);
-
-
-  // Filtra por rango de fechas
   const handleBuscar = (values: Record<string, string>) => {
     const { fechaInicio, fechaFin } = values;
 
-    const filtrado = fullData.filter(({ fecha }) => {
+    const filtrado = fullData.filter(({ fecha, producto, descripcion, proveedor, bodega, tipo }) => {
       const itemFecha = new Date(fecha);
       if (fechaInicio && itemFecha < new Date(fechaInicio)) return false;
       if (fechaFin && itemFecha > new Date(fechaFin)) return false;
-      return true;
+
+      const texto = filtroTexto.toLowerCase();
+      return (
+        producto.toLowerCase().includes(texto) ||
+        descripcion.toLowerCase().includes(texto) ||
+        proveedor.toLowerCase().includes(texto) ||
+        bodega.toLowerCase().includes(texto) ||
+        tipo.toLowerCase().includes(texto)
+      );
     });
 
     setData(filtrado);
   };
 
-  // Exporta a CSV
+  useEffect(() => {
+    handleBuscar({});
+  }, [filtroTexto]);
+
   const exportToCSV = () => {
     const headers = columns.map(c => c.header).join(',');
     const rows = data.map(row =>
@@ -100,18 +105,14 @@ useEffect(() => {
 
   return (
     <div>
-      {/* Botón de exportación */}
-      {mostrarExportar && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <div></div>
-          <button className="btn-exportar" onClick={exportToCSV}>Exportar CSV</button>
-        </div>
+      {mostrarFiltro && (
+        <Filtro
+          fields={filtros}
+          onSearch={handleBuscar}
+          onTextoChange={setFiltroTexto}
+          onExport={mostrarExportar ? exportToCSV : undefined}
+        />
       )}
-
-      {/* Filtro */}
-      {mostrarFiltro && <Filtro fields={filtros} onSearch={handleBuscar} />}
-
-      {/* Tabla de datos */}
       <DataTable columns={columns} data={data} />
     </div>
   );
