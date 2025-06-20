@@ -13,6 +13,7 @@ import {
   ProductoGraficoDto,
   ProductoStockDto,
 } from './dto/dashboard-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class DashboardService {
@@ -34,12 +35,11 @@ export class DashboardService {
       manana.setDate(manana.getDate() + 1);
 
       const totalMovimientosHoy = await this.movimientoRepo.count({
-        where: {
-          fechaMovimiento: Between(hoy, manana),
-        },
+        where: { fechaMovimiento: Between(hoy, manana) },
       });
 
       const UMBRAL_BAJO_STOCK = 10;
+
       const inventariosBajo = await this.inventarioRepo.find({
         relations: ['producto'],
         where: { cantidad_actual: Between(0, UMBRAL_BAJO_STOCK) },
@@ -50,7 +50,7 @@ export class DashboardService {
         .map((inv) => ({
           id: inv.producto.id,
           nombre: inv.producto.nombre,
-          cantidad_actual: inv.cantidad_actual,
+          cantidadActual: inv.cantidad_actual,
         }));
 
       const topCinco = await this.inventarioRepo.find({
@@ -90,12 +90,13 @@ export class DashboardService {
           },
         }));
 
-      return {
+      // Transformar a instancia del DTO con class-transformer
+      return plainToInstance(DashboardResponseDto, {
         totalMovimientosHoy,
         productosBajoStock,
         top5ProductosMasBajoStock,
         ultimosMovimientos,
-      };
+      });
     } catch (error) {
       this.logger.error('Error generando datos del dashboard', error);
       throw new InternalServerErrorException(
