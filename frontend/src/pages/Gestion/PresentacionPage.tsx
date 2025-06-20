@@ -12,41 +12,51 @@ import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
 type Presentacion = {
-  id: number;
+  id?: number;
   nombre: string;
 };
 
 const initialForm: Presentacion = {
-  id: 0,
-  nombre: '',
+  nombre: ''
 };
 
 const PresentacionPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<Presentacion>(initialForm);
   const [data, setData] = useState<Presentacion[]>([]);
+  const [fullData, setFullData] = useState<Presentacion[]>([]);
   const [filtro, setFiltro] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const columns = [
     { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
   ];
 
-  const datosFiltrados = data.filter((presentacion) =>
-    presentacion.nombre.toLowerCase().includes(filtro)
+  const datosFiltrados = fullData.filter((presentacion) =>
+    presentacion.nombre.toLowerCase().includes(filtro.toLowerCase())
   );
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch('http://localhost:3000/presentacion');
+        if (!response.ok) throw new Error('Error al cargar presentaciones');
         const presentaciones = await response.json();
         setData(presentaciones);
+        setFullData(presentaciones);
       } catch (error) {
         console.error("Error cargando presentaciones:", error);
-        Swal.fire('Error', 'No se pudieron cargar las presentaciones', 'error');
+        let errorMessage = 'No se pudieron cargar las presentaciones';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        Swal.fire('Error', errorMessage, 'error');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
@@ -56,64 +66,116 @@ const PresentacionPage = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.nombre.trim()) {
-      Swal.fire('Campo obligatorio', 'El nombre es requerido', 'warning');
+      Swal.fire('Error', 'El nombre es obligatorio', 'warning');
       return;
     }
 
+    setIsLoading(true);
     try {
-      if (isEditMode) {
-        setData(data.map((item) => (item.id === form.id ? form : item)));
-      } else {
-        const newPresentacion = {
-          ...form,
-          id: Date.now()
-        };
-        setData([...data, newPresentacion]);
+      const method = isEditMode ? 'PATCH' : 'POST';
+      const url = isEditMode 
+        ? `http://localhost:3000/presentacion/${form.id}`
+        : 'http://localhost:3000/presentacion';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ nombre: form.nombre })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error del servidor:', errorText);
+        throw new Error(errorText || 'Error al guardar la presentación');
       }
 
-      setForm(initialForm);
+      const result = await response.json();
+      
+      if (isEditMode) {
+        setData(prev => prev.map(p => p.id === form.id ? result : p));
+        setFullData(prev => prev.map(p => p.id === form.id ? result : p));
+      } else {
+        setData(prev => [...prev, result]);
+        setFullData(prev => [...prev, result]);
+      }
+
+      Swal.fire('Éxito', `Presentación ${isEditMode ? 'actualizada' : 'creada'} correctamente`, 'success');
       setShowModal(false);
+      setForm(initialForm);
       setIsEditMode(false);
-      Swal.fire('¡Guardado!', 'La presentación fue registrada correctamente', 'success');
-    } catch {
-      Swal.fire('¡Error!', 'Ocurrió un error al guardar.', 'error');
+    } catch (error) {
+      console.error('Error:', error);
+      let errorMessage = 'Error al guardar la presentación';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      Swal.fire('Error', errorMessage, 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleEdit = (row: Presentacion) => {
+    if (!row.id) {
+      Swal.fire('Error', 'La presentación seleccionada no tiene ID válido', 'error');
+      return;
+    }
     setForm(row);
     setIsEditMode(true);
     setShowModal(true);
   };
 
-  const handleDelete = (row: Presentacion) => {
-    Swal.fire({
+  const handleDelete = async (row: Presentacion) => {
+    if (!row.id) return;
+    
+    const result = await Swal.fire({
       title: '¿Eliminar presentación?',
       text: 'Esta acción no se puede deshacer.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Eliminar',
       cancelButtonText: 'Cancelar',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setData(data.filter((item) => item.id !== row.id));
-        Swal.fire('Eliminado', 'La presentación ha sido eliminada.', 'success');
-      }
     });
+
+    if (result.isConfirmed) {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`http://localhost:3000/presentacion/${row.id}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) throw new Error('Error al eliminar');
+        
+        setData(prev => prev.filter(p => p.id !== row.id));
+        setFullData(prev => prev.filter(p => p.id !== row.id));
+        
+        Swal.fire('Eliminado', 'La presentación ha sido eliminada.', 'success');
+      } catch (error) {
+        console.error('Error:', error);
+        let errorMessage = 'No se pudo eliminar la presentación';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        Swal.fire('Error', errorMessage, 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   return (
     <Home>
       <Header>
         <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
-
           <SearchBar
-        onSearch={setFiltro}
-        placeholder="Buscar presentación..."
-        className="search-bar-container"
-      />
+            onSearch={setFiltro}
+            placeholder="Buscar presentación..."
+          />
           <BackButton onClick={() => navigate('/gestion')}>
             <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
           </BackButton>
@@ -123,38 +185,50 @@ const PresentacionPage = () => {
               setIsEditMode(false);
               setShowModal(true);
             }}
+            disabled={isLoading}
           >
             Agregar Presentación
           </Button>
         </div>
       </Header>
 
-      
-
-      <DataTable
-        columns={columns}
-        data={datosFiltrados}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {isLoading ? (
+        <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando...</div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={datosFiltrados}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
 
       {showModal && (
-        <Modal onClose={() => setShowModal(false)}>
+        <Modal onClose={() => !isLoading && setShowModal(false)}>
           <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>
             {isEditMode ? 'Editar Presentación' : 'Agregar Presentación'}
           </h2>
 
           <Input
             label="Nombre *"
+            id="nombrePresentacion"
             name="nombre"
             value={form.nombre}
             onChange={handleChange}
+            disabled={isLoading}
             required
           />
 
           <ModalFooter>
-            <Button onClick={handleSave}>Guardar</Button>
-            <Button onClick={() => setShowModal(false)}>Cerrar</Button>
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading ? 'Guardando...' : 'Guardar'}
+            </Button>
+            <Button 
+              onClick={() => !isLoading && setShowModal(false)} 
+              disabled={isLoading}
+            >
+              Cancelar
+            </Button>
           </ModalFooter>
         </Modal>
       )}

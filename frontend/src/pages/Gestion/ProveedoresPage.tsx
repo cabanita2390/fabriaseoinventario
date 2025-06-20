@@ -5,63 +5,67 @@ import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
+import SearchBar from '../../components/ui/Searchbar';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
 type Proveedor = {
-  id: number;
+  id?: number;
   nombre: string;
   telefono: string;
   email: string;
   direccion: string;
-  estado?: string;
 };
 
 const initialForm: Proveedor = {
-  id: 0,
   nombre: '',
   telefono: '',
   email: '',
-  direccion: '',
-  estado: 'Activo'
+  direccion: ''
 };
 
 const ProveedoresPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<Proveedor>(initialForm);
   const [data, setData] = useState<Proveedor[]>([]);
+  const [fullData, setFullData] = useState<Proveedor[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [filtro, setFiltro] = useState('');
 
   const columns = [
     { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
     { header: 'Teléfono', accessor: 'telefono' },
     { header: 'Email', accessor: 'email' },
-    { header: 'Dirección', accessor: 'direccion' },
-    { header: 'Estado', accessor: 'estado' },
+    { header: 'Dirección', accessor: 'direccion' }
   ];
 
-  // Cargar datos iniciales (usando mock por ahora)
+  const datosFiltrados = fullData.filter(proveedor =>
+    Object.values(proveedor).some(
+      value => value && value.toString().toLowerCase().includes(filtro.toLowerCase())
+    )
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Usando datos mock por ahora (reemplazar con fetch al backend cuando esté listo)
-        const response = await fetch('/Gestion.mock.json');
-        const json = await response.json();
-        setData(json.proveedores || []);
-        
-        // Cuando el backend esté listo, usar esto:
-        // const response = await fetch('http://localhost:3000/proveedor');
-        // const proveedores = await response.json();
-        // setData(proveedores);
+        const response = await fetch('http://localhost:3000/proveedor');
+        if (!response.ok) throw new Error('Error al cargar proveedores');
+        const proveedores = await response.json();
+        setData(proveedores);
+        setFullData(proveedores);
       } catch (error) {
-        console.error("Error cargando proveedores:", error);
-        Swal.fire('Error', 'No se pudieron cargar los proveedores', 'error');
+        console.error("Error:", error);
+        let errorMessage = 'No se pudieron cargar los proveedores';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        Swal.fire('Error', errorMessage, 'error');
       } finally {
         setIsLoading(false);
       }
@@ -74,70 +78,102 @@ const ProveedoresPage = () => {
   };
 
   const handleSave = async () => {
-    const { nombre, telefono, email, direccion } = form;
-
-    if (!nombre || !telefono || !email || !direccion) {
-      Swal.fire('Campos obligatorios', 'Completa todos los campos requeridos', 'warning');
+    if (!form.nombre || !form.telefono || !form.email || !form.direccion) {
+      Swal.fire('Error', 'Todos los campos son obligatorios', 'warning');
       return;
     }
 
     setIsLoading(true);
     try {
-      // Usando mock por ahora (reemplazar con fetch al backend cuando esté listo)
-      if (isEditMode) {
-        setData(data.map(item => item.id === form.id ? form : item));
-      } else {
-        const newProveedor = {
-          ...form,
-          id: Math.max(...data.map(p => p.id), 0) + 1 // Generar nuevo ID temporal
-        };
-        setData([...data, newProveedor]);
+      // Verificar que tenemos ID en modo edición
+      if (isEditMode && !form.id) {
+        throw new Error('ID del proveedor no especificado');
       }
-      
-      // Cuando el backend esté listo, usar esto:
-      /*
-      let response;
-      if (isEditMode) {
-        response = await fetch(`http://localhost:3000/proveedor/${form.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form)
-        });
-      } else {
-        response = await fetch('http://localhost:3000/proveedor', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form)
-        });
+
+      // Usar PATCH en lugar de PUT según la documentación
+      const method = isEditMode ? 'PATCH' : 'POST';
+      const url = isEditMode 
+        ? `http://localhost:3000/proveedor/${form.id}`
+        : 'http://localhost:3000/proveedor';
+
+      const requestBody = {
+        nombre: form.nombre,
+        telefono: form.telefono,
+        email: form.email,
+        direccion: form.direccion
+      };
+
+      console.log('Enviando datos:', { method, url, body: requestBody });
+
+      const response = await fetch(url, {
+        method,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('Respuesta recibida:', {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error del servidor:', errorText);
+        throw new Error(errorText || 'Error en la solicitud');
       }
+
+      const result = await response.json();
+      console.log('Datos actualizados:', result);
       
-      if (!response.ok) throw new Error('Error al guardar');
-      
-      // Recargar datos del backend
-      const updatedResponse = await fetch('http://localhost:3000/proveedor');
-      const updatedData = await updatedResponse.json();
-      setData(updatedData);
-      */
-      
-      Swal.fire('¡Guardado!', 'El proveedor fue registrado correctamente', 'success');
-      setForm(initialForm);
+      if (isEditMode) {
+        setData(prev => prev.map(p => p.id === form.id ? result : p));
+        setFullData(prev => prev.map(p => p.id === form.id ? result : p));
+      } else {
+        setData(prev => [...prev, result]);
+        setFullData(prev => [...prev, result]);
+      }
+
+      Swal.fire('Éxito', `Proveedor ${isEditMode ? 'actualizado' : 'creado'} correctamente`, 'success');
       setShowModal(false);
+      setForm(initialForm);
       setIsEditMode(false);
     } catch (error) {
-      console.error('Error:', error);
-      Swal.fire('¡Error!', 'Ocurrió un error al guardar el proveedor', 'error');
+      console.error('Error completo:', error);
+      let errorMessage = 'Error al guardar el proveedor';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      Swal.fire('Error', errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleEdit = (row: Proveedor) => {
-    setForm(row);
+    if (!row.id) {
+      console.error('El proveedor a editar no tiene ID:', row);
+      Swal.fire('Error', 'El proveedor seleccionado no tiene ID válido', 'error');
+      return;
+    }
+
+    setForm({
+      id: row.id,
+      nombre: row.nombre,
+      telefono: row.telefono,
+      email: row.email,
+      direccion: row.direccion
+    });
     setIsEditMode(true);
     setShowModal(true);
   };
 
   const handleDelete = async (row: Proveedor) => {
+    if (!row.id) return;
+    
     const result = await Swal.fire({
       title: '¿Eliminar proveedor?',
       text: 'Esta acción no se puede deshacer.',
@@ -150,27 +186,23 @@ const ProveedoresPage = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        // Usando mock por ahora (reemplazar con fetch al backend cuando esté listo)
-        setData(data.filter(item => item.id !== row.id));
-        
-        // Cuando el backend esté listo, usar esto:
-        /*
         const response = await fetch(`http://localhost:3000/proveedor/${row.id}`, {
           method: 'DELETE'
         });
         
         if (!response.ok) throw new Error('Error al eliminar');
         
-        // Recargar datos del backend
-        const updatedResponse = await fetch('http://localhost:3000/proveedor');
-        const updatedData = await updatedResponse.json();
-        setData(updatedData);
-        */
+        setData(prev => prev.filter(p => p.id !== row.id));
+        setFullData(prev => prev.filter(p => p.id !== row.id));
         
         Swal.fire('Eliminado', 'El proveedor ha sido eliminado.', 'success');
       } catch (error) {
         console.error('Error:', error);
-        Swal.fire('Error', 'No se pudo eliminar el proveedor', 'error');
+        let errorMessage = 'No se pudo eliminar el proveedor';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        Swal.fire('Error', errorMessage, 'error');
       } finally {
         setIsLoading(false);
       }
@@ -181,6 +213,10 @@ const ProveedoresPage = () => {
     <Home>
       <Header>
         <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+          <SearchBar 
+            onSearch={setFiltro} 
+            placeholder="Buscar proveedores..." 
+          />
           <BackButton onClick={() => navigate('/gestion')}>
             <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
           </BackButton>
@@ -202,7 +238,7 @@ const ProveedoresPage = () => {
       ) : (
         <DataTable 
           columns={columns} 
-          data={data} 
+          data={datosFiltrados} 
           onEdit={handleEdit} 
           onDelete={handleDelete} 
         />
@@ -247,8 +283,11 @@ const ProveedoresPage = () => {
             <Button onClick={handleSave} disabled={isLoading}>
               {isLoading ? 'Guardando...' : 'Guardar'}
             </Button>
-            <Button onClick={() => !isLoading && setShowModal(false)} disabled={isLoading}>
-              Cerrar
+            <Button 
+              onClick={() => !isLoading && setShowModal(false)} 
+              disabled={isLoading}
+            >
+              Cancelar
             </Button>
           </ModalFooter>
         </Modal>
