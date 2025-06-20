@@ -1,5 +1,5 @@
 // src/bodega/dto/create-bodega.dto.ts
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateBodegaDto {
   @IsNotEmpty()
@@ -7,8 +7,8 @@ export class CreateBodegaDto {
   @MaxLength(100)
   nombre: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @MaxLength(200)
-  ubicacion: string;
+  ubicacion?: string;
 }
