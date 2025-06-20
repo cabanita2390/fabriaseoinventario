@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // src/movimiento/movimiento.service.ts
 import {
   BadRequestException,
@@ -5,26 +7,25 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
-import {
-  CreateMovimientoDto,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  TipoMovimiento,
-} from './dto/create-movimiento.dto';
+import { DeepPartial, QueryFailedError, Repository } from 'typeorm';
+import { CreateMovimientoDto } from './dto/create-movimiento.dto';
 // import { UpdateMovimientoDto } from './dto/update-movimiento.dto';
 import { Movimiento } from '../entities/movimiento.entity';
+import { Inventario } from 'src/entities/inventario.entity';
+import { UpdateMovimientoDto } from './dto/update-movimiento.dto';
 
 @Injectable()
 export class MovimientoService {
   constructor(
     @InjectRepository(Movimiento)
     private readonly movimientoRepo: Repository<Movimiento>,
+    @InjectRepository(Inventario)
+    private readonly inventarioRepo: Repository<Inventario>,
   ) {}
 
   async create(dto: CreateMovimientoDto): Promise<any> {
-    // 1) Preparamos la entidad usando la fecha actual
-    const now = new Date(); // momento en servidor (UTC o local segun configuración)
-    const entidad = this.movimientoRepo.create({
+    const now = new Date();
+    const mov = this.movimientoRepo.create({
       tipo: dto.tipo,
       cantidad: dto.cantidad,
       fechaMovimiento: now,
@@ -35,32 +36,34 @@ export class MovimientoService {
 
     let guardado: Movimiento;
     try {
-      // 2) Guardamos la fila (aquí puede fallar FK)
-      guardado = await this.movimientoRepo.save(entidad);
+      guardado = await this.movimientoRepo.save(mov);
     } catch (error) {
       if (
         error instanceof QueryFailedError &&
         (error as any).code === '23503'
       ) {
-        const detail: string = (error as any).detail;
-        if (detail.includes('(producto_idproducto)')) {
+        const detail = (error as any).detail as string;
+        if (detail.includes('(producto_idproducto)'))
           throw new BadRequestException(
             `No existe un producto con id = ${dto.producto_idproducto}`,
           );
-        }
-        if (detail.includes('(bodega_idbodega)')) {
+        if (detail.includes('(bodega_idbodega)'))
           throw new BadRequestException(
             `No existe una bodega con id = ${dto.bodega_idbodega}`,
           );
-        }
-        throw new BadRequestException(
-          'Violación de llave foránea al crear Movimiento',
-        );
       }
       throw error;
     }
 
-    // 3) Recargamos con relaciones para conseguir todos los campos anidados
+    // <-- Aquí: pasamos INGRESO/EGRESO directamente
+    await this.upsertInventario(
+      guardado.producto.id,
+      guardado.bodega.id,
+      guardado.tipo,
+      guardado.cantidad,
+      now,
+    );
+
     const completo = await this.movimientoRepo.findOne({
       where: { id: guardado.id },
       relations: [
@@ -71,13 +74,11 @@ export class MovimientoService {
         'bodega',
       ],
     });
-    if (!completo) {
+    if (!completo)
       throw new NotFoundException(
         `Movimiento con id ${guardado.id} no encontrado después de guardar`,
       );
-    }
 
-    // 4) Devolvemos JSON, formateando fechaMovimiento en zona America/Bogota
     return {
       ...completo,
       fechaMovimiento: completo.fechaMovimiento.toLocaleString('es-CO', {
@@ -91,6 +92,41 @@ export class MovimientoService {
         second: '2-digit',
       }),
     };
+  }
+
+  /**
+   * Si ya existe un inventario para ese producto+bodega,
+   * ajusta cantidad_actual (INGRESO suma, EGRESO resta) y actualiza fecha.
+   * Si no existe, lo crea.
+   */
+  private async upsertInventario(
+    productoId: number,
+    bodegaId: number,
+    tipoMovimiento: 'INGRESO' | 'EGRESO',
+    cantidad: number,
+    fecha: Date,
+  ) {
+    const inv = await this.inventarioRepo.findOne({
+      where: {
+        producto: { id: productoId },
+        bodega: { id: bodegaId },
+      },
+    });
+
+    if (inv) {
+      inv.cantidad_actual +=
+        tipoMovimiento === 'INGRESO' ? cantidad : -cantidad;
+      inv.fechaUltimaActualizacion = fecha;
+      await this.inventarioRepo.save(inv);
+    } else {
+      const nuevo = this.inventarioRepo.create({
+        producto: { id: productoId },
+        bodega: { id: bodegaId },
+        cantidad_actual: tipoMovimiento === 'INGRESO' ? cantidad : -cantidad,
+        fechaUltimaActualizacion: fecha,
+      });
+      await this.inventarioRepo.save(nuevo);
+    }
   }
 
   async findAll(): Promise<Movimiento[]> {
@@ -122,42 +158,40 @@ export class MovimientoService {
     return entidad;
   }
 
-  // async update(id: number, dto: UpdateMovimientoDto): Promise<Movimiento> {
-  //   const parcial: Partial<Movimiento> = {};
-  //   if (dto.tipo) parcial.tipo = dto.tipo;
-  //   if (dto.cantidad !== undefined) parcial.cantidad = dto.cantidad;
-  //   if (dto.fecha_movimiento)
-  //     parcial.fechaMovimiento = new Date(dto.fecha_movimiento);
-  //   if (dto.descripcion !== undefined) parcial.descripcion = dto.descripcion;
-  //   if (dto.producto_idproducto !== undefined)
-  //     parcial.producto = { id: dto.producto_idproducto };
-  //   if (dto.bodega_idbodega !== undefined)
-  //     parcial.bodega = { id: dto.bodega_idbodega };
+  async update(id: number, dto: UpdateMovimientoDto): Promise<Movimiento> {
+    const parcial: DeepPartial<Movimiento> = { id };
+    if (dto.tipo) parcial.tipo = dto.tipo;
+    if (dto.cantidad !== undefined) parcial.cantidad = dto.cantidad;
+    if (dto.descripcion !== undefined) parcial.descripcion = dto.descripcion;
+    if (dto.producto_idproducto !== undefined)
+      parcial.producto = { id: dto.producto_idproducto };
+    if (dto.bodega_idbodega !== undefined)
+      parcial.bodega = { id: dto.bodega_idbodega };
 
-  //   const entidad = await this.movimientoRepo.preload({ id, ...parcial });
-  //   if (!entidad) {
-  //     throw new NotFoundException(`Movimiento con id ${id} no encontrado`);
-  //   }
-  //   await this.movimientoRepo.save(entidad);
+    const entidad = await this.movimientoRepo.preload({ id, ...parcial });
+    if (!entidad) {
+      throw new NotFoundException(`Movimiento con id ${id} no encontrado`);
+    }
+    await this.movimientoRepo.save(entidad);
 
-  //   // Recargar relaciones
-  //   const actualizado = await this.movimientoRepo.findOne({
-  //     where: { id },
-  //     relations: [
-  //       'producto',
-  //       'producto.presentacion',
-  //       'producto.unidadMedida',
-  //       'producto.proveedor',
-  //       'bodega',
-  //     ],
-  //   });
-  //   if (!actualizado) {
-  //     throw new NotFoundException(
-  //       `Movimiento con id ${id} no encontrado después de actualizar`,
-  //     );
-  //   }
-  //   return actualizado;
-  // }
+    // Recargar relaciones
+    const actualizado = await this.movimientoRepo.findOne({
+      where: { id },
+      relations: [
+        'producto',
+        'producto.presentacion',
+        'producto.unidadMedida',
+        'producto.proveedor',
+        'bodega',
+      ],
+    });
+    if (!actualizado) {
+      throw new NotFoundException(
+        `Movimiento con id ${id} no encontrado después de actualizar`,
+      );
+    }
+    return actualizado;
+  }
 
   async remove(id: number): Promise<void> {
     const entidad = await this.movimientoRepo.findOne({ where: { id } });

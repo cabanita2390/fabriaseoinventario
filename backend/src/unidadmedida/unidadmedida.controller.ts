@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { UnidadmedidaService } from './unidadmedida.service';
 import { CreateUnidadmedidaDto } from './dto/create-unidadmedida.dto';
 import { UpdateUnidadmedidaDto } from './dto/update-unidadmedida.dto';
@@ -23,7 +31,10 @@ export class UnidadmedidaController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUnidadmedidaDto: UpdateUnidadmedidaDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateUnidadmedidaDto: UpdateUnidadmedidaDto,
+  ) {
     return this.unidadmedidaService.update(+id, updateUnidadmedidaDto);
   }
 

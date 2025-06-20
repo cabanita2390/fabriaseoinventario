@@ -1526,6 +1526,12 @@ export class SeedService {
       }
     }
 
+    await this.productoRepo.query(`
+      SELECT setval(
+        pg_get_serial_sequence('"producto"', 'idproducto'),
+        (SELECT MAX(idproducto) FROM "producto")
+      );
+    `);
     return { message: 'Seed de Materias Primas completado' };
   }
 
