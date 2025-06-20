@@ -12,12 +12,11 @@ import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 
 type UnidadMedida = {
-  id: number;
+  id?: number;
   nombre: string;
 };
 
-const initialForm: UnidadMedida = {
-  id: 0,
+const initialForm: Omit<UnidadMedida, 'id'> = {
   nombre: '',
 };
 
@@ -36,7 +35,7 @@ const UnidadesPage = () => {
   ];
 
   const unidadesFiltradas = data.filter((unidad) =>
-    unidad.nombre.toLowerCase().includes(filtro)
+    unidad.nombre.toLowerCase().includes(filtro.toLowerCase())
   );
 
   useEffect(() => {
@@ -44,12 +43,15 @@ const UnidadesPage = () => {
       setIsLoading(true);
       try {
         const response = await fetch('http://localhost:3000/unidadmedida');
-        if (!response.ok) throw new Error('Error al cargar las unidades de medida');
+        if (!response.ok) {
+          throw new Error('Error al cargar las unidades de medida');
+        }
         const unidades = await response.json();
         setData(unidades);
       } catch (error) {
         console.error("Error cargando unidades:", error);
-        Swal.fire('Error', 'No se pudieron cargar las unidades de medida', 'error');
+        const errorMessage = error instanceof Error ? error.message : 'No se pudieron cargar las unidades de medida';
+        Swal.fire('Error', errorMessage, 'error');
       } finally {
         setIsLoading(false);
       }
@@ -70,24 +72,30 @@ const UnidadesPage = () => {
     setIsLoading(true);
     try {
       let response;
-      if (isEditMode) {
+      const payload = { nombre: form.nombre.trim() };
+
+      if (isEditMode && form.id) {
         response = await fetch(`http://localhost:3000/unidadmedida/${form.id}`, {
-          method: 'PUT',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
       } else {
         response = await fetch('http://localhost:3000/unidadmedida', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
       }
 
-      if (!response.ok) throw new Error('Error al guardar la unidad');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al guardar la unidad');
+      }
 
-      const updated = await fetch('http://localhost:3000/unidadmedida');
-      setData(await updated.json());
+      const updatedResponse = await fetch('http://localhost:3000/unidadmedida');
+      const updatedData = await updatedResponse.json();
+      setData(updatedData);
 
       Swal.fire('¡Guardado!', 'La unidad fue registrada correctamente', 'success');
       setForm(initialForm);
@@ -95,14 +103,18 @@ const UnidadesPage = () => {
       setIsEditMode(false);
     } catch (error) {
       console.error('Error:', error);
-      Swal.fire('¡Error!', 'Ocurrió un error al guardar la unidad', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error al guardar la unidad';
+      Swal.fire('¡Error!', errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleEdit = (row: UnidadMedida) => {
-    setForm(row);
+    setForm({
+      nombre: row.nombre,
+      ...(row.id && { id: row.id })
+    });
     setIsEditMode(true);
     setShowModal(true);
   };
@@ -123,15 +135,19 @@ const UnidadesPage = () => {
         const response = await fetch(`http://localhost:3000/unidadmedida/${row.id}`, {
           method: 'DELETE',
         });
-        if (!response.ok) throw new Error('Error al eliminar la unidad');
+        if (!response.ok) {
+          throw new Error('Error al eliminar la unidad');
+        }
 
-        const updated = await fetch('http://localhost:3000/unidadmedida');
-        setData(await updated.json());
+        const updatedResponse = await fetch('http://localhost:3000/unidadmedida');
+        const updatedData = await updatedResponse.json();
+        setData(updatedData);
 
         Swal.fire('Eliminado', 'La unidad ha sido eliminada.', 'success');
       } catch (error) {
         console.error('Error:', error);
-        Swal.fire('Error', 'No se pudo eliminar la unidad', 'error');
+        const errorMessage = error instanceof Error ? error.message : 'No se pudo eliminar la unidad';
+        Swal.fire('Error', errorMessage, 'error');
       } finally {
         setIsLoading(false);
       }
@@ -142,8 +158,11 @@ const UnidadesPage = () => {
     <Home>
       <Header>
         <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
-
-          <SearchBar onSearch={setFiltro} placeholder="Buscar unidad de medida..." className="search-bar-container" />
+          <SearchBar 
+            onSearch={setFiltro} 
+            placeholder="Buscar unidad de medida..." 
+            className="search-bar-container" 
+          />
           <BackButton onClick={() => navigate('/gestion')}>
             <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
           </BackButton>
@@ -159,8 +178,6 @@ const UnidadesPage = () => {
           </Button>
         </div>
       </Header>
-
-      
 
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando...</div>
