@@ -33,6 +33,26 @@ interface FormState {
   bodega: string;
 }
 
+interface InventarioItem {
+  id: number;
+  cantidad_actual: number;
+  fechaUltimaActualizacion: string;
+  producto: {
+    id: number;
+  };
+  bodega: {
+    id: number;
+  };
+}
+
+// Interfaz para el payload de actualización
+interface UpdateInventarioDto {
+  cantidad_actual: number;
+  fecha_ultima_actualizacion: string;
+  producto_idproducto: number;
+  bodega_idbodega: number;
+}
+
 const SECCIONES = [
   {
     titulo: 'Materia Prima',
@@ -50,7 +70,7 @@ const SECCIONES = [
 
 type Tipo =
   | 'Ingreso de materia prima'
-  | ''
+  | 'Salida de materia prima'
   | 'Ingreso de Envase'
   | 'Salida de Envase'
   | 'Ingreso de Etiqueta'
@@ -81,7 +101,9 @@ function InsumosPage() {
   const [form, setForm] = useState<FormState>(INIT_FORM);
   const [productosDisponibles, setProductosDisponibles] = useState<ProductoAgrupado[]>([]);
   const [bodegasDisponibles, setBodegasDisponibles] = useState<{ id: number; nombre: string }[]>([]);
-
+  const [productosOriginales, setProductosOriginales] = useState<any[]>([]);
+  
+  
   const handleOpenModal = useCallback((tipo: Tipo, edit = false) => {
     setTipoActual(tipo);
     setIsEditMode(edit);
@@ -121,127 +143,307 @@ function InsumosPage() {
     }));
   };
 
+  // Función para obtener inventario existente
+  const obtenerInventarioExistente = async (productoId: number, bodegaId: number): Promise<InventarioItem | null> => {
+    try {
+      const response = await fetch("http://localhost:3000/inventario");
+      if (!response.ok) {
+        throw new Error("Error al obtener inventario");
+      }
+
+      const inventario: InventarioItem[] = await response.json();
+      return inventario.find(item => 
+        item.producto.id === productoId && 
+        item.bodega.id === bodegaId
+      ) || null;
+    } catch (error) {
+      console.error("Error al obtener inventario:", error);
+      return null;
+    }
+  };
+
+  // Función para crear nuevo item de inventario
+  const crearInventario = async (productoId: number, bodegaId: number, cantidad: number) => {
+    try {
+      const payload = {
+        cantidad_actual: cantidad,
+        fechaUltimaActualizacion: new Date().toISOString(),
+        producto: { id: productoId },
+        bodega: { id: bodegaId }
+      };
+
+      const response = await fetch("http://localhost:3000/inventario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al crear inventario");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error al crear inventario:", error);
+      throw error;
+    }
+  };
+
+  // Función para actualizar inventario existente (CORREGIDA)
+  const actualizarInventario = async (
+    inventarioId: number, 
+    nuevaCantidad: number,
+    productoId: number,
+    bodegaId: number
+  ) => {
+    try {
+      const payload: UpdateInventarioDto = {
+        cantidad_actual: nuevaCantidad,
+        fecha_ultima_actualizacion: new Date().toISOString(),
+        producto_idproducto: productoId,
+        bodega_idbodega: bodegaId
+      };
+
+      const response = await fetch(`http://localhost:3000/inventario/${inventarioId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorBody}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error al actualizar inventario:", error);
+      throw error;
+    }
+  };
+
   const handleSave = async () => {
-  if (
-    !form.producto ||
-    !form.cantidad ||
-    !form.bodega ||
-    form.bodega === "seleccione una opcion"
-  ) {
-    Swal.fire({
-      icon: "warning",
-      title: "Campos incompletos",
-      text: "Por favor, selecciona Producto, Cantidad y Bodega antes de guardar.",
-    });
-    return;
-  }
-
-  try {
-    const payload = {
-      tipo: form.tipo,
-      producto: form.producto.nombre,
-      presentacion: form.presentacionSeleccionada?.nombre || "",
-      unidad: form.producto.unidadMedida?.nombre || "",
-      proveedor: form.producto.proveedor?.nombre || "",
-      cantidad: form.cantidad,
-      fecha: form.fecha,
-      descripcion: form.descripcion,
-      bodega: form.bodega,
-    };
-
-    const response = await fetch("http://localhost:3000/movimientos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error("Error en el servidor");
+    if (
+      !form.producto ||
+      !form.presentacionSeleccionada ||
+      !form.cantidad ||
+      !form.bodega ||
+      form.bodega === "seleccione una opcion"
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Campos incompletos",
+        text: "Por favor, selecciona Producto, Presentación, Cantidad y Bodega antes de guardar.",
+      });
+      return;
     }
 
-    Swal.fire({
-      icon: "success",
-      title: "Guardado",
-      text: "El movimiento ha sido guardado exitosamente.",
-    });
+    try {
+      // Encontrar el producto original específico basado en nombre y presentación
+      const productoEspecifico = productosOriginales.find(p => 
+        p.nombre === form.producto?.nombre && 
+        p.presentacion.id === form.presentacionSeleccionada?.id
+      );
 
-    setShowModal(false);
-    setForm(INIT_FORM);
-  } catch (error) {
-    Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: "Hubo un problema al guardar. Por favor, inténtalo nuevamente.",
-    });
-    console.error("Error al guardar:", error);
-  }
-};
+      if (!productoEspecifico) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo encontrar el producto específico.",
+        });
+        return;
+      }
 
+      // Encontrar la bodega seleccionada
+      const bodegaSeleccionada = bodegasDisponibles.find(b => b.nombre === form.bodega);
+
+      if (!bodegaSeleccionada) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo encontrar la bodega seleccionada.",
+        });
+        return;
+      }
+
+      // Determinar el tipo de movimiento
+      const tipoMovimiento = tipoActual.toLowerCase().includes('ingreso') ? 'INGRESO' : 'EGRESO';
+
+      // Validar cantidad para salidas
+      if (tipoMovimiento === 'EGRESO' && Number(form.cantidad) <= 0) {
+        Swal.fire({
+          icon: "error",
+          title: "Cantidad inválida",
+          text: "La cantidad para salida debe ser mayor a 0.",
+        });
+        return;
+      }
+
+      // VALIDACIÓN CRÍTICA: Verificar inventario antes de salidas
+      if (tipoMovimiento === 'EGRESO') {
+        const inventarioExistente = await obtenerInventarioExistente(
+          productoEspecifico.id, 
+          bodegaSeleccionada.id
+        );
+        
+        if (!inventarioExistente) {
+          Swal.fire({
+            icon: "error",
+            title: "Sin inventario",
+            text: "No se puede realizar una salida de un producto que no existe en inventario.",
+          });
+          return;
+        }
+
+        if (inventarioExistente.cantidad_actual < Number(form.cantidad)) {
+          Swal.fire({
+            icon: "error",
+            title: "Stock insuficiente",
+            text: `No hay suficiente stock. Stock actual: ${inventarioExistente.cantidad_actual}, cantidad solicitada: ${form.cantidad}`,
+          });
+          return;
+        }
+      }
+
+      // Mostrar loading
+      Swal.fire({
+        title: 'Procesando...',
+        text: 'Guardando movimiento y actualizando inventario',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // **SOLUCIÓN PRINCIPAL: Solo crear el movimiento**
+      // El backend debería manejar la actualización del inventario automáticamente
+      const payload = {
+        tipo: tipoMovimiento,
+        cantidad: Number(form.cantidad),
+        descripcion: form.descripcion,
+        producto_idproducto: productoEspecifico.id,
+        bodega_idbodega: bodegaSeleccionada.id
+      };
+
+      console.log('Payload enviado:', payload);
+
+      const responseMovimiento = await fetch("http://localhost:3000/movimiento", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!responseMovimiento.ok) {
+        throw new Error("Error al crear el movimiento");
+      }
+
+      // **COMENTADO: La actualización manual del inventario**
+      // Si el backend ya actualiza el inventario automáticamente cuando se crea un movimiento,
+      // no necesitas hacer esto manualmente. Descomenta solo si el backend NO lo hace automáticamente.
+      
+      /*
+      // 2. Actualizar el inventario manualmente
+      const inventarioExistente = await obtenerInventarioExistente(
+        productoEspecifico.id, 
+        bodegaSeleccionada.id
+      );
+
+      if (inventarioExistente) {
+        // Calcular nueva cantidad
+        let nuevaCantidad: number;
+        if (tipoMovimiento === 'INGRESO') {
+          nuevaCantidad = inventarioExistente.cantidad_actual + Number(form.cantidad);
+        } else { // EGRESO
+          nuevaCantidad = inventarioExistente.cantidad_actual - Number(form.cantidad);
+        }
+
+        await actualizarInventario(
+          inventarioExistente.id,
+          nuevaCantidad,
+          productoEspecifico.id,
+          bodegaSeleccionada.id
+        );
+      } else {
+        // Crear nuevo inventario solo para ingresos
+        if (tipoMovimiento === 'INGRESO') {
+          await crearInventario(productoEspecifico.id, bodegaSeleccionada.id, Number(form.cantidad));
+        }
+      }
+      */
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El movimiento ha sido guardado correctamente.",
+      });
+
+      setShowModal(false);
+      setForm(INIT_FORM);
+    } catch (error: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Hubo un problema al procesar la operación. Por favor, inténtalo nuevamente.",
+      });
+      console.error("Error al guardar:", error);
+    }
+  };
 
   const cargarProductos = useCallback(async () => {
-  try {
-    const res = await fetch('http://localhost:3000/producto');
-    const data = await res.json();
+    try {
+      const res = await fetch('http://localhost:3000/producto');
+      const data = await res.json();
 
-    const agrupados: ProductoAgrupado[] = [];
+      // Guardar productos originales para obtener los IDs específicos
+      setProductosOriginales(data);
 
-    for (const producto of data) {
-      const existente = agrupados.find(p => p.nombre === producto.nombre);
-      if (existente) {
-        if (!existente.presentaciones.some(pr => pr.id === producto.presentacion.id)) {
-          existente.presentaciones.push(producto.presentacion);
+      const agrupados: ProductoAgrupado[] = [];
+
+      for (const producto of data) {
+        const existente = agrupados.find(p => p.nombre === producto.nombre);
+        if (existente) {
+          if (!existente.presentaciones.some(pr => pr.id === producto.presentacion.id)) {
+            existente.presentaciones.push(producto.presentacion);
+          }
+        } else {
+          agrupados.push({
+            ...producto,
+            presentaciones: [producto.presentacion],
+          });
         }
-      } else {
-        agrupados.push({
-          ...producto,
-          presentaciones: [producto.presentacion],
-        });
       }
+
+      const tipoProducto = extraerTipoProducto(tipoActual);
+      const filtrados = agrupados.filter(p => p.tipoProducto === tipoProducto);
+      setProductosDisponibles(filtrados);
+    } catch (err) {
+      console.error("Error cargando productos:", err);
     }
-
-    const tipoProducto = extraerTipoProducto(tipoActual);
-    const filtrados = agrupados.filter(p => p.tipoProducto === tipoProducto);
-    setProductosDisponibles(filtrados);
-  } catch (err) {
-    console.error("Error cargando productos:", err);
-  }
-}, [tipoActual]);
-
-useEffect(() => {
-  if (showModal) cargarProductos();
-}, [showModal, cargarProductos]);
-
-// 2. cargarBodegas también con useCallback (opcional pero consistente)
-const cargarBodegas = useCallback(async () => {
-  try {
-    const res = await fetch('http://localhost:3000/bodega');
-    const data = await res.json();
-    setBodegasDisponibles(data);
-  } catch (err) {
-    console.error("Error cargando bodegas:", err);
-  }
-}, []);
-
-useEffect(() => {
-  cargarBodegas();
-}, [cargarBodegas]);
-
+  }, [tipoActual]);
 
   useEffect(() => {
-    const cargarBodegas = async () => {
-      try {
-        const res = await fetch('http://localhost:3000/bodega');
-        const data = await res.json();
-        setBodegasDisponibles(data);
-      } catch (err) {
-        console.error("Error cargando bodegas:", err);
-      }
-    };
+    if (showModal) cargarProductos();
+  }, [showModal, cargarProductos]);
 
-    cargarBodegas();
+  const cargarBodegas = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:3000/bodega');
+      const data = await res.json();
+      setBodegasDisponibles(data);
+    } catch (err) {
+      console.error("Error cargando bodegas:", err);
+    }
   }, []);
+
+  useEffect(() => {
+    cargarBodegas();
+  }, [cargarBodegas]);
 
   return (
     <Home>
