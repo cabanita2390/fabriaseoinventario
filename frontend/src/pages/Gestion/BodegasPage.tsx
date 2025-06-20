@@ -31,6 +31,7 @@ const BodegasPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [filtro, setFiltro] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false); // Nuevo estado para controlar envío
 
   const columns = [
     { header: 'ID', accessor: 'id' },
@@ -39,8 +40,8 @@ const BodegasPage = () => {
   ];
 
   const datosFiltrados = fullData.filter((bodega) =>
-    bodega.nombre.toLowerCase().includes(filtro) ||
-    (bodega.ubicacion?.toLowerCase().includes(filtro) ?? false)
+    bodega.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+    (bodega.ubicacion?.toLowerCase().includes(filtro.toLowerCase()) ?? false)
   );
 
   useEffect(() => {
@@ -63,52 +64,56 @@ const BodegasPage = () => {
   };
 
   const handleSave = async () => {
+    if (isSubmitting) return; // Prevenir múltiples envíos
     if (!form.nombre.trim()) {
       Swal.fire('Error', 'El nombre es obligatorio', 'warning');
       return;
     }
 
+    setIsSubmitting(true); // Bloquear el botón
+    
     try {
-  const method = isEditMode ? 'PATCH' : 'POST';
-  const url = isEditMode
-    ? `http://localhost:3000/bodega/${form.id}`
-    : 'http://localhost:3000/bodega';
+      const method = isEditMode ? 'PATCH' : 'POST';
+      const url = isEditMode
+        ? `http://localhost:3000/bodega/${form.id}`
+        : 'http://localhost:3000/bodega';
 
-  const payload = {
-    nombre: form.nombre,
-    ubicacion: form.ubicacion || null,
-  };
+      const payload = {
+        nombre: form.nombre,
+        ubicacion: form.ubicacion || null,
+      };
 
-  const response = await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-  if (!response.ok) throw new Error('Error en el servidor');
-  const result = await response.json();
+      if (!response.ok) throw new Error('Error en el servidor');
+      const result = await response.json();
 
-  const nuevasBodegas = isEditMode
-    ? fullData.map((b) => (b.id === result.id ? result : b))
-    : [...fullData, result];
+      const nuevasBodegas = isEditMode
+        ? fullData.map((b) => (b.id === result.id ? result : b))
+        : [...fullData, result];
 
-  setData(nuevasBodegas);
-  setFullData(nuevasBodegas);
+      setData(nuevasBodegas);
+      setFullData(nuevasBodegas);
 
-  Swal.fire(
-    isEditMode ? 'Actualizado' : 'Registrado',
-    isEditMode ? 'La bodega fue actualizada correctamente' : 'Bodega registrada correctamente',
-    'success'
-  );
+      Swal.fire(
+        isEditMode ? 'Actualizado' : 'Registrado',
+        isEditMode ? 'La bodega fue actualizada correctamente' : 'Bodega registrada correctamente',
+        'success'
+      );
 
-  setForm(initialForm);
-  setShowModal(false);
-  setIsEditMode(false);
-} catch (error) {
-  console.error('Error al guardar:', error);
-  Swal.fire('Error', 'No se pudo guardar la bodega', 'error');
-}
-
+      setForm(initialForm);
+      setShowModal(false);
+      setIsEditMode(false);
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      Swal.fire('Error', 'No se pudo guardar la bodega', 'error');
+    } finally {
+      setIsSubmitting(false); // Liberar el botón
+    }
   };
 
   const handleEdit = (row: Bodega) => {
@@ -198,8 +203,12 @@ const BodegasPage = () => {
           />
 
           <ModalFooter>
-            <Button onClick={handleSave}>Guardar</Button>
-            <Button onClick={() => setShowModal(false)}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={isSubmitting}>
+              {isSubmitting ? 'Guardando...' : 'Guardar'}
+            </Button>
+            <Button onClick={() => setShowModal(false)} disabled={isSubmitting}>
+              Cancelar
+            </Button>
           </ModalFooter>
         </Modal>
       )}
@@ -208,4 +217,3 @@ const BodegasPage = () => {
 };
 
 export default BodegasPage;
-
