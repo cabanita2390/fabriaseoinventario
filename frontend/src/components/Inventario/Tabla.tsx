@@ -155,14 +155,18 @@ function Tabla() {
     <div>
       
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div style={{ width: '300px' }}>
-          <SearchBar
-            onSearch={setFiltro}
-            placeholder="Buscar productos..."
-          />
-        </div>
-      </div>
+      <div
+  className="d-flex justify-content-between align-items-center mb-5"
+  style={{ marginTop: '20px' }} // Ajusta el valor según lo que necesites
+>
+  <div style={{ width: '300px' }}>
+    <SearchBar
+      onSearch={setFiltro}
+      placeholder="Buscar productos..."
+    />
+  </div>
+</div>
+
 
       {datosFiltrados.length === 0 ? (
         <div className="alert alert-info">
@@ -171,14 +175,15 @@ function Tabla() {
             : 'No hay productos en el inventario'}
         </div>
       ) : (
-        <div className="card border-0 shadow-sm">
-          <div className="card-body p-0">
-            <DataTable 
-              columns={columns} 
-              data={datosFiltrados} 
-            />
-          </div>
-        </div>
+        <div style={{ marginTop: '20px' }} className="card border-0 shadow-sm">
+  <div className="card-body p-0">
+    <DataTable 
+      columns={columns} 
+      data={datosFiltrados} 
+    />
+  </div>
+</div>
+
       )}
     </div>
   );
