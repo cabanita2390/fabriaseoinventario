@@ -1,4 +1,3 @@
-// src/unidadmedida/unidadmedida.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -22,7 +21,14 @@ export class UnidadmedidaService {
   }
 
   async findAll(): Promise<UnidadMedida[]> {
-    return this.unidadRepo.find();
+    const unidades = await this.unidadRepo.find();
+
+    // ✅ Validación de resultado vacío (mejora agregada)
+    if (unidades.length === 0) {
+      throw new NotFoundException('No hay unidades de medida registradas');
+    }
+
+    return unidades;
   }
 
   async findOne(id: number): Promise<UnidadMedida> {

@@ -3,15 +3,14 @@ import {
   Get,
   Post,
   Body,
-  //Patch,
   Param,
   Delete,
   Patch,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { MovimientoService } from './movimiento.service';
 import { CreateMovimientoDto } from './dto/create-movimiento.dto';
 import { UpdateMovimientoDto } from './dto/update-movimiento.dto';
-// import { UpdateMovimientoDto } from './dto/update-movimiento.dto';
 
 @Controller('movimiento')
 export class MovimientoController {
@@ -20,7 +19,6 @@ export class MovimientoController {
   @Post()
   create(@Body() createMovimientoDto: CreateMovimientoDto) {
     return this.movimientoService.create(createMovimientoDto);
-    console.log('prueba rama');
   }
 
   @Get()
@@ -29,20 +27,20 @@ export class MovimientoController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.movimientoService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.movimientoService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateMovimientoDto: UpdateMovimientoDto,
   ) {
-    return this.movimientoService.update(+id, updateMovimientoDto);
+    return this.movimientoService.update(id, updateMovimientoDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.movimientoService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.movimientoService.remove(id);
   }
 }

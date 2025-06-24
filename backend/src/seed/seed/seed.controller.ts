@@ -7,12 +7,14 @@ export class SeedController {
   constructor(private readonly seedService: SeedService) {}
 
   @Post('materiaprima')
-  async seedMateriasPrimas() {
+  async seedMateriasPrimas(): Promise<{ message: string; resumen: any }> {
+    // 👉 Tipado agregado
     return this.seedService.seedMateriasPrimas();
   }
 
   @Post('bodegas')
-  async seedBodegas() {
+  async seedBodegas(): Promise<{ message: string; resumen: any }> {
+    // 👉 Tipado agregado
     return this.seedService.seedBodegas();
   }
 }
