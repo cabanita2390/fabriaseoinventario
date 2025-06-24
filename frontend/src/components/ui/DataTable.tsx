@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { StyledTable, TableWrapper } from '../../styles/ui/DataTable.css';
-import { FiEdit, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiChevronLeft, FiChevronRight, FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import styled from 'styled-components';
 
 interface Column {
   header: string;
   accessor: string;
+  sortable?: boolean;
 }
 
 interface DataTableProps<T extends object> {
@@ -46,6 +47,21 @@ const ActionButtons = styled.div`
   }
 `;
 
+const SortableHeader = styled.th<{ sortable?: boolean }>`
+  cursor: ${({ sortable }) => (sortable ? 'pointer' : 'default')};
+  user-select: none;
+  position: relative;
+
+  &:hover {
+    background-color: ${({ sortable }) => (sortable ? 'rgb(73, 84, 101)' : 'transparent')};
+  }
+
+  .sort-icon {
+    margin-left: 5px;
+    vertical-align: middle;
+  }
+`;
+
 const PaginationWrapper = styled.div`
   display: flex;
   justify-content: space-between;
@@ -64,7 +80,7 @@ const PaginationControls = styled.div`
 const PaginationButton = styled.button`
   background-color: #0057d9;
   border: 1px solid #dee2e6;
-  color:rgb(248, 248, 248);
+  color: rgb(248, 248, 248);
   padding: 0.5rem 0.75rem;
   border-radius: 4px;
   cursor: pointer;
@@ -75,7 +91,7 @@ const PaginationButton = styled.button`
   height: 35px;
 
   &:hover:not(:disabled) {
-    background-color:rgb(64, 122, 208);
+    background-color: rgb(64, 122, 208);
   }
 
   &:disabled {
@@ -129,30 +145,64 @@ const DataTable = <T extends object>({
 }: DataTableProps<T>) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(defaultItemsPerPage);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' } | null>(null);
 
-  // Calcular datos paginados
-  const paginatedData = useMemo(() => {
+  // Función para manejar el ordenamiento (modificada para empezar con descendente)
+  const requestSort = (key: string) => {
+    let direction: 'ascending' | 'descending' = 'descending'; // Cambiado a descendente por defecto
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'descending') {
+      direction = 'ascending';
+    }
+    setSortConfig({ key, direction });
+    setCurrentPage(1);
+  };
+
+  // Datos ordenados y paginados
+  const sortedAndPaginatedData = useMemo(() => {
+    let sortableData = [...data];
+    
+    if (sortConfig !== null) {
+      sortableData.sort((a, b) => {
+        const aValue = (a as any)[sortConfig.key];
+        const bValue = (b as any)[sortConfig.key];
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'ascending' 
+            ? aValue.localeCompare(bValue) 
+            : bValue.localeCompare(aValue);
+        } else {
+          return sortConfig.direction === 'ascending' 
+            ? (aValue < bValue ? -1 : 1) 
+            : (aValue < bValue ? 1 : -1);
+        }
+      });
+    }
+
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return data.slice(startIndex, endIndex);
-  }, [data, currentPage, itemsPerPage]);
+    return sortableData.slice(startIndex, endIndex);
+  }, [data, currentPage, itemsPerPage, sortConfig]);
 
-  // Calcular información de paginación
   const totalPages = Math.ceil(data.length / itemsPerPage);
   const startItem = data.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, data.length);
 
-
-
-  // Manejar cambio de página
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  // Manejar cambio de elementos por página
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Resetear a la primera página
+    setCurrentPage(1);
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return null;
+    }
+    return sortConfig.direction === 'ascending' 
+      ? <FiArrowUp className="sort-icon" /> 
+      : <FiArrowDown className="sort-icon" />;
   };
 
   return (
@@ -162,20 +212,27 @@ const DataTable = <T extends object>({
           <thead>
             <tr>
               {columns.map((col) => (
-                <th key={col.accessor}>{col.header}</th>
+                <SortableHeader
+                  key={col.accessor}
+                  onClick={() => col.sortable !== false && requestSort(col.accessor)}
+                  sortable={col.sortable !== false}
+                >
+                  {col.header}
+                  {getSortIcon(col.accessor)}
+                </SortableHeader>
               ))}
               {(onEdit || onDelete) && <th className="action-header">Modificar / Eliminar</th>}
             </tr>
           </thead>
           <tbody>
-            {paginatedData.length === 0 ? (
+            {sortedAndPaginatedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + (onEdit || onDelete ? 1 : 0)} style={{ textAlign: 'center' }}>
                   No hay datos disponibles
                 </td>
               </tr>
             ) : (
-              paginatedData.map((row, index) => (
+              sortedAndPaginatedData.map((row, index) => (
                 <tr key={index}>
                   {columns.map((col) => (
                     <td key={col.accessor}>{(row as any)[col.accessor]}</td>
@@ -203,7 +260,6 @@ const DataTable = <T extends object>({
         </StyledTable>
       </TableWrapper>
 
-      {/* Controles de paginación */}
       {data.length > 0 && (
         <PaginationWrapper>
           <ItemsPerPageSelector>

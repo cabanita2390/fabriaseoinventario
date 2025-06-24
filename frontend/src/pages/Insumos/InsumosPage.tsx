@@ -343,39 +343,6 @@ function InsumosPage() {
         throw new Error("Error al crear el movimiento");
       }
 
-      // **COMENTADO: La actualización manual del inventario**
-      // Si el backend ya actualiza el inventario automáticamente cuando se crea un movimiento,
-      // no necesitas hacer esto manualmente. Descomenta solo si el backend NO lo hace automáticamente.
-      
-      /*
-      // 2. Actualizar el inventario manualmente
-      const inventarioExistente = await obtenerInventarioExistente(
-        productoEspecifico.id, 
-        bodegaSeleccionada.id
-      );
-
-      if (inventarioExistente) {
-        // Calcular nueva cantidad
-        let nuevaCantidad: number;
-        if (tipoMovimiento === 'INGRESO') {
-          nuevaCantidad = inventarioExistente.cantidad_actual + Number(form.cantidad);
-        } else { // EGRESO
-          nuevaCantidad = inventarioExistente.cantidad_actual - Number(form.cantidad);
-        }
-
-        await actualizarInventario(
-          inventarioExistente.id,
-          nuevaCantidad,
-          productoEspecifico.id,
-          bodegaSeleccionada.id
-        );
-      } else {
-        // Crear nuevo inventario solo para ingresos
-        if (tipoMovimiento === 'INGRESO') {
-          await crearInventario(productoEspecifico.id, bodegaSeleccionada.id, Number(form.cantidad));
-        }
-      }
-      */
 
       Swal.fire({
         icon: "success",
