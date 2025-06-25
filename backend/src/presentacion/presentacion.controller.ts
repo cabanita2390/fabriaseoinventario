@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PresentacionService } from './presentacion.service';
 import { CreatePresentacionDto } from './dto/create-presentacion.dto';
@@ -26,20 +27,20 @@ export class PresentacionController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.presentacionService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.presentacionService.findOne(id);
   }
 
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updatePresentacionDto: UpdatePresentacionDto,
   ) {
-    return this.presentacionService.update(+id, updatePresentacionDto);
+    return this.presentacionService.update(id, updatePresentacionDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.presentacionService.remove(+id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    return this.presentacionService.remove(id);
   }
 }

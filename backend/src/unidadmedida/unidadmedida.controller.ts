@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe, // ✅ Agregado para validación de tipo
 } from '@nestjs/common';
 import { UnidadmedidaService } from './unidadmedida.service';
 import { CreateUnidadmedidaDto } from './dto/create-unidadmedida.dto';
@@ -16,30 +17,34 @@ export class UnidadmedidaController {
   constructor(private readonly unidadmedidaService: UnidadmedidaService) {}
 
   @Post()
-  create(@Body() createUnidadmedidaDto: CreateUnidadmedidaDto) {
+  async create(@Body() createUnidadmedidaDto: CreateUnidadmedidaDto) {
+    // ✅ async agregado
     return this.unidadmedidaService.create(createUnidadmedidaDto);
   }
 
   @Get()
-  findAll() {
+  async findAll() {
+    // ✅ async agregado
     return this.unidadmedidaService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.unidadmedidaService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    // ✅ Validación de tipo agregada
+    return this.unidadmedidaService.findOne(id);
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
+  async update(
+    @Param('id', ParseIntPipe) id: number, // ✅ Validación de tipo agregada
     @Body() updateUnidadmedidaDto: UpdateUnidadmedidaDto,
   ) {
-    return this.unidadmedidaService.update(+id, updateUnidadmedidaDto);
+    return this.unidadmedidaService.update(id, updateUnidadmedidaDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.unidadmedidaService.remove(+id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    // ✅ Validación de tipo agregada
+    return this.unidadmedidaService.remove(id);
   }
 }

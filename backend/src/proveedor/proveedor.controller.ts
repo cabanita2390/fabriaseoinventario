@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe, // 👉 Agregado para validación de parámetros
 } from '@nestjs/common';
 import { ProveedorService } from './proveedor.service';
 import { CreateProveedorDto } from './dto/create-proveedor.dto';
@@ -26,20 +27,22 @@ export class ProveedorController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.proveedorService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    // 👉 Validación agregada
+    return this.proveedorService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number, // 👉 Validación agregada
     @Body() updateProveedorDto: UpdateProveedorDto,
   ) {
-    return this.proveedorService.update(+id, updateProveedorDto);
+    return this.proveedorService.update(id, updateProveedorDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.proveedorService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    // 👉 Validación agregada
+    return this.proveedorService.remove(id);
   }
 }

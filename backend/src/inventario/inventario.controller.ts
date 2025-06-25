@@ -3,15 +3,14 @@ import {
   Get,
   Post,
   Body,
-  // Patch,
   Param,
   Delete,
   Patch,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { InventarioService } from './inventario.service';
 import { CreateInventarioDto } from './dto/create-inventario.dto';
 import { UpdateInventarioDto } from './dto/update-inventario.dto';
-// import { UpdateInventarioDto } from './dto/update-inventario.dto';
 
 @Controller('inventario')
 export class InventarioController {
@@ -28,20 +27,20 @@ export class InventarioController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.inventarioService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.inventarioService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateInventarioDto: UpdateInventarioDto,
   ) {
-    return this.inventarioService.update(+id, updateInventarioDto);
+    return this.inventarioService.update(id, updateInventarioDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.inventarioService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.inventarioService.remove(id);
   }
 }

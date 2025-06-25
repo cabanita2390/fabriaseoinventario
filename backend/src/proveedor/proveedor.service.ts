@@ -1,5 +1,9 @@
-// src/proveedor/proveedor.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException, // 👉 Agregado para manejo de errores técnicos
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateProveedorDto } from './dto/create-proveedor.dto';
@@ -15,37 +19,63 @@ export class ProveedorService {
 
   async create(dto: CreateProveedorDto): Promise<Proveedor> {
     const entidad = this.proveedorRepo.create(dto);
-    return this.proveedorRepo.save(entidad);
+
+    try {
+      // 👉 Agregado try/catch
+      return await this.proveedorRepo.save(entidad);
+    } catch (error) {
+      throw new InternalServerErrorException('Error al crear proveedor'); // 👉 Manejo de error técnico
+    }
   }
 
   async findAll(): Promise<Proveedor[]> {
-    return this.proveedorRepo.find();
+    try {
+      // 👉 Agregado try/catch
+      return await this.proveedorRepo.find();
+    } catch (error) {
+      throw new InternalServerErrorException('Error al consultar proveedores'); // 👉 Manejo de error técnico
+    }
   }
 
   async findOne(id: number): Promise<Proveedor> {
-    const entidad = await this.proveedorRepo.findOne({ where: { id } });
-    if (!entidad) {
-      throw new NotFoundException(`Proveedor con id ${id} no encontrado`);
+    try {
+      // 👉 Agregado try/catch
+      const entidad = await this.proveedorRepo.findOne({ where: { id } });
+      if (!entidad) {
+        throw new NotFoundException(`Proveedor con id ${id} no encontrado`);
+      }
+      return entidad;
+    } catch (error) {
+      throw new InternalServerErrorException('Error al consultar proveedor'); // 👉 Manejo de error técnico
     }
-    return entidad;
   }
 
   async update(id: number, dto: UpdateProveedorDto): Promise<Proveedor> {
-    const entidad = await this.proveedorRepo.preload({
-      id,
-      ...dto,
-    });
-    if (!entidad) {
-      throw new NotFoundException(`Proveedor con id ${id} no encontrado`);
+    try {
+      // 👉 Agregado try/catch
+      const entidad = await this.proveedorRepo.preload({
+        id,
+        ...dto,
+      });
+      if (!entidad) {
+        throw new NotFoundException(`Proveedor con id ${id} no encontrado`);
+      }
+      return await this.proveedorRepo.save(entidad);
+    } catch (error) {
+      throw new InternalServerErrorException('Error al actualizar proveedor'); // 👉 Manejo de error técnico
     }
-    return this.proveedorRepo.save(entidad);
   }
 
   async remove(id: number): Promise<void> {
-    const entidad = await this.proveedorRepo.findOne({ where: { id } });
-    if (!entidad) {
-      throw new NotFoundException(`Proveedor con id ${id} no encontrado`);
+    try {
+      // 👉 Agregado try/catch
+      const entidad = await this.proveedorRepo.findOne({ where: { id } });
+      if (!entidad) {
+        throw new NotFoundException(`Proveedor con id ${id} no encontrado`);
+      }
+      await this.proveedorRepo.remove(entidad);
+    } catch (error) {
+      throw new InternalServerErrorException('Error al eliminar proveedor'); // 👉 Manejo de error técnico
     }
-    await this.proveedorRepo.remove(entidad);
   }
 }

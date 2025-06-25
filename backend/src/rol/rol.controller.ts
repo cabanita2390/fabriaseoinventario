@@ -1,4 +1,3 @@
-// src/rol/rol.controller.ts
 import {
   Controller,
   Get,
@@ -7,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe, // 👉 Agregado para validación de parámetros
 } from '@nestjs/common';
 import { RolService } from './rol.service';
 import { CreateRolDto } from './dto/create-rol.dto';
@@ -27,17 +27,22 @@ export class RolController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.rolService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    // 👉 Validación agregada
+    return this.rolService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRolDto: UpdateRolDto) {
-    return this.rolService.update(+id, updateRolDto);
+  update(
+    @Param('id', ParseIntPipe) id: number, // 👉 Validación agregada
+    @Body() updateRolDto: UpdateRolDto,
+  ) {
+    return this.rolService.update(id, updateRolDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.rolService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    // 👉 Validación agregada
+    return this.rolService.remove(id);
   }
 }

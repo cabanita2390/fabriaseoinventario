@@ -5,9 +5,13 @@ import { MovimientoService } from './movimiento.service';
 import { MovimientoController } from './movimiento.controller';
 import { Movimiento } from '../entities/movimiento.entity';
 import { Inventario } from 'src/entities/inventario.entity';
+import { Producto } from 'src/entities/producto.entity';
+import { Bodega } from 'src/entities/bodega.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Movimiento, Inventario])],
+  imports: [
+    TypeOrmModule.forFeature([Movimiento, Inventario, Producto, Bodega]),
+  ],
   controllers: [MovimientoController],
   providers: [MovimientoService],
 })

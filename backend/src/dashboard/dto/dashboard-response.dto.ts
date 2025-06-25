@@ -1,35 +1,78 @@
-// src/dashboard/dto/dashboard-response.dto.ts
+import { Expose, Type } from 'class-transformer';
 
-export interface MovimientoResumenDto {
+export class ProductoDto {
+  @Expose()
   id: number;
+
+  @Expose()
+  nombre: string;
+}
+
+export class BodegaDto {
+  @Expose()
+  id: number;
+
+  @Expose()
+  nombre: string;
+}
+
+export class MovimientoResumenDto {
+  @Expose()
+  id: number;
+
+  @Expose()
   tipo: string;
+
+  @Expose()
   cantidad: number;
+
+  @Expose()
   fechaMovimiento: string;
+
+  @Expose()
   descripcion: string;
-  producto: {
-    id: number;
-    nombre: string;
-  };
-  bodega: {
-    id: number;
-    nombre: string;
-  };
+
+  @Expose()
+  @Type(() => ProductoDto)
+  producto: ProductoDto;
+
+  @Expose()
+  @Type(() => BodegaDto)
+  bodega: BodegaDto;
 }
 
-export interface ProductoStockDto {
+export class ProductoStockDto {
+  @Expose()
   id: number;
+
+  @Expose()
   nombre: string;
-  cantidad_actual: number;
+
+  @Expose({ name: 'cantidadActual' })
+  cantidadActual: number;
 }
 
-export interface ProductoGraficoDto {
+export class ProductoGraficoDto {
+  @Expose()
   nombre: string;
+
+  @Expose()
   totalStock: number;
 }
 
-export interface DashboardResponseDto {
+export class DashboardResponseDto {
+  @Expose()
   totalMovimientosHoy: number;
+
+  @Expose()
+  @Type(() => ProductoStockDto)
   productosBajoStock: ProductoStockDto[];
+
+  @Expose()
+  @Type(() => ProductoGraficoDto)
   top5ProductosMasBajoStock: ProductoGraficoDto[];
-  ultimosMovimientos: MovimientoResumenDto[]; // ahora 6
+
+  @Expose()
+  @Type(() => MovimientoResumenDto)
+  ultimosMovimientos: MovimientoResumenDto[];
 }
