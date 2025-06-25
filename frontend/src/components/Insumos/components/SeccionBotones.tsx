@@ -6,9 +6,14 @@ interface SeccionBotonesProps {
   onButtonClick: (tipo: Tipo) => void;
 }
 
+const getButtonText = (accion: string): string => {
+  const [firstWord] = accion.split(' ');
+  return firstWord || accion; // Fallback por si accion está vacía
+};
+
 const SeccionBotones: React.FC<SeccionBotonesProps> = ({ onButtonClick }) => {
   return (
-    <ButtonGroup>
+    <ButtonGroup role="group" aria-label="Secciones de insumos">
       {SECCIONES.map(({ titulo, acciones }) => (
         <ButtonContainer key={titulo}>
           <h3>{titulo}</h3>
@@ -16,9 +21,10 @@ const SeccionBotones: React.FC<SeccionBotonesProps> = ({ onButtonClick }) => {
             {acciones.map((accion) => (
               <StyledButton
                 key={accion}
-                onClick={() => onButtonClick(accion as Tipo)}
+                onClick={() => onButtonClick(accion)}
+                aria-label={accion}
               >
-                {accion.split(' ')[0]}
+                {getButtonText(accion)}
               </StyledButton>
             ))}
           </ButtonWrapper>

@@ -8,10 +8,11 @@ export interface ProductoAgrupado {
   nombre: string;
   tipoProducto: string;
   estado: string;
-  unidadMedida?: { id: number; nombre: string };
-  proveedor?: { id: number; nombre: string } | null;
-  presentaciones: Presentacion[];
+  unidadMedida: { id: number; nombre: string } | null;
+  proveedor: { id: number; nombre: string } | null;
+  presentaciones: [Presentacion, ...Presentacion[]]; // Al menos una presentación
 }
+
 
 export interface FormState {
   tipo: string;
