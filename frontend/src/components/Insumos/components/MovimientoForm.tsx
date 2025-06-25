@@ -6,6 +6,10 @@ import { ModalFooter } from '../../../styles/ui/Modal.css';
 import { StyledButton } from '../../../styles/Insumos.css';
 import { FormState, Tipo, ProductoAgrupado } from '../types/InsumosTipe';
 
+// Definir constantes para valores por defecto
+const DEFAULT_OPTION = "seleccione una opción";
+const EMPTY_STRING = "";
+
 interface MovimientoFormProps {
   tipoActual: Tipo;
   isEditMode: boolean;
@@ -15,54 +19,120 @@ interface MovimientoFormProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onSave: () => Promise<void>;
   onClose: () => void;
+  disabled?: boolean; // Prop opcional añadida
 }
 
 const MovimientoForm: React.FC<MovimientoFormProps> = ({
   tipoActual, isEditMode, form, productosDisponibles, 
-  bodegasDisponibles, onChange, onSave, onClose
+  bodegasDisponibles, onChange, onSave, onClose, disabled = false
 }) => {
+  // Memoizar opciones para mejor rendimiento
+  const productoOptions = React.useMemo(
+    () => [DEFAULT_OPTION, ...productosDisponibles.map((p) => p.nombre)],
+    [productosDisponibles]
+  );
+
+  const bodegaOptions = React.useMemo(
+    () => [DEFAULT_OPTION, ...bodegasDisponibles.map((b) => b.nombre)],
+    [bodegasDisponibles]
+  );
+
+  const presentacionOptions = React.useMemo(() => {
+    if (!form.producto?.presentaciones?.length) return [DEFAULT_OPTION];
+    return [DEFAULT_OPTION, ...form.producto.presentaciones.map(p => p.nombre)];
+  }, [form.producto]);
+
+  // Manejo seguro de valores nulos/undefined
+  const getSafeValue = (value: string | undefined | null, fallback = EMPTY_STRING) => 
+    value ?? fallback;
+
   return (
-    <Modal onClose={onClose}>
-      <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>
+    <Modal onClose={onClose} aria-labelledby="movimiento-form-title">
+      <h2 
+        id="movimiento-form-title"
+        style={{ textAlign: "center", marginBottom: "1rem" }}
+      >
         {isEditMode ? `Editar ${tipoActual}` : `Registrar ${tipoActual}`}
       </h2>
 
       <Select
         label="Producto"
         name="producto"
-        value={form.producto?.nombre || "seleccione una opcion"}
+        value={getSafeValue(form.producto?.nombre, DEFAULT_OPTION)}
         onChange={onChange}
-        options={["seleccione una opcion", ...productosDisponibles.map((p) => p.nombre)]}
+        options={productoOptions}
+        disabled={disabled}
+        aria-required="true"
       />
 
       <Select
         label="Presentación"
         name="presentacion"
-        value={form.presentacionSeleccionada?.nombre || "seleccione una opcion"}
+        value={getSafeValue(form.presentacionSeleccionada?.nombre, DEFAULT_OPTION)}
         onChange={onChange}
-        options={
-          form.producto?.presentaciones.length
-            ? ["seleccione una opcion", ...form.producto.presentaciones.map(p => p.nombre)]
-            : ["seleccione una opcion"]
-        }
+        options={presentacionOptions}
+        disabled={disabled || !form.producto}
+        aria-required="true"
       />
 
-      <Input label="Unidad de Medida" value={form.producto?.unidadMedida?.nombre || ""} disabled />
-      <Input label="Proveedor (opcional)" value={form.producto?.proveedor?.nombre || ""} disabled />
-      <Input label="Cantidad" name="cantidad" value={form.cantidad} onChange={onChange} type="number" />
-      <Input label="" name="fecha" type="hidden" value={form.fecha} disabled />
-      <Input label="Descripción" name="descripcion" value={form.descripcion} onChange={onChange} />
+      <Input 
+        label="Unidad de Medida" 
+        value={getSafeValue(form.producto?.unidadMedida?.nombre)} 
+        disabled 
+      />
+
+      <Input 
+        label="Proveedor (opcional)" 
+        value={getSafeValue(form.producto?.proveedor?.nombre)} 
+        disabled 
+      />
+
+      <Input 
+        label="Cantidad" 
+        name="cantidad" 
+        value={form.cantidad} 
+        onChange={onChange} 
+        type="number" 
+        min="0"
+        step="0.01"
+        disabled={disabled}
+        aria-required="true"
+      />
+
+      <Input 
+        label="" 
+        name="fecha" 
+        type="hidden" 
+        value={form.fecha} 
+        disabled 
+      />
+
+      <Input 
+        label="Descripción" 
+        name="descripcion" 
+        value={getSafeValue(form.descripcion)} 
+        onChange={onChange}
+        disabled={disabled}
+      />
 
       <Select
         label="Bodega"
         name="bodega"
-        value={form.bodega}
+        value={getSafeValue(form.bodega, DEFAULT_OPTION)}
         onChange={onChange}
-        options={["seleccione una opcion", ...bodegasDisponibles.map((b) => b.nombre)]}
+        options={bodegaOptions}
+        disabled={disabled}
+        aria-required="true"
       />
 
       <ModalFooter>
-        <StyledButton onClick={onSave}>Guardar</StyledButton>
+        <StyledButton 
+          onClick={onSave} 
+          disabled={disabled}
+          aria-busy={disabled}
+        >
+          {disabled ? "Guardando..." : "Guardar"}
+        </StyledButton>
       </ModalFooter>
     </Modal>
   );
