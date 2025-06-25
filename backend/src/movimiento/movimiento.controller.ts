@@ -7,11 +7,18 @@ import {
   Delete,
   Patch,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { MovimientoService } from './movimiento.service';
 import { CreateMovimientoDto } from './dto/create-movimiento.dto';
 import { UpdateMovimientoDto } from './dto/update-movimiento.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { ADMIN } from 'src/auth/constants/roles.constant';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(ADMIN)
 @Controller('movimiento')
 export class MovimientoController {
   constructor(private readonly movimientoService: MovimientoService) {}

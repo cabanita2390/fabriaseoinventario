@@ -11,7 +11,7 @@ import { UsuarioModule } from '../usuario/usuario.module';
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: 'jwt_secret_key', // Puedes moverlo a .env después
+      secret: 'secreto', // Puedes moverlo a .env después
       signOptions: { expiresIn: '1h' },
     }),
     UsuarioModule, // Necesitamos el servicio de usuarios
