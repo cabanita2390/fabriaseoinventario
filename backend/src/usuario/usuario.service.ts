@@ -34,7 +34,7 @@ export class UsuarioService {
     const passwordHash = await this.hashPassword(dto.password);
 
     const rolPorDefecto = await this.rolRepo.findOne({
-      where: { nombre: 'USUARIO' },
+      where: { nombre: 'OPERARIO_PRODUCCION' },
     });
     if (!rolPorDefecto) {
       throw new BadRequestException(

@@ -6,12 +6,19 @@ import {
   Patch,
   Param,
   Delete,
-  ParseIntPipe, // ✅ Agregado para validación de tipo
+  ParseIntPipe,
+  UseGuards, // ✅ Agregado para validación de tipo
 } from '@nestjs/common';
 import { UnidadmedidaService } from './unidadmedida.service';
 import { CreateUnidadmedidaDto } from './dto/create-unidadmedida.dto';
 import { UpdateUnidadmedidaDto } from './dto/update-unidadmedida.dto';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { ADMIN } from 'src/auth/constants/roles.constant';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(ADMIN)
 @Controller('unidadmedida')
 export class UnidadmedidaController {
   constructor(private readonly unidadmedidaService: UnidadmedidaService) {}
