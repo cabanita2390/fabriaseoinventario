@@ -14,7 +14,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getDashboard(): Promise<DashboardResponseDto> {
     return this.dashboardService.getDashboardData();

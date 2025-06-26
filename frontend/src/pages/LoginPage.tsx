@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import api from '../api/auth'; // Ruta corregida a la carpeta api
 import logo from '../assets/logo-fabriaseo.png';
 import {
   Container,
@@ -10,52 +9,27 @@ import {
   Form,
   Input,
   Button,
-  Error as ErrorStyled
-} from '../styles/Login.css';
+  Error
+} from '../styles/Login.css'; // ✅ Importamos los estilos separados
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
 
-    if (!username || !password) {
+    if (!email || !password) {
       setError('Todos los campos son obligatorios');
-      setIsLoading(false);
       return;
     }
 
-    try {
-      const response = await api.post('/auth/login', {
-        username: username.trim(),
-        password
-      });
-
-      localStorage.setItem('authToken', response.data.access_token);
+    if (email === 'admin@fabriaseo.com' && password === '123456') {
       navigate('/dashboard');
-      
-    } catch (err: any) {
-      let errorMessage = 'Error al iniciar sesión';
-      
-      if (err.response) {
-        if (err.response.status === 401) {
-          errorMessage = 'Credenciales incorrectas';
-        } else if (err.response.data?.message) {
-          errorMessage = err.response.data.message;
-        }
-      } else if (err.request) {
-        errorMessage = 'No se pudo conectar al servidor';
-      }
-      
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
+    } else {
+      setError('Credenciales inválidas');
     }
   };
 
@@ -66,23 +40,19 @@ const LoginPage = () => {
         <Title>Iniciar Sesión</Title>
         <Form onSubmit={handleSubmit}>
           <Input
-            type="text"
-            placeholder="Nombre de usuario"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
           <Input
             type="password"
             placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
           />
-          {error && <ErrorStyled>{error}</ErrorStyled>}
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Cargando...' : 'Entrar'}
-          </Button>
+          {error && <Error>{error}</Error>}
+          <Button type="submit">Entrar</Button>
         </Form>
       </Card>
     </Container>
