@@ -9,6 +9,7 @@ import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Swal from 'sweetalert2';
 import styled from 'styled-components';
+import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
 interface RowData {
   id: number;
   tipo: string;
@@ -52,7 +53,7 @@ function Tabla({ mostrarFiltro = true, mostrarExportar = true }: { mostrarFiltro
   const [productosDisponibles, setProductosDisponibles] = useState<ProductoAgrupado[]>([]);
   const [bodegasDisponibles, setBodegasDisponibles] = useState<Bodega[]>([]);
   const [productosOriginales, setProductosOriginales] = useState<any[]>([]);
-
+  const { authFetch } = useAuthFetch(); 
   const handleEdit = useCallback((movimiento: RowData) => {
     setEditando(movimiento);
     cargarDatosRelacionados();
@@ -72,7 +73,7 @@ function Tabla({ mostrarFiltro = true, mostrarExportar = true }: { mostrarFiltro
 
   const cargarProductos = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:3000/producto');
+      const res = await authFetch('http://localhost:3000/producto');
       const data = await res.json();
 
       setProductosOriginales(data);
@@ -100,7 +101,7 @@ function Tabla({ mostrarFiltro = true, mostrarExportar = true }: { mostrarFiltro
 
   const cargarBodegas = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:3000/bodega');
+      const res = await authFetch ('http://localhost:3000/bodega');
       const data = await res.json();
       setBodegasDisponibles(data);
     } catch (err) {
@@ -115,7 +116,7 @@ function Tabla({ mostrarFiltro = true, mostrarExportar = true }: { mostrarFiltro
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:3000/movimiento');
+        const response = await authFetch ('http://localhost:3000/movimiento');
         const json = await response.json();
 
         const movimientos: RowData[] = json.map((mov: any) => ({
@@ -263,7 +264,7 @@ function Tabla({ mostrarFiltro = true, mostrarExportar = true }: { mostrarFiltro
         bodega_idbodega: editando.bodega_id
       };
 
-      const response = await fetch(`http://localhost:3000/movimiento/${editando.id}`, {
+      const response = await authFetch (`http://localhost:3000/movimiento/${editando.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

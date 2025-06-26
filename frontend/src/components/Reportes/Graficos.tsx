@@ -3,7 +3,8 @@ import Filtro from '../Movimientos/Filtro';
 import GraficoProductos from './GraficoProductos';
 import { FieldConfig } from '../types/FieldConfig';
 import { useState , useEffect } from 'react';
-
+import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
+const { authFetch } = useAuthFetch(); 
 const filtros: FieldConfig[] = [
   { tipo: 'date', id: 'fechaInicio', label: 'Fecha de inicio' },
   { tipo: 'date', id: 'fechaFin', label: 'Fecha fin' },
@@ -22,7 +23,7 @@ const Graficos = () => {
 useEffect(() => {
   const fetchData = async () => {
     try {
-      const res = await fetch('http://localhost:3000/movimiento');
+      const res = await  authFetch ('http://localhost:3000/movimiento');
       const json = await res.json();
 
       const movimientos: Movimiento[] = json.map((mov: any) => ({

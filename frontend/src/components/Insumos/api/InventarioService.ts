@@ -1,12 +1,13 @@
 import { InventarioItem, UpdateInventarioDto } from '../types/InsumosTipe';
+import { useAuthFetch } from '../../ui/useAuthFetch';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const { authFetch } = useAuthFetch();
 
 const validateId = (id: number): void => {
   if (!Number.isInteger(id)) throw new Error(`ID inválido: ${id}`);
   if (id <= 0) throw new Error(`ID debe ser positivo: ${id}`);
 };
-
 
 const validateNumber = (value: number, name: string): void => {
   if (typeof value !== 'number' || isNaN(value)) {
@@ -23,7 +24,7 @@ export const obtenerInventarioExistente = async (
     validateId(productoId);
     validateId(bodegaId);
 
-    const response = await fetch(`${API_BASE_URL}/inventario`);
+    const response = await authFetch(`${API_BASE_URL}/inventario`);
     
     if (!response.ok) {
       throw new Error(`Error ${response.status} al obtener inventario`);
@@ -41,7 +42,7 @@ export const obtenerInventarioExistente = async (
     ) ?? null;
   } catch (error) {
     console.error("Error al obtener inventario:", error);
-    throw error; // Mejor re-lanzar el error para manejo superior
+    throw error;
   }
 };
 
@@ -62,7 +63,7 @@ export const crearInventario = async (
       bodega: { id: bodegaId }
     };
 
-    const response = await fetch(`${API_BASE_URL}/inventario`, {
+    const response = await authFetch(`${API_BASE_URL}/inventario`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -102,7 +103,7 @@ export const actualizarInventario = async (
     };
 
     const url = new URL(`${API_BASE_URL}/inventario/${encodeURIComponent(inventarioId)}`);
-    const response = await fetch(url.toString(), {
+    const response = await authFetch(url.toString(), {
       method: "PATCH",
       headers: { 
         "Content-Type": "application/json",

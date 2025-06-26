@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuthFetch , ApiError } from '../../ui/useAuthFetch';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -39,9 +40,10 @@ function Gstockbajo() {
     labels: [],
     datasets: [],
   });
+  const { authFetch } = useAuthFetch(); 
 
   useEffect(() => {
-  fetch('http://localhost:3000/dashboard')
+      authFetch('http://localhost:3000/dashboard')
     .then((res) => res.json())
     .then((mockData) => {
       const productos: Producto[] = mockData.top5ProductosMasBajoStock;

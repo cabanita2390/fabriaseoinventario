@@ -5,12 +5,15 @@ import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
+import Select from '../../components/ui/Select';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import SearchBar from '../../components/ui/Searchbar';
+import { useAuthFetch, ApiError } from '../../components/ui/useAuthFetch';
 
+// Types
 type Opcion = { id: number; nombre: string };
 
 type Producto = {
@@ -24,305 +27,217 @@ type Producto = {
   proveedor: string | null;
 };
 
-type ProductoRow = Omit<Producto, 'presentacion' | 'unidadMedida'> & {
-  presentacion: string;
-  unidadMedida: string;
-};
-
 type ProductoForm = {
   id?: number;
   nombre: string;
   tipoProducto: string;
   subtipoInsumo: string | null;
   estado: string;
-  presentacion_id: number | '';
-  unidadmedida_id: number | '';
-  proveedor_id: number | '' | null;
+  presentacion_id: number | null;
+  unidadmedida_id: number | null;
+  proveedor_id: number | null;
 };
 
+// Constants
 const API_BASE = 'http://localhost:3000';
-
-const initialForm: ProductoForm = {
+const INITIAL_FORM: ProductoForm = {
   nombre: '',
   tipoProducto: 'MATERIA_PRIMA',
   subtipoInsumo: null,
   estado: 'ACTIVO',
-  presentacion_id: '',
-  unidadmedida_id: '',
-  proveedor_id: ''
+  presentacion_id: null,
+  unidadmedida_id: null,
+  proveedor_id: null
 };
 
-const columns = [
+const COLUMNS = [
   { header: 'ID', accessor: 'id' },
   { header: 'Nombre', accessor: 'nombre' },
-  { header: 'Presentación', accessor: 'presentacion' },
-  { header: 'Unidad', accessor: 'unidadMedida' },
+  { header: 'Presentación', accessor: 'presentacion.nombre' },
+  { header: 'Unidad', accessor: 'unidadMedida.nombre' },
   { header: 'Tipo', accessor: 'tipoProducto' }
 ];
 
 const ProductosBasePage: React.FC = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState<ProductoForm>(initialForm);
+  const { authFetch } = useAuthFetch();
+  
+  // State
+  const [form, setForm] = useState<ProductoForm>(INITIAL_FORM);
   const [data, setData] = useState<Producto[]>([]);
-  const [opciones, setOpciones] = useState<{
-    presentaciones: Opcion[];
-    unidades: Opcion[];
-    proveedores: Opcion[];
-  }>({ presentaciones: [], unidades: [], proveedores: [] });
+  const [opciones, setOpciones] = useState({
+    presentaciones: [] as Opcion[],
+    unidades: [] as Opcion[],
+    proveedores: [] as Opcion[]
+  });
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [filtro, setFiltro] = useState('');
 
-  // Datos filtrados memoizados para mejor performance
-  const filteredData: ProductoRow[] = useMemo(() => {
-    if (!filtro) {
-      return data.map((item: Producto): ProductoRow => ({
-        ...item,
-        presentacion: item.presentacion.nombre,
-        unidadMedida: item.unidadMedida.nombre
-      }));
-    }
-
-    const texto = filtro.toLowerCase();
-    return data
-      .filter((item: Producto) => {
-        return (
-          item.nombre.toLowerCase().includes(texto) ||
-          item.tipoProducto.toLowerCase().includes(texto) ||
-          item.presentacion.nombre.toLowerCase().includes(texto) ||
-          item.unidadMedida.nombre.toLowerCase().includes(texto)
-        );
-      })
-      .map((item: Producto): ProductoRow => ({
-        ...item,
-        presentacion: item.presentacion.nombre,
-        unidadMedida: item.unidadMedida.nombre
-      }));
-  }, [data, filtro]);
-
-  // Cargar productos al montar el componente
+  // Data fetching
   useEffect(() => {
-    const fetchProductos = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`${API_BASE}/producto`);
-        if (!response.ok) throw new Error('Error al cargar productos');
-        const productos = await response.json();
+        const [productos, presentaciones, unidades, proveedores] = await Promise.all([
+          authFetch(`${API_BASE}/producto`).then(r => r.json()),
+          authFetch(`${API_BASE}/presentacion`).then(r => r.json()),
+          authFetch(`${API_BASE}/unidadmedida`).then(r => r.json()),
+          authFetch(`${API_BASE}/proveedor`).then(r => r.json())
+        ]);
         setData(productos);
-      } catch {
-        Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
+        setOpciones({ presentaciones, unidades, proveedores });
+      } catch (error) {
+        handleError(error, 'Error al cargar datos');
       }
     };
-
-    fetchProductos();
+    fetchData();
   }, []);
 
-  // Cargar opciones cuando se abre el modal
-  useEffect(() => {
-    if (!showModal) return;
-
-    const fetchOpciones = async () => {
-      try {
-        const [presentaciones, unidades, proveedores] = await Promise.all([
-          fetch(`${API_BASE}/presentacion`).then(r => r.json()),
-          fetch(`${API_BASE}/unidadmedida`).then(r => r.json()),
-          fetch(`${API_BASE}/proveedor`).then(r => r.json())
-        ]);
-        
-        setOpciones({ presentaciones, unidades, proveedores });
-      } catch {
-        Swal.fire('Error', 'No se pudieron cargar las opciones', 'error');
-      }
-    };
-
-    fetchOpciones();
-  }, [showModal]);
+  // Handlers
+  const handleError = (error: unknown, defaultMessage: string) => {
+    console.error(error);
+    const message = error instanceof Error ? error.message : defaultMessage;
+    if (!['No autenticado', 'Sesión expirada'].includes(message)) {
+      Swal.fire('Error', message, 'error');
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({
       ...prev,
-      [name]: name.includes('_id') ? (value === '' ? '' : Number(value)) : value
+      [name]: name.endsWith('_id') ? (value ? Number(value) : null) : value
     }));
   };
 
-  const resetForm = () => {
-    setForm(initialForm);
-    setIsEditMode(false);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    resetForm();
-  };
-
-  const handleSave = async () => {
-    const { nombre, presentacion_id, unidadmedida_id } = form;
+  const handleSubmit = async () => {
+    const camposFaltantes: string[] = [];
     
-    if (!nombre || !presentacion_id || !unidadmedida_id) {
-      return Swal.fire('Error', 'Completa todos los campos obligatorios', 'warning');
-    }
+    if (!form.nombre.trim()) camposFaltantes.push('Nombre');
+    if (!form.tipoProducto.trim()) camposFaltantes.push('Tipo de Producto');
+    if (!form.presentacion_id) camposFaltantes.push('Presentación');
+    if (!form.unidadmedida_id) camposFaltantes.push('Unidad de Medida');
+    if (isEditMode && !form.estado.trim()) camposFaltantes.push('Estado');
 
-    const payload = {
-      nombre: form.nombre,
-      tipoProducto: form.tipoProducto,
-      subtipoInsumo: form.subtipoInsumo,
-      estado: form.estado,
-      presentacion_idpresentacion: form.presentacion_id,
-      unidadmedida_idunidadmedida: form.unidadmedida_id,
-      proveedor_idproveedor: form.proveedor_id || null
-    };
+    if (camposFaltantes.length > 0) {
+      return Swal.fire({
+        title: 'Campos obligatorios faltantes',
+        html: `Por favor complete los siguientes campos:<br><br>• ${camposFaltantes.join('<br>• ')}`,
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+    }
 
     try {
-      const response = await fetch(
-        isEditMode ? `${API_BASE}/producto/${form.id}` : `${API_BASE}/producto`,
-        {
-          method: isEditMode ? 'PATCH' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }
-      );
-
-      if (!response.ok) throw new Error('Error en el servidor');
+      const method = isEditMode ? 'PATCH' : 'POST';
+      const url = isEditMode ? `${API_BASE}/producto/${form.id}` : `${API_BASE}/producto`;
+      
+      const response = await authFetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: form.nombre,
+          tipoProducto: form.tipoProducto,
+          subtipoInsumo: form.subtipoInsumo,
+          estado: form.estado,
+          presentacion_idpresentacion: form.presentacion_id,
+          unidadmedida_idunidadmedida: form.unidadmedida_id,
+          proveedor_idproveedor: form.proveedor_id
+        })
+      });
 
       const result = await response.json();
-      const productoCompleto: Producto = {
-        id: isEditMode ? form.id! : result.id,
-        nombre: form.nombre,
-        tipoProducto: form.tipoProducto,
-        subtipoInsumo: form.subtipoInsumo,
-        estado: form.estado,
-        presentacion: opciones.presentaciones.find(p => p.id === form.presentacion_id) || 
-                     { id: Number(form.presentacion_id), nombre: 'Desconocido' },
-        unidadMedida: opciones.unidades.find(u => u.id === form.unidadmedida_id) || 
-                     { id: Number(form.unidadmedida_id), nombre: 'Desconocido' },
-        proveedor: form.proveedor_id 
-          ? opciones.proveedores.find(p => p.id === form.proveedor_id)?.nombre || null 
-          : null
-      };
-
-      setData(prev => 
-        isEditMode 
-          ? prev.map(item => item.id === form.id ? productoCompleto : item)
-          : [...prev, productoCompleto]
+      setData(prev => isEditMode
+        ? prev.map(p => p.id === form.id ? result : p)
+        : [...prev, result]
       );
-
-      Swal.fire('¡Éxito!', `Producto ${isEditMode ? 'actualizado' : 'creado'} correctamente`, 'success');
       closeModal();
-    } catch {
-      Swal.fire('Error', 'No se pudo guardar el producto', 'error');
+      Swal.fire('Éxito', `Producto ${isEditMode ? 'actualizado' : 'creado'} correctamente`, 'success');
+    } catch (error) {
+      handleError(error, 'Error al guardar el producto');
     }
   };
 
-  const handleDelete = async (row: ProductoRow) => {
-    const result = await Swal.fire({
-      title: '¿Eliminar producto?',
-      text: `¿Estás seguro de eliminar "${row.nombre}"?`,
+  const handleDelete = async (id: number, nombre: string) => {
+    const { isConfirmed } = await Swal.fire({
+      title: `¿Eliminar ${nombre}?`,
+      text: 'Esta acción no se puede deshacer',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Eliminar',
       cancelButtonText: 'Cancelar'
     });
 
-    if (result.isConfirmed) {
-      try {
-        const response = await fetch(`${API_BASE}/producto/${row.id}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Error al eliminar');
-        
-        setData(prev => prev.filter(item => item.id !== row.id));
-        Swal.fire('Eliminado', 'Producto eliminado correctamente', 'success');
-      } catch {
-        Swal.fire('Error', 'No se pudo eliminar el producto', 'error');
-      }
+    if (!isConfirmed) return;
+
+    try {
+      await authFetch(`${API_BASE}/producto/${id}`, { method: 'DELETE' });
+      setData(prev => prev.filter(p => p.id !== id));
+      Swal.fire('Eliminado', 'Producto eliminado correctamente', 'success');
+    } catch (error) {
+      handleError(error, 'Error al eliminar el producto');
     }
   };
 
-  const handleEdit = (row: ProductoRow) => {
-    const original = data.find(p => p.id === row.id);
-    if (!original) return;
-
-    const proveedorId = original.proveedor 
-      ? opciones.proveedores.find(p => p.nombre === original.proveedor)?.id || ''
-      : '';
+  const handleEdit = (id: number) => {
+    const producto = data.find(p => p.id === id);
+    if (!producto) return;
 
     setForm({
-      id: original.id,
-      nombre: original.nombre,
-      tipoProducto: original.tipoProducto,
-      subtipoInsumo: original.subtipoInsumo,
-      estado: original.estado,
-      presentacion_id: original.presentacion.id,
-      unidadmedida_id: original.unidadMedida.id,
-      proveedor_id: proveedorId
+      id: producto.id,
+      nombre: producto.nombre,
+      tipoProducto: producto.tipoProducto,
+      subtipoInsumo: producto.subtipoInsumo,
+      estado: producto.estado,
+      presentacion_id: producto.presentacion.id,
+      unidadmedida_id: producto.unidadMedida.id,
+      proveedor_id: producto.proveedor 
+        ? opciones.proveedores.find(p => p.nombre === producto.proveedor)?.id || null
+        : null
     });
     setIsEditMode(true);
     setShowModal(true);
   };
 
-  // Componente para campos select reutilizable
-  const SelectField: React.FC<{
-    name: keyof ProductoForm;
-    label: string;
-    options: Opcion[];
-    required?: boolean;
-  }> = ({ name, label, options, required = false }) => (
-    <div style={{ marginBottom: '1rem' }}>
-      <label htmlFor={name} style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-        {label} {required && '*'}
-      </label>
-      <select
-        id={name}
-        name={name}
-        value={form[name] || ''}
-        onChange={handleChange}
-        required={required}
-        style={{
-          width: '100%',
-          padding: '0.75rem',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          fontSize: '1rem',
-          backgroundColor: 'white'
-        }}
-      >
-        <option value="">{`Seleccione ${label.toLowerCase()}`}</option>
-        {options.map(option => (
-          <option key={option.id} value={option.id}>
-            {option.nombre}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
+  const closeModal = () => {
+    setShowModal(false);
+    setForm(INITIAL_FORM);
+    setIsEditMode(false);
+  };
+
+  // Filtered data
+  const filteredData = useMemo(() => {
+    if (!filtro) return data;
+    const searchTerm = filtro.toLowerCase();
+    return data.filter(p => 
+      p.nombre.toLowerCase().includes(searchTerm) ||
+      p.tipoProducto.toLowerCase().includes(searchTerm) ||
+      p.presentacion.nombre.toLowerCase().includes(searchTerm) ||
+      p.unidadMedida.nombre.toLowerCase().includes(searchTerm)
+    );
+  }, [data, filtro]);
 
   return (
     <Home>
       <Header>
-        <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
-          <SearchBar onSearch={setFiltro} placeholder="Buscar productos..." />
-          <BackButton onClick={() => navigate('/gestion')}>
-            <FaArrowLeft style={{ marginRight: '8px' }} />
-            Volver
-          </BackButton>
-          <Button onClick={() => setShowModal(true)}>
-            Agregar Producto
-          </Button>
-        </div>
+        <SearchBar onSearch={setFiltro} placeholder="Buscar productos..." />
+        <BackButton onClick={() => navigate('/gestion')}>
+          <FaArrowLeft /> Volver
+        </BackButton>
+        <Button onClick={() => setShowModal(true)}>Agregar Producto</Button>
       </Header>
 
-      <DataTable<ProductoRow>
-        columns={columns}
+      <DataTable
+        columns={COLUMNS}
         data={filteredData}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        defaultItemsPerPage={10}
+        onEdit={row => handleEdit(row.id)}
+        onDelete={row => handleDelete(row.id, row.nombre)}
       />
 
       {showModal && (
         <Modal onClose={closeModal}>
-          <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>
-            {isEditMode ? 'Editar Producto' : 'Agregar Producto'}
-          </h2>
-
+          <h2>{isEditMode ? 'Editar Producto' : 'Agregar Producto'}</h2>
+          
           <Input
             label="Nombre *"
             name="nombre"
@@ -346,59 +261,55 @@ const ProductosBasePage: React.FC = () => {
             onChange={handleChange}
           />
 
-          <SelectField
+          <Select
+            label="Presentación *"
             name="presentacion_id"
-            label="Presentación"
+            value={form.presentacion_id || ''}
             options={opciones.presentaciones}
+            onChange={handleChange}
+            placeholder="Elija una presentación"
             required
           />
 
-          <SelectField
+          <Select
+            label="Unidad de Medida *"
             name="unidadmedida_id"
-            label="Unidad de Medida"
+            value={form.unidadmedida_id || ''}
             options={opciones.unidades}
+            onChange={handleChange}
+            placeholder="Elija una unidad"
             required
           />
 
-          <SelectField
-            name="proveedor_id"
+          <Select
             label="Proveedor"
+            name="proveedor_id"
+            value={form.proveedor_id || ''}
             options={opciones.proveedores}
+            onChange={handleChange}
+            placeholder="Elija un proveedor"
           />
 
           {isEditMode && (
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="estado" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                Estado *
-              </label>
-              <select
-                id="estado"
-                name="estado"
-                value={form.estado}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  backgroundColor: 'white'
-                }}
-              >
-                <option value="ACTIVO">Activo</option>
-                <option value="INACTIVO">Inactivo</option>
-              </select>
-            </div>
+            <Select
+              label="Estado *"
+              name="estado"
+              value={form.estado}
+              options={[
+                { id: 'ACTIVO', nombre: 'Activo' },
+                { id: 'INACTIVO', nombre: 'Inactivo' }
+              ]}
+              onChange={handleChange}
+              placeholder="Elija un estado"
+              required
+            />
           )}
 
           <ModalFooter>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSubmit}>
               {isEditMode ? 'Actualizar' : 'Guardar'}
             </Button>
-            <Button onClick={closeModal}>
-              Cancelar
-            </Button>
+            <Button onClick={closeModal}>Cancelar</Button>
           </ModalFooter>
         </Modal>
       )}

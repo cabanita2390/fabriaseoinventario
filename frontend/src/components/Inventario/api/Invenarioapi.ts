@@ -1,15 +1,16 @@
 import { InventarioItemAPI, Bodega,InventarioItem } from '../types/inventarioTypes';
-
+import { useAuthFetch , ApiError } from '../../ui/useAuthFetch';
 const API_BASE_URL = 'http://localhost:3000';
+const { authFetch } = useAuthFetch();
 
 export const fetchInventario = async (): Promise<InventarioItemAPI[]> => {
-  const response = await fetch(`${API_BASE_URL}/inventario`);
+  const response = await  authFetch(`${API_BASE_URL}/inventario`);
   if (!response.ok) throw new Error('Error al cargar el inventario');
   return response.json();
 };
 
 export const fetchBodegas = async (): Promise<Bodega[]> => {
-  const response = await fetch(`${API_BASE_URL}/bodega`);
+  const response = await  authFetch(`${API_BASE_URL}/bodega`);
   if (!response.ok) throw new Error('Error al cargar las bodegas');
   return response.json();
 };
@@ -19,7 +20,7 @@ export const updateInventarioItem = async (id: number, payload: {
   producto_idproducto?: number;
   bodega_idbodega?: number;
 }) => {
-  const response = await fetch(`${API_BASE_URL}/inventario/${id}`, {
+  const response = await  authFetch(`${API_BASE_URL}/inventario/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
