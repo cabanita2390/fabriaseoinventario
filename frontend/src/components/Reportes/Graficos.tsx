@@ -3,8 +3,8 @@ import Filtro from '../Movimientos/Filtro';
 import GraficoProductos from './GraficoProductos';
 import { FieldConfig } from '../types/FieldConfig';
 import { useState , useEffect } from 'react';
-import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
-const { authFetch } = useAuthFetch(); 
+import {  authFetch , ApiError } from '../../components/ui/useAuthFetch';
+
 const filtros: FieldConfig[] = [
   { tipo: 'date', id: 'fechaInicio', label: 'Fecha de inicio' },
   { tipo: 'date', id: 'fechaFin', label: 'Fecha fin' },

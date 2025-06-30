@@ -1,7 +1,7 @@
 import { InventarioItemAPI, Bodega,InventarioItem } from '../types/inventarioTypes';
-import { useAuthFetch , ApiError } from '../../ui/useAuthFetch';
+import { authFetch , ApiError } from '../../ui/useAuthFetch';
 const API_BASE_URL = 'http://localhost:3000';
-const { authFetch } = useAuthFetch();
+
 
 export const fetchInventario = async (): Promise<InventarioItemAPI[]> => {
   const response = await  authFetch(`${API_BASE_URL}/inventario`);

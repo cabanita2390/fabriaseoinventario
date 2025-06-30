@@ -1,8 +1,8 @@
 import { InventarioItem, UpdateInventarioDto } from '../types/InsumosTipe';
-import { useAuthFetch } from '../../ui/useAuthFetch';
+import { authFetch } from '../../ui/useAuthFetch';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-const { authFetch } = useAuthFetch();
+
 
 const validateId = (id: number): void => {
   if (!Number.isInteger(id)) throw new Error(`ID inválido: ${id}`);

@@ -1,7 +1,7 @@
-import { useAuthFetch } from '../../ui/useAuthFetch';
+import { authFetch } from '../../ui/useAuthFetch'; // ✅ Correcto
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-const { authFetch } = useAuthFetch();
+// const { authFetch } = useAuthFetch(); // ❌ ELIMINA esta línea - no puedes usar hooks en servicios
 
 export const crearMovimiento = async (payload: {
   tipo: string;
