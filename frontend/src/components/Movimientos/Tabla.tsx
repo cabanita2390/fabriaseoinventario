@@ -60,10 +60,18 @@ const SaveButton = styled.button`
   }
 `;
 
-function Tabla({ mostrarFiltro = true, mostrarExportar = true }: { 
+// Definimos una interfaz para las props
+interface TablaProps {
   mostrarFiltro?: boolean; 
-  mostrarExportar?: boolean 
-}) {
+  mostrarExportar?: boolean;
+  reloadTrigger?: number; // Nueva prop añadida
+}
+
+function Tabla({ 
+  mostrarFiltro = true, 
+  mostrarExportar = true,
+  reloadTrigger // Recibimos la nueva prop
+}: TablaProps) {
   const [data, setData] = useState<RowData[]>([]);
   const [fullData, setFullData] = useState<RowData[]>([]);
   const [filtroTexto, setFiltroTexto] = useState('');
@@ -107,9 +115,10 @@ function Tabla({ mostrarFiltro = true, mostrarExportar = true }: {
     }
   }, [authFetch]);
 
+  // Añadimos reloadTrigger como dependencia para recargar datos cuando cambie
   useEffect(() => {
     cargarDatos();
-  }, [cargarDatos]);
+  }, [cargarDatos, reloadTrigger]);
 
   const handleBuscar = useCallback((values: Record<string, string>) => {
     const { fechaInicio, fechaFin } = values;
