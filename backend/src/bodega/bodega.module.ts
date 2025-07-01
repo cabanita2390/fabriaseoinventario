@@ -1,3 +1,4 @@
+// src/bodega/bodega.module.ts
 import { Module } from '@nestjs/common';
 import { BodegaService } from './bodega.service';
 import { BodegaController } from './bodega.controller';

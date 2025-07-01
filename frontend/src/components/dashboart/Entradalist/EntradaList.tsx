@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import '../../../styles/Dashboartdpage/MovimientoList.css';
-
+import { useAuthFetch , ApiError } from '../../ui/useAuthFetch';
 interface Movimiento {
   fecha: string;
   tipo: 'Entrada' | 'Salida';
@@ -11,11 +11,12 @@ interface Movimiento {
 function MovimientoList() {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [hayError, setHayError] = useState(false);
+  const { authFetch } = useAuthFetch(); 
 
   useEffect(() => {
   const obtenerMovimientos = async () => {
     try {
-      const response = await fetch('http://localhost:3000/dashboard');
+      const response = await authFetch('http://localhost:3000/dashboard');
       console.log('respuesta: ', response)
       const data = await response.json();
 

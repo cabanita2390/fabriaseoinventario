@@ -8,14 +8,15 @@ import {
 } from 'typeorm';
 import { Producto } from './producto.entity';
 import { Bodega } from './bodega.entity';
+import { TipoMovimiento } from 'src/movimiento/dto/create-movimiento.dto';
 
 @Entity({ name: 'movimiento' })
 export class Movimiento {
   @PrimaryGeneratedColumn({ name: 'idmovimiento' })
   id: number;
 
-  @Column({ type: 'enum', enum: ['INGRESO', 'EGRESO'] })
-  tipo: 'INGRESO' | 'EGRESO';
+  @Column({ type: 'enum', enum: TipoMovimiento })
+  tipo: TipoMovimiento;
 
   @Column({ type: 'int' })
   cantidad: number;

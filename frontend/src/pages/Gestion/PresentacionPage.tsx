@@ -10,7 +10,7 @@ import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-
+import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
 type Presentacion = {
   id?: number;
   nombre: string;
@@ -19,6 +19,8 @@ type Presentacion = {
 const initialForm: Presentacion = {
   nombre: ''
 };
+
+
 
 const PresentacionPage = () => {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ const PresentacionPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { authFetch } = useAuthFetch();
 
   const columns = [
     { header: 'ID', accessor: 'id' },
@@ -43,7 +46,7 @@ const PresentacionPage = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/presentacion');
+        const response = await authFetch ('http://localhost:3000/presentacion');
         if (!response.ok) throw new Error('Error al cargar presentaciones');
         const presentaciones = await response.json();
         setData(presentaciones);
@@ -79,7 +82,7 @@ const PresentacionPage = () => {
         ? `http://localhost:3000/presentacion/${form.id}`
         : 'http://localhost:3000/presentacion';
 
-      const response = await fetch(url, {
+      const response =  await authFetch(url, {
         method,
         headers: { 
           'Content-Type': 'application/json',
@@ -145,7 +148,7 @@ const PresentacionPage = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:3000/presentacion/${row.id}`, {
+        const response = await authFetch(`http://localhost:3000/presentacion/${row.id}`, {
           method: 'DELETE'
         });
         

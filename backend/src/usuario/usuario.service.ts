@@ -23,26 +23,18 @@ export class UsuarioService {
     private readonly rolRepo: Repository<Rol>,
   ) {}
 
-  // 1) Función auxiliar para hashear la contraseña
+  // 👉 Función auxiliar para hashear la contraseña
   private async hashPassword(password: string): Promise<string> {
     const salt = await bcrypt.genSalt(10);
     return bcrypt.hash(password, salt);
   }
 
-  /**
-   * Crear un nuevo usuario.
-   * - Asigna siempre el rol por defecto "USUARIO".
-   * - No se recibe rol en el DTO.
-   * - Hashea la contraseña.
-   * - Maneja email duplicado.
-   */
+  // 👉 Crear un nuevo usuario
   async create(dto: CreateUsuarioDto): Promise<any> {
-    // 1.1) Hashear contraseña
     const passwordHash = await this.hashPassword(dto.password);
 
-    // 1.2) Obtener el rol por defecto "USUARIO"
     const rolPorDefecto = await this.rolRepo.findOne({
-      where: { nombre: 'USUARIO' },
+      where: { nombre: 'OPERARIO_PRODUCCION' },
     });
     if (!rolPorDefecto) {
       throw new BadRequestException(
@@ -50,7 +42,6 @@ export class UsuarioService {
       );
     }
 
-    // 1.3) Crear la entidad Usuario
     const usuarioEntity = this.usuarioRepo.create({
       username: dto.username,
       nombre: dto.nombre ?? dto.username,
@@ -63,19 +54,18 @@ export class UsuarioService {
     try {
       guardado = await this.usuarioRepo.save(usuarioEntity);
     } catch (error) {
-      // Código 23505 = email duplicado
+      // 👉 Manejo de error por username o email duplicado
       if (
         error instanceof QueryFailedError &&
         (error as any).code === '23505'
       ) {
         throw new BadRequestException(
-          `Ya existe un usuario con el email = ${dto.email}`,
+          `El username o email ya están registrados`,
         );
       }
       throw error;
     }
 
-    // 1.4) Recargar para incluir "rol" y eliminar "password" de la respuesta
     const completo = await this.usuarioRepo.findOne({
       where: { id: guardado.id },
       relations: ['rol'],
@@ -89,11 +79,7 @@ export class UsuarioService {
     return sinPassword;
   }
 
-  /**
-   * Listar todos los usuarios.
-   * - Incluye el objeto "rol".
-   * - Omite la propiedad "password".
-   */
+  // 👉 Listar todos los usuarios sin mostrar contraseñas
   async findAll(): Promise<any[]> {
     const lista = await this.usuarioRepo.find({ relations: ['rol'] });
     return lista.map((u) => {
@@ -102,11 +88,7 @@ export class UsuarioService {
     });
   }
 
-  /**
-   * Obtener un usuario por ID.
-   * - Si no existe, lanza NotFoundException.
-   * - Incluye "rol" y omite "password".
-   */
+  // 👉 Obtener usuario por ID sin mostrar contraseña
   async findOne(id: number): Promise<any> {
     const entidad = await this.usuarioRepo.findOne({
       where: { id },
@@ -119,19 +101,12 @@ export class UsuarioService {
     return sinPassword;
   }
 
-  /**
-   * DTO para actualización: nombre, email o password.
-   * - No permite cambiar rol, siempre mantiene "USUARIO" a menos que después se modifique por un administrador.
-   * - Si llega "password", lo rehasea.
-   * - Maneja email duplicado.
-   */
+  // 👉 Actualizar usuario (nombre, email o contraseña)
   async update(id: number, dto: UpdateUsuarioDto): Promise<any> {
-    // 1) Si se envía nueva contraseña, rehasearla
     if (dto.password) {
       dto.password = await this.hashPassword(dto.password);
     }
 
-    // 2) Preload recarga la entidad con ID + campos a actualizar
     const entidad = await this.usuarioRepo.preload({ id, ...dto });
     if (!entidad) {
       throw new NotFoundException(`Usuario con id ${id} no encontrado`);
@@ -140,19 +115,17 @@ export class UsuarioService {
     try {
       await this.usuarioRepo.save(entidad);
     } catch (error) {
-      // 23505 = email duplicado
       if (
         error instanceof QueryFailedError &&
         (error as any).code === '23505'
       ) {
         throw new BadRequestException(
-          `Ya existe un usuario con el email = ${dto.email}`,
+          `El username o email ya están registrados`,
         );
       }
       throw error;
     }
 
-    // 3) Recargar para incluir "rol" y omitir "password"
     const actualizado = await this.usuarioRepo.findOne({
       where: { id },
       relations: ['rol'],
@@ -166,10 +139,7 @@ export class UsuarioService {
     return sinPassword;
   }
 
-  /**
-   * Eliminar un usuario por ID.
-   * - Si no existe, lanza NotFoundException.
-   */
+  // 👉 Eliminar usuario por ID
   async remove(id: number): Promise<void> {
     const entidad = await this.usuarioRepo.findOne({ where: { id } });
     if (!entidad) {
@@ -178,7 +148,7 @@ export class UsuarioService {
     await this.usuarioRepo.remove(entidad);
   }
 
-  /** Devuelve el usuario (con hash) o null si no existe */
+  // 👉 Buscar usuario por username (incluye hash de la contraseña)
   async findByUsernameWithPassword(username: string): Promise<Usuario | null> {
     return this.usuarioRepo.findOne({
       where: { username },

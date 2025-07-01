@@ -2,10 +2,27 @@ import React, { useState, useEffect } from 'react';
 import DataTable from '../ui/DataTable';
 import SearchBar from '../ui/Searchbar';
 import Modal from '../ui/Modal';
-import { fetchInventario, fetchBodegas, updateInventarioItem,transformInventarioData } from '../Inventario/api/Invenarioapi';
-import { InventarioItem, Bodega } from '../Inventario/types/inventarioTypes';
+import { fetchInventario, fetchBodegas, updateInventarioItem } from '../Inventario/api/Invenarioapi';
+import { InventarioItemAPI, InventarioItem, Bodega } from '../Inventario/types/inventarioTypes';
 import Swal from 'sweetalert2';
 import EditModal from '../Inventario/components/IdictModal';
+
+// Función para transformar los datos del API a tu estructura InventarioItem
+const transformInventarioData = (apiData: InventarioItemAPI[]): InventarioItem[] => {
+  return apiData.map(item => ({
+    id: item.id,
+    nombre: item.producto.nombre,
+    tipo: item.producto.tipoProducto,
+    presentacion: item.producto.presentacion.nombre,
+    unidad_medida: item.producto.unidadMedida.nombre,
+    cantidad_actual: item.cantidad_actual,
+    estado: item.producto.estado,
+    fechaUltimaActualizacion: item.fechaUltimaActualizacion, // <-- Se mantiene exactamente igual
+    bodega: item.bodega.nombre,
+    producto_id: item.producto.id,
+    bodega_id: item.bodega.id
+  }));
+};
 
 const columns = [
   { header: 'ID', accessor: 'id', width: '70px' },
