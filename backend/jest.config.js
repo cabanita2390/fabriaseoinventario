@@ -7,6 +7,8 @@ module.exports = {
   rootDir: '.',
   testMatch: [
     '<rootDir>/tests/**/*.spec.ts',
+    '<rootDir>/tests/**/*.integration-spec.ts',
+    '<rootDir>/tests/**/*.e2e-spec.ts',
     '<rootDir>/src/**/*.(spec|test).ts',
   ],
   transform: {

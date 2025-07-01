@@ -28,22 +28,25 @@ export class MovimientoController {
 
   @Post()
   @Roles(ADMIN, RECEPTOR_INSUMOS, RECEPTOR_MP)
-  create(@Body() createMovimientoDto: CreateMovimientoDto) {
+  async create(@Body() createMovimientoDto: CreateMovimientoDto) {
     return this.movimientoService.create(createMovimientoDto);
   }
 
   @Get()
-  findAll() {
+  @Roles(ADMIN)
+  async findAll() {
     return this.movimientoService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  @Roles(ADMIN)
+  async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.movimientoService.findOne(id);
   }
 
   @Patch(':id')
-  update(
+  @Roles(ADMIN)
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateMovimientoDto: UpdateMovimientoDto,
   ) {
@@ -51,7 +54,8 @@ export class MovimientoController {
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  @Roles(ADMIN)
+  async remove(@Param('id', ParseIntPipe) id: number) {
     return this.movimientoService.remove(id);
   }
 }
