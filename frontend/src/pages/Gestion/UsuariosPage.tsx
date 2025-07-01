@@ -1,40 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Home from '../../components/Home';
-import Input from '../../components/ui/Input';
-import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
-import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
-import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-
-type Rol = {
-  id: number;
-  nombre: string;
-};
-
-type Usuario = {
-  id: number;
-  nombre: string;
-  email: string;
-  contraseña: string;
-  fechaCreacion?: string;
-  id_rol: number;
-  estado?: string;
-  rol?: Rol;
-};
-
-const initialForm: Usuario = {
-  id: 0,
-  nombre: '',
-  email: '',
-  contraseña: '',
-  id_rol: 0,
-  estado: 'Activo'
-};
+import { Usuario, initialForm,Rol, CreateUsuarioDto , UpdateUsuarioDto } from '../../components/Usuarios/types/UsuariosTypes';
+import { useUsuarioService } from '../../components/Usuarios/api/UsuariosApi';
+import { UsuarioFormModal } from '../../components/Usuarios/components/UsuarioFormModal';
 
 const UsuariosPage = () => {
   const navigate = useNavigate();
@@ -43,38 +17,50 @@ const UsuariosPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [roles, setRoles] = useState<Rol[]>([
-    { id: 1, nombre: 'Administrador' },
-    { id: 2, nombre: 'Operario' }
-  ]);
+  const [roles, setRoles] = useState<Rol[]>([]);
+  
+  const {
+    fetchUsuarios,
+    fetchRoles,
+    createUsuario,
+    updateUsuario,
+    deleteUsuario
+  } = useUsuarioService();
 
-  // Convertir roles a array de strings para el Select
-  const rolesOptions = roles.map(r => r.nombre);
+  // Procesar datos para DataTable
+  const processedData = data.map(usuario => ({
+    ...usuario,
+    rol_nombre: usuario.rol?.nombre || 'Sin rol'
+  }));
 
   const columns = [
     { header: 'ID', accessor: 'id' },
+    { header: 'Username', accessor: 'username' },
     { header: 'Nombre', accessor: 'nombre' },
     { header: 'Email', accessor: 'email' },
-    { header: 'Rol', accessor: 'id_rol', cell: (row: Usuario) => roles.find(r => r.id === row.id_rol)?.nombre || row.id_rol },
+    { header: 'Rol', accessor: 'rol_nombre' },
     { header: 'Estado', accessor: 'estado' },
   ];
 
-  // Cargar datos mock
+  // Cargar datos iniciales
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('/Gestion.mock.json');
-        const json = await response.json();
-        setData(json.usuarios || []);
+        const [usuarios, rolesData] = await Promise.all([
+          fetchUsuarios(),
+          fetchRoles()
+        ]);
+        setData(usuarios);
+        setRoles(rolesData);
       } catch (error) {
-        console.error("Error cargando datos:", error);
-        Swal.fire('Error', 'No se pudieron cargar los usuarios', 'error');
+        console.error(error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchData();
+    
+    loadData();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,34 +70,74 @@ const UsuariosPage = () => {
   const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedRol = roles.find(r => r.nombre === e.target.value);
     if (selectedRol) {
-      setForm({ ...form, id_rol: selectedRol.id });
+      setForm({ ...form, rol: selectedRol });
     }
   };
 
   const handleSave = async () => {
-    const { nombre, email, contraseña, id_rol } = form;
+    if (isEditMode) {
+      await handleUpdate();
+    } else {
+      await handleCreate();
+    }
+  };
 
-    if (!nombre || !email || !contraseña || !id_rol) {
+  const handleCreate = async () => {
+    const { username, nombre, email, password } = form;
+
+    if (!username || !nombre || !email || !password) {
       Swal.fire('Campos obligatorios', 'Completa todos los campos requeridos', 'warning');
       return;
     }
 
     setIsLoading(true);
     try {
-      if (isEditMode) {
-        setData(data.map(item => item.id === form.id ? form : item));
-      } else {
-        const newId = Math.max(...data.map(u => u.id), 0) + 1;
-        setData([...data, { ...form, id: newId }]);
-      }
+      const nuevoUsuario = await createUsuario({
+        username,
+        nombre,
+        email,
+        password
+      });
       
-      Swal.fire('¡Guardado!', 'El usuario fue registrado correctamente', 'success');
+      setData(prev => [...prev, nuevoUsuario]);
+      Swal.fire('¡Creado!', 'Usuario creado correctamente', 'success');
+      setForm(initialForm);
+      setShowModal(false);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Error al crear usuario';
+      Swal.fire('Error', errorMessage, 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    const { id, username, nombre, email, password } = form;
+
+    if (!username || !nombre || !email) {
+      Swal.fire('Campos obligatorios', 'Completa los campos requeridos', 'warning');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const updateData: UpdateUsuarioDto = { username, nombre, email };
+      if (password && password.trim() !== '') {
+        updateData.password = password;
+      }
+
+      const updatedUser = await updateUsuario(id, updateData);
+      
+      setData(prev => 
+        prev.map(u => u.id === id ? updatedUser : u)
+      );
+      Swal.fire('¡Actualizado!', 'Usuario actualizado correctamente', 'success');
       setForm(initialForm);
       setShowModal(false);
       setIsEditMode(false);
-    } catch (error) {
-      console.error('Error:', error);
-      Swal.fire('¡Error!', 'Ocurrió un error al guardar el usuario', 'error');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Error al actualizar usuario';
+      Swal.fire('Error', errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -119,12 +145,8 @@ const UsuariosPage = () => {
 
   const handleEdit = (row: Usuario) => {
     setForm({
-      id: row.id,
-      nombre: row.nombre,
-      email: row.email,
-      contraseña: row.contraseña,
-      id_rol: row.id_rol,
-      estado: row.estado || 'Activo'
+      ...row,
+      password: '' // No mostrar contraseña actual
     });
     setIsEditMode(true);
     setShowModal(true);
@@ -133,105 +155,82 @@ const UsuariosPage = () => {
   const handleDelete = async (row: Usuario) => {
     const result = await Swal.fire({
       title: '¿Eliminar usuario?',
-      text: 'Esta acción no se puede deshacer.',
+      text: `¿Estás seguro de eliminar a ${row.nombre}?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Eliminar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Eliminar'
     });
 
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        setData(data.filter(item => item.id !== row.id));
-        Swal.fire('Eliminado', 'El usuario ha sido eliminado.', 'success');
-      } catch (error) {
-        console.error('Error:', error);
-        Swal.fire('Error', 'No se pudo eliminar el usuario', 'error');
+        await deleteUsuario(row.id);
+        setData(prev => prev.filter(u => u.id !== row.id));
+        Swal.fire('Eliminado!', 'Usuario eliminado correctamente', 'success');
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || 'Error al eliminar usuario';
+        Swal.fire('Error', errorMessage, 'error');
       } finally {
         setIsLoading(false);
       }
     }
   };
 
+  const handleCloseModal = () => {
+    if (!isLoading) {
+      setForm(initialForm);
+      setShowModal(false);
+      setIsEditMode(false);
+    }
+  };
+
+  const handleOpenCreateModal = () => {
+    setForm(initialForm);
+    setShowModal(true);
+  };
+
   return (
     <Home>
       <Header>
-        <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
-          <BackButton onClick={() => navigate('/gestion')}>
-            <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
-          </BackButton>
-          <Button
-            onClick={() => {
-              setForm(initialForm);
-              setIsEditMode(false);
-              setShowModal(true);
-            }}
-            disabled={isLoading}
-          >
-            Agregar Usuario
-          </Button>
+        <div className="header-content">
+          <h1>Gestión de Usuarios</h1>
+          <div className="header-actions">
+            <BackButton onClick={() => navigate('/gestion')}>
+              <FaArrowLeft /> Volver a Gestión
+            </BackButton>
+            <Button onClick={handleOpenCreateModal} disabled={isLoading}>
+              Agregar Usuario
+            </Button>
+          </div>
         </div>
       </Header>
 
       {isLoading ? (
-        <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando...</div>
+        <div className="loading-container">
+          <div>Cargando...</div>
+        </div>
       ) : (
         <DataTable 
           columns={columns} 
-          data={data} 
+          data={processedData} 
           onEdit={handleEdit} 
           onDelete={handleDelete} 
         />
       )}
 
-      {showModal && (
-        <Modal onClose={() => !isLoading && setShowModal(false)}>
-          <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>
-            {isEditMode ? 'Editar Usuario' : 'Agregar Usuario'}
-          </h2>
-
-          <Input 
-            label="Nombre *" 
-            name="nombre" 
-            value={form.nombre} 
-            onChange={handleChange} 
-            disabled={isLoading}
-          />
-          <Input 
-            label="Email *" 
-            name="email" 
-            value={form.email} 
-            onChange={handleChange} 
-            disabled={isLoading}
-          />
-          <Input 
-            label="Contraseña *" 
-            name="contraseña" 
-            value={form.contraseña} 
-            onChange={handleChange} 
-            type="password"
-            disabled={isLoading}
-          />
-          <Select 
-            label="Rol *" 
-            name="id_rol" 
-            value={roles.find(r => r.id === form.id_rol)?.nombre || ''} 
-            onChange={handleSelect} 
-            options={rolesOptions}
-            disabled={isLoading}
-          />
-
-          <ModalFooter>
-            <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading ? 'Guardando...' : 'Guardar'}
-            </Button>
-            <Button onClick={() => !isLoading && setShowModal(false)} disabled={isLoading}>
-              Cerrar
-            </Button>
-          </ModalFooter>
-        </Modal>
-      )}
+      <UsuarioFormModal
+        showModal={showModal}
+        isLoading={isLoading}
+        isEditMode={isEditMode}
+        form={form}
+        roles={roles}
+        onChange={handleChange}
+        onSelect={handleSelect}
+        onSave={handleSave}
+        onClose={handleCloseModal}
+      />
     </Home>
   );
 };
