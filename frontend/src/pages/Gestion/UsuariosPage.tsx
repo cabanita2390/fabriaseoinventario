@@ -6,7 +6,7 @@ import DataTable from '../../components/ui/DataTable';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-import { Usuario, initialForm,Rol, CreateUsuarioDto , UpdateUsuarioDto } from '../../components/Usuarios/types/UsuariosTypes';
+import { Usuario, initialForm,Rol,  UpdateUsuarioDto } from '../../components/Usuarios/types/UsuariosTypes';
 import { useUsuarioService } from '../../components/Usuarios/api/UsuariosApi';
 import { UsuarioFormModal } from '../../components/Usuarios/components/UsuarioFormModal';
 
@@ -194,17 +194,10 @@ const UsuariosPage = () => {
   return (
     <Home>
       <Header>
-        <div className="header-content">
-          <h1>Gestión de Usuarios</h1>
-          <div className="header-actions">
             <BackButton onClick={() => navigate('/gestion')}>
-              <FaArrowLeft /> Volver a Gestión
+              <FaArrowLeft /> Volver 
             </BackButton>
-            <Button onClick={handleOpenCreateModal} disabled={isLoading}>
-              Agregar Usuario
-            </Button>
-          </div>
-        </div>
+            <Button onClick={handleOpenCreateModal} disabled={isLoading}>Agregar Usuario</Button>
       </Header>
 
       {isLoading ? (
