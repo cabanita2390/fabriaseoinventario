@@ -10,6 +10,7 @@ import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
 
 type UnidadMedida = {
   id?: number;
@@ -28,7 +29,7 @@ const UnidadesPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const { authFetch } = useAuthFetch(); 
   const columns = [
     { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
@@ -42,7 +43,7 @@ const UnidadesPage = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/unidadmedida');
+        const response = await authFetch ('http://localhost:3000/unidadmedida');
         if (!response.ok) {
           throw new Error('Error al cargar las unidades de medida');
         }
@@ -75,13 +76,13 @@ const UnidadesPage = () => {
       const payload = { nombre: form.nombre.trim() };
 
       if (isEditMode && form.id) {
-        response = await fetch(`http://localhost:3000/unidadmedida/${form.id}`, {
+        response = await authFetch (`http://localhost:3000/unidadmedida/${form.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
       } else {
-        response = await fetch('http://localhost:3000/unidadmedida', {
+        response = await authFetch('http://localhost:3000/unidadmedida', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -93,7 +94,7 @@ const UnidadesPage = () => {
         throw new Error(errorData.message || 'Error al guardar la unidad');
       }
 
-      const updatedResponse = await fetch('http://localhost:3000/unidadmedida');
+      const updatedResponse = await authFetch('http://localhost:3000/unidadmedida');
       const updatedData = await updatedResponse.json();
       setData(updatedData);
 
@@ -132,14 +133,14 @@ const UnidadesPage = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:3000/unidadmedida/${row.id}`, {
+        const response = await authFetch(`http://localhost:3000/unidadmedida/${row.id}`, {
           method: 'DELETE',
         });
         if (!response.ok) {
           throw new Error('Error al eliminar la unidad');
         }
 
-        const updatedResponse = await fetch('http://localhost:3000/unidadmedida');
+        const updatedResponse = await authFetch('http://localhost:3000/unidadmedida');
         const updatedData = await updatedResponse.json();
         setData(updatedData);
 

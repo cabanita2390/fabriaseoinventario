@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreatePresentacionDto } from './dto/create-presentacion.dto';
@@ -18,7 +18,13 @@ export class PresentacionService {
   }
 
   async findAll(): Promise<Presentacion[]> {
-    return this.presentacionRepo.find();
+    try {
+      return await this.presentacionRepo.find();
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error al consultar las presentaciones',
+      );
+    }
   }
 
   async findOne(id: number): Promise<Presentacion> {

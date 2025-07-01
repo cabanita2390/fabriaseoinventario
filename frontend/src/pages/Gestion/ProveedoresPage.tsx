@@ -10,6 +10,7 @@ import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import { useAuthFetch, ApiError } from '../../components/ui/useAuthFetch';
 
 type Proveedor = {
   id?: number;
@@ -35,7 +36,8 @@ const ProveedoresPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [filtro, setFiltro] = useState('');
-
+  const { authFetch } = useAuthFetch(); 
+  
   const columns = [
     { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
@@ -54,7 +56,7 @@ const ProveedoresPage = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/proveedor');
+        const response = await authFetch('http://localhost:3000/proveedor');
         if (!response.ok) throw new Error('Error al cargar proveedores');
         const proveedores = await response.json();
         setData(proveedores);
@@ -85,12 +87,10 @@ const ProveedoresPage = () => {
 
     setIsLoading(true);
     try {
-      // Verificar que tenemos ID en modo edición
       if (isEditMode && !form.id) {
         throw new Error('ID del proveedor no especificado');
       }
 
-      // Usar PATCH en lugar de PUT según la documentación
       const method = isEditMode ? 'PATCH' : 'POST';
       const url = isEditMode 
         ? `http://localhost:3000/proveedor/${form.id}`
@@ -103,9 +103,7 @@ const ProveedoresPage = () => {
         direccion: form.direccion
       };
 
-      console.log('Enviando datos:', { method, url, body: requestBody });
-
-      const response = await fetch(url, {
+      const response = await authFetch(url, {
         method,
         headers: { 
           'Content-Type': 'application/json',
@@ -114,20 +112,12 @@ const ProveedoresPage = () => {
         body: JSON.stringify(requestBody)
       });
 
-      console.log('Respuesta recibida:', {
-        status: response.status,
-        ok: response.ok,
-        statusText: response.statusText
-      });
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error del servidor:', errorText);
         throw new Error(errorText || 'Error en la solicitud');
       }
 
       const result = await response.json();
-      console.log('Datos actualizados:', result);
       
       if (isEditMode) {
         setData(prev => prev.map(p => p.id === form.id ? result : p));
@@ -186,7 +176,7 @@ const ProveedoresPage = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:3000/proveedor/${row.id}`, {
+        const response = await authFetch(`http://localhost:3000/proveedor/${row.id}`, {
           method: 'DELETE'
         });
         

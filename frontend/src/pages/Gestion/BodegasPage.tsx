@@ -10,7 +10,7 @@ import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-
+import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
 type Bodega = {
   id: number;
   nombre: string;
@@ -23,6 +23,8 @@ const initialForm: Bodega = {
   ubicacion: null,
 };
 
+
+
 const BodegasPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<Bodega>(initialForm);
@@ -31,7 +33,8 @@ const BodegasPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [filtro, setFiltro] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // Nuevo estado para controlar envío
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { authFetch } = useAuthFetch();
 
   const columns = [
     { header: 'ID', accessor: 'id' },
@@ -45,74 +48,75 @@ const BodegasPage = () => {
   );
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch('http://localhost:3000/bodega');
+        const response = await authFetch('http://localhost:3000/bodega');
         const bodegas = await response.json();
         setData(bodegas);
         setFullData(bodegas);
       } catch (error) {
-        console.error("Error al cargar las bodegas:", error);
-        Swal.fire('Error', 'No se pudieron cargar las bodegas', 'error');
+        const err = error as ApiError;
+        if (err.message !== 'Sesión expirada') {
+          Swal.fire('Error', 'Error al cargar bodegas', 'error');
+        }
       }
     };
-    fetchData();
+
+    loadData();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value || null });
+    setForm({ 
+      ...form, 
+      [e.target.name]: e.target.value || null 
+    });
   };
 
   const handleSave = async () => {
-    if (isSubmitting) return; // Prevenir múltiples envíos
+    if (isSubmitting) return;
     if (!form.nombre.trim()) {
       Swal.fire('Error', 'El nombre es obligatorio', 'warning');
       return;
     }
 
-    setIsSubmitting(true); // Bloquear el botón
-    
+    setIsSubmitting(true);
+
     try {
-      const method = isEditMode ? 'PATCH' : 'POST';
-      const url = isEditMode
+      const url = isEditMode 
         ? `http://localhost:3000/bodega/${form.id}`
         : 'http://localhost:3000/bodega';
 
-      const payload = {
-        nombre: form.nombre,
-        ubicacion: form.ubicacion || null,
-      };
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      const response = await authFetch(url, {
+        method: isEditMode ? 'PATCH' : 'POST',
+        body: JSON.stringify({
+          nombre: form.nombre,
+          ubicacion: form.ubicacion
+        })
       });
 
-      if (!response.ok) throw new Error('Error en el servidor');
-      const result = await response.json();
+      const updatedBodega = await response.json();
 
-      const nuevasBodegas = isEditMode
-        ? fullData.map((b) => (b.id === result.id ? result : b))
-        : [...fullData, result];
-
-      setData(nuevasBodegas);
-      setFullData(nuevasBodegas);
+      setFullData(prev => 
+        isEditMode
+          ? prev.map(b => b.id === updatedBodega.id ? updatedBodega : b)
+          : [...prev, updatedBodega]
+      );
 
       Swal.fire(
-        isEditMode ? 'Actualizado' : 'Registrado',
-        isEditMode ? 'La bodega fue actualizada correctamente' : 'Bodega registrada correctamente',
+        'Éxito',
+        `Bodega ${isEditMode ? 'actualizada' : 'creada'} correctamente`,
         'success'
       );
 
-      setForm(initialForm);
       setShowModal(false);
-      setIsEditMode(false);
+      setForm(initialForm);
     } catch (error) {
-      console.error('Error al guardar:', error);
-      Swal.fire('Error', 'No se pudo guardar la bodega', 'error');
+      const err = error as ApiError;
+      if (err.message !== 'Sesión expirada') {
+        Swal.fire('Error', 'No se pudo guardar la bodega', 'error');
+      }
     } finally {
-      setIsSubmitting(false); // Liberar el botón
+      setIsSubmitting(false);
     }
   };
 
@@ -125,29 +129,27 @@ const BodegasPage = () => {
   const handleDelete = async (row: Bodega) => {
     const confirm = await Swal.fire({
       title: '¿Eliminar bodega?',
-      text: 'No podrás revertir esto',
+      text: 'Esta acción no se puede deshacer',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
+      cancelButtonText: 'Cancelar'
     });
 
     if (!confirm.isConfirmed) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/bodega/${row.id}`, {
-        method: 'DELETE',
+      await authFetch(`http://localhost:3000/bodega/${row.id}`, {
+        method: 'DELETE'
       });
 
-      if (!response.ok) throw new Error('Error al eliminar');
-
-      setData((prev) => prev.filter((item) => item.id !== row.id));
-      setFullData((prev) => prev.filter((item) => item.id !== row.id));
-
-      Swal.fire('Eliminada', 'La bodega ha sido eliminada', 'success');
+      setFullData(prev => prev.filter(b => b.id !== row.id));
+      Swal.fire('Éxito', 'Bodega eliminada', 'success');
     } catch (error) {
-      console.error("Error al eliminar:", error);
-      Swal.fire('Error', 'No se pudo eliminar la bodega', 'error');
+      const err = error as ApiError;
+      if (err.message !== 'Sesión expirada') {
+        Swal.fire('Error', 'No se pudo eliminar', 'error');
+      }
     }
   };
 
@@ -160,16 +162,16 @@ const BodegasPage = () => {
             placeholder="Buscar por nombre o ubicación..."
             className="search-bar-container"
           />
+          
           <BackButton onClick={() => navigate('/gestion')}>
             <FaArrowLeft style={{ marginRight: '8px' }} /> Volver a Gestión
           </BackButton>
-          <Button
-            onClick={() => {
-              setForm(initialForm);
-              setIsEditMode(false);
-              setShowModal(true);
-            }}
-          >
+          
+          <Button onClick={() => {
+            setForm(initialForm);
+            setIsEditMode(false);
+            setShowModal(true);
+          }}>
             Agregar Bodega
           </Button>
         </div>
@@ -195,6 +197,7 @@ const BodegasPage = () => {
             onChange={handleChange}
             required
           />
+          
           <Input
             label="Ubicación"
             name="ubicacion"
@@ -206,7 +209,11 @@ const BodegasPage = () => {
             <Button onClick={handleSave} disabled={isSubmitting}>
               {isSubmitting ? 'Guardando...' : 'Guardar'}
             </Button>
-            <Button onClick={() => setShowModal(false)} disabled={isSubmitting}>
+            
+            <Button 
+              onClick={() => setShowModal(false)} 
+              disabled={isSubmitting}
+            >
               Cancelar
             </Button>
           </ModalFooter>

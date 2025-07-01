@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import '../../../styles/Dashboartdpage/Labelstack.css';
+import { useAuthFetch , ApiError } from '../../ui/useAuthFetch';
 
 function Labelstack() {
   const [movimientos, setMovimientos] = useState<number | null>(null);
   const [stockBajo, setStockBajo] = useState<number | null>(null);
-
+  const { authFetch } = useAuthFetch(); 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:3000/dashboard'); // o desde el backend real
+        const res = await authFetch('http://localhost:3000/dashboard'); // o desde el backend real
         const data = await res.json();
 
         // Suponiendo que el JSON tiene las propiedades así:

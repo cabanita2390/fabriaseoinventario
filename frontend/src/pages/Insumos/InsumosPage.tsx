@@ -16,6 +16,7 @@ function InsumosPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [tipoActual, setTipoActual] = useState<Tipo>('Ingreso de materia prima');
   const [form, setForm] = useState(INIT_FORM);
+  const [reloadTable, setReloadTable] = useState(0); // Nuevo estado para recargar la tabla
   
   const { productosDisponibles, productosOriginales, cargarProductos } = useProductos(tipoActual);
   const { bodegasDisponibles, cargarBodegas } = useBodegas();
@@ -134,6 +135,7 @@ function InsumosPage() {
       Swal.fire({ icon: "success", title: "¡Éxito!", text: "El movimiento ha sido guardado correctamente." });
       setShowModal(false);
       setForm(INIT_FORM);
+      setReloadTable(prev => prev + 1); // Incrementamos para forzar recarga de la tabla
     } catch (error: any) {
       Swal.fire({
         icon: "error",
@@ -176,7 +178,11 @@ function InsumosPage() {
 
       <section>
         <h1 style={{ marginBottom: '20px' }}>Movimientos</h1>
-        <Tabla mostrarFiltro={false} mostrarExportar={false} />
+        <Tabla 
+          mostrarFiltro={false} 
+          mostrarExportar={false} 
+          reloadTrigger={reloadTable} // Pasamos la prop
+        />
       </section>
     </Home>
   );
