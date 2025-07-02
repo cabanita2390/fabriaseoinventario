@@ -106,6 +106,11 @@ const Select = ({
         isDefaultPrevented: () => false,
         stopPropagation: () => {},
         isPropagationStopped: () => false,
+        persist: () => {},
+        timeStamp: Date.now(),
+        type: 'change'
+      } as React.ChangeEvent<HTMLSelectElement>;
+      
       onChange(syntheticEvent);
     }
   };
