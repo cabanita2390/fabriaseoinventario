@@ -50,6 +50,7 @@ export class MovimientoController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateMovimientoDto: UpdateMovimientoDto,
   ) {
+    console.log('En mov.controller: ', id, updateMovimientoDto);
     return this.movimientoService.update(id, updateMovimientoDto);
   }
 
