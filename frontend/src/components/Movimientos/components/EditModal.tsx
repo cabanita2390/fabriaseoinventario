@@ -65,16 +65,18 @@ const EditModal: React.FC<EditModalProps> = ({
         name="tipo"
         value={movimientoEditado.tipo}
         onChange={handleChange}
+        
         options={["Entrada", "Salida"]}
       />
       
-      <Select
-        label="Producto"
-        name="producto"
-        value={movimientoEditado.producto || "seleccione una opcion"}
-        onChange={handleChange}
-        options={["seleccione una opcion", ...productosDisponibles.map((p) => p.nombre)]}
-      />
+      <Select 
+  label="Producto"
+  name="producto"
+  value={movimientoEditado.producto || "seleccione una opcion"}
+  onChange={handleChange}
+  searchable={true}  // ← Solo aquí, porque puede tener 100+ productos
+  options={["seleccione una opcion", ...productosDisponibles.map((p) => p.nombre)]}
+/>
       
       <Input 
         label="Cantidad"
