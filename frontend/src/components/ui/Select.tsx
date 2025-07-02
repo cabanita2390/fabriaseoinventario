@@ -1,3 +1,4 @@
+
 import React, { SelectHTMLAttributes, useState, useRef, useEffect } from 'react';
 import { SelectContainer } from '../../styles/ui/Select.css';
 
@@ -43,6 +44,9 @@ const Select = ({
   onChange,
   ...props 
 }: SelectProps) => {
+  // Generar un ID único para asociar label con el control
+  const selectId = useRef(`select-${Math.random().toString(36).substr(2, 9)}`);
+  
   // Memoizar normalizedOptions para evitar recálculos innecesarios
   const normalizedOptions = React.useMemo(() => 
     options.map(normalizeOption), 
@@ -130,8 +134,13 @@ const Select = ({
   if (!searchable) {
     return (
       <SelectContainer>
-        <label>{label}</label>
-        <select value={value} onChange={onChange} {...props}>
+        <label htmlFor={selectId.current}>{label}</label>
+        <select 
+          id={selectId.current}
+          value={value || ''} 
+          onChange={onChange || (() => {})} 
+          {...props}
+        >
           <option value="">{placeholder}</option>
           {normalizedOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -146,10 +155,11 @@ const Select = ({
   // Render del select con búsqueda
   return (
     <SelectContainer ref={containerRef} style={{ position: 'relative' }}>
-      <label>{label}</label>
+      <label htmlFor={selectId.current}>{label}</label>
       <div style={{ position: 'relative' }}>
         <input
           ref={inputRef}
+          id={selectId.current}
           type="text"
           value={isOpen ? searchTerm : displayValue}
           onChange={(e) => setSearchTerm(e.target.value)}
