@@ -1,6 +1,15 @@
+export interface FieldOption {
+  value: string;
+  label: string;
+}
+
 export interface FieldConfig {
-  tipo: 'date' | 'text' | 'select';
+  tipo: 'select' | 'date' | 'number' | 'text';
   id: string;
   label: string;
-  options?: string[]; // Solo aplica si tipo === 'select'
+  placeholder?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  options?: FieldOption[] | string[]; // Permitir ambos tipos de opciones
 }
