@@ -46,6 +46,7 @@ export class UsuarioController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUsuarioDto: UpdateUsuarioDto,
   ) {
+    console.log('usuario.controller: ', id, updateUsuarioDto);
     return this.usuarioService.update(id, updateUsuarioDto);
   }
 

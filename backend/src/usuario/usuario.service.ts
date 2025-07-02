@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, QueryFailedError } from 'typeorm';
+import type { FindOneOptions } from 'typeorm';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Usuario } from '../entities/usuario.entity';
@@ -103,15 +104,29 @@ export class UsuarioService {
 
   // 👉 Actualizar usuario (nombre, email o contraseña)
   async update(id: number, dto: UpdateUsuarioDto): Promise<any> {
-    if (dto.password) {
-      dto.password = await this.hashPassword(dto.password);
+    // 1) Si viene rol_idrol, búscalo (puede devolver null)
+    let rolEntity: Rol | null = null;
+    if (dto.rol_idrol !== undefined) {
+      rolEntity = await this.rolRepo.findOne({ where: { id: dto.rol_idrol } });
+      if (!rolEntity) {
+        throw new BadRequestException(
+          `El rol con id ${dto.rol_idrol} no existe`,
+        );
+      }
     }
 
-    const entidad = await this.usuarioRepo.preload({ id, ...dto });
+    // 2) Preloadizar al usuario, inyectando la relación sólo si la tenemos
+    const entidad = await this.usuarioRepo.preload({
+      id,
+      ...dto,
+      ...(rolEntity ? { rol: rolEntity } : {}),
+    } as any);
+
     if (!entidad) {
       throw new NotFoundException(`Usuario con id ${id} no encontrado`);
     }
 
+    // 3) Guardar cambios
     try {
       await this.usuarioRepo.save(entidad);
     } catch (error) {
@@ -126,6 +141,7 @@ export class UsuarioService {
       throw error;
     }
 
+    // 4) Volver a cargar para devolver sin password
     const actualizado = await this.usuarioRepo.findOne({
       where: { id },
       relations: ['rol'],
@@ -135,7 +151,10 @@ export class UsuarioService {
         `Usuario con id ${id} no encontrado después de actualizar`,
       );
     }
-    const { password, ...sinPassword } = actualizado;
+
+    // 5) TS aún cree que puede ser null, así que usa ! para afirmar “no es null”
+    const { password, ...sinPassword } = actualizado!;
+
     return sinPassword;
   }
 
@@ -149,7 +168,10 @@ export class UsuarioService {
   }
 
   // 👉 Buscar usuario por username (incluye hash de la contraseña)
-  async findByUsernameWithPassword(username: string): Promise<Usuario | null> {
+  async findByUsernameWithPassword(
+    username: string,
+    options?: FindOneOptions<Usuario>,
+  ) {
     return this.usuarioRepo.findOne({
       where: { username },
       relations: ['rol'],
