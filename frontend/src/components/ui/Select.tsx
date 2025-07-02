@@ -43,7 +43,11 @@ const Select = ({
   onChange,
   ...props 
 }: SelectProps) => {
-  const normalizedOptions = options.map(normalizeOption);
+  // Memoizar normalizedOptions para evitar recálculos innecesarios
+  const normalizedOptions = React.useMemo(() => 
+    options.map(normalizeOption), 
+    [options]
+  );
   
   // Estados para el modo búsqueda
   const [isOpen, setIsOpen] = useState(false);

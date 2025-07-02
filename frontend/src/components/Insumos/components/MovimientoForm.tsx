@@ -62,6 +62,7 @@ const MovimientoForm: React.FC<MovimientoFormProps> = ({
         onChange={onChange}
         options={productoOptions}
         disabled={disabled}
+        searchable={true}
         aria-required="true"
       />
 

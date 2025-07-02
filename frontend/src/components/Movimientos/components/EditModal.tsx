@@ -65,7 +65,6 @@ const EditModal: React.FC<EditModalProps> = ({
         name="tipo"
         value={movimientoEditado.tipo}
         onChange={handleChange}
-        
         options={["Entrada", "Salida"]}
       />
       
