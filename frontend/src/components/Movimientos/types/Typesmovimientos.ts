@@ -3,15 +3,15 @@ export interface RowData {
   tipo: string;
   producto: string;
   cantidad: number;
-  fecha: string;
-  descripcion: string;
   unidad: string;
+  descripcion: string;
   proveedor: string;
   bodega: string;
-  producto_id?: number;
-  bodega_id?: number;
+  fecha: string;          // Fecha original de la API
+  fechaMovimiento?: string; // Campo alternativo de fecha (opcional)
+  fechaFormateada?: string; // Fecha formateada para mostrar
+  fechaOriginal?: string;   // Fecha original preservada para filtros
 }
-
 export interface ProductoAgrupado {
   id: number;
   nombre: string;

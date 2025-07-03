@@ -43,8 +43,8 @@ const Select = ({
   onChange,
   ...props 
 }: SelectProps) => {
-  // Generar un ID único para asociar label con el control
-  const selectId = useRef(`select-${Math.random().toString(36).substr(2, 9)}`);
+  // Generar un ID único para el componente
+  const selectId = React.useId();
   
   // Memoizar normalizedOptions para evitar recálculos innecesarios
   const normalizedOptions = React.useMemo(() => 
@@ -96,11 +96,11 @@ const Select = ({
       // Crear un evento sintético que sea compatible con React.ChangeEvent
       const syntheticEvent = {
         target: {
-          value: optionValue as string,
+          value: String(optionValue), // Convertir a string
           name: props.name
         },
         currentTarget: {
-          value: optionValue as string,
+          value: String(optionValue), // Convertir a string
           name: props.name
         },
         nativeEvent: {} as Event,
@@ -133,16 +133,16 @@ const Select = ({
   if (!searchable) {
     return (
       <SelectContainer>
-        <label htmlFor={selectId.current}>{label}</label>
+        <label htmlFor={selectId}>{label}</label>
         <select 
-          id={selectId.current}
-          value={value || ''} 
-          onChange={onChange || (() => {})} 
+          id={selectId}
+          value={value} 
+          onChange={onChange} 
           {...props}
         >
           <option value="">{placeholder}</option>
           {normalizedOptions.map((option) => (
-            <option key={option.value} value={option.value}>
+            <option key={String(option.value)} value={String(option.value)}>
               {option.label}
             </option>
           ))}
@@ -154,11 +154,11 @@ const Select = ({
   // Render del select con búsqueda
   return (
     <SelectContainer ref={containerRef} style={{ position: 'relative' }}>
-      <label htmlFor={selectId.current}>{label}</label>
+      <label htmlFor={selectId}>{label}</label>
       <div style={{ position: 'relative' }}>
         <input
           ref={inputRef}
-          id={selectId.current}
+          id={selectId}
           type="text"
           value={isOpen ? searchTerm : displayValue}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -202,7 +202,7 @@ const Select = ({
             ) : (
               filteredOptions.map((option) => (
                 <div
-                  key={option.value}
+                  key={String(option.value)}
                   onClick={() => handleOptionSelect(option.value)}
                   style={{
                     padding: '8px 12px',
@@ -230,7 +230,7 @@ const Select = ({
       <input
         type="hidden"
         name={props.name}
-        value={value || ''}
+        value={String(value || '')} // Convertir a string
       />
     </SelectContainer>
   );
