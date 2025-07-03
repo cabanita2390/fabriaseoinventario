@@ -39,7 +39,6 @@ const UsuariosPage = () => {
     { header: 'Nombre', accessor: 'nombre' },
     { header: 'Email', accessor: 'email' },
     { header: 'Rol', accessor: 'rol_nombre' },
-    { header: 'Estado', accessor: 'estado' },
   ];
 
   // Cargar datos iniciales
@@ -111,37 +110,45 @@ const UsuariosPage = () => {
     }
   };
 
-  const handleUpdate = async () => {
-    const { id, username, nombre, email, password } = form;
+  // Reemplaza la función handleUpdate existente con esta versión
+const handleUpdate = async () => {
+  const { id, username, nombre, email, password, rol } = form;
 
-    if (!username || !nombre || !email) {
-      Swal.fire('Campos obligatorios', 'Completa los campos requeridos', 'warning');
-      return;
+  if (!username || !nombre || !email) {
+    Swal.fire('Campos obligatorios', 'Completa los campos requeridos', 'warning');
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    const updateData: UpdateUsuarioDto = { username, nombre, email };
+    
+    // Solo incluir password si se proporcionó una nueva
+    if (password && password.trim() !== '') {
+      updateData.password = password;
     }
 
-    setIsLoading(true);
-    try {
-      const updateData: UpdateUsuarioDto = { username, nombre, email };
-      if (password && password.trim() !== '') {
-        updateData.password = password;
-      }
-
-      const updatedUser = await updateUsuario(id, updateData);
-      
-      setData(prev => 
-        prev.map(u => u.id === id ? updatedUser : u)
-      );
-      Swal.fire('¡Actualizado!', 'Usuario actualizado correctamente', 'success');
-      setForm(initialForm);
-      setShowModal(false);
-      setIsEditMode(false);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Error al actualizar usuario';
-      Swal.fire('Error', errorMessage, 'error');
-    } finally {
-      setIsLoading(false);
+    // Incluir rol_idrol si se seleccionó un rol
+    if (rol && rol.id) {
+      updateData.rol_idrol = rol.id;
     }
-  };
+
+    const updatedUser = await updateUsuario(id, updateData);
+    
+    setData(prev => 
+      prev.map(u => u.id === id ? updatedUser : u)
+    );
+    Swal.fire('¡Actualizado!', 'Usuario actualizado correctamente', 'success');
+    setForm(initialForm);
+    setShowModal(false);
+    setIsEditMode(false);
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || 'Error al actualizar usuario';
+    Swal.fire('Error', errorMessage, 'error');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleEdit = (row: Usuario) => {
     setForm({

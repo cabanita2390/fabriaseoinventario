@@ -199,6 +199,7 @@ const ProductosBasePage: React.FC = () => {
       handleError(error, 'Error al eliminar el producto');
     }
   };
+  
 
   const handleEdit = (id: number) => {
     const producto = data.find(p => p.id === id);
