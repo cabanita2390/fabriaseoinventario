@@ -75,7 +75,8 @@ export const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         placeholder={isEditMode ? "Dejar vacío para mantener actual" : "Ingrese contraseña"}
       />
 
-      {roles.length > 0 && (
+      {/* Solo mostrar el selector de rol en modo edición */}
+      {isEditMode && roles.length > 0 && (
         <Select 
           label="Rol" 
           name="rol" 

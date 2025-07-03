@@ -124,6 +124,7 @@ const MovimientoForm: React.FC<MovimientoFormProps> = ({
         options={bodegaOptions}
         disabled={disabled}
         aria-required="true"
+        searchable={true}
       />
 
       <ModalFooter>

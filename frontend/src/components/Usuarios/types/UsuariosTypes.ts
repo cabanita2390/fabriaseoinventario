@@ -1,3 +1,4 @@
+
 export type Rol = {
   id: number;
   nombre: string;
@@ -26,6 +27,7 @@ export type UpdateUsuarioDto = {
   nombre?: string;
   email?: string;
   password?: string;
+  rol_idrol?: number; // Agregado para enviar el ID del rol al backend
 };
 
 export const initialForm: Usuario = {

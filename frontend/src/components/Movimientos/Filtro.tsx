@@ -9,6 +9,7 @@ interface FiltroProps {
   onTextoChange?: (texto: string) => void;
   onReset?: () => void;
   initialValues?: Record<string, any>;
+  showSearchBar?: boolean; // Nueva prop para controlar visibilidad
 }
 
 const Filtro: React.FC<FiltroProps> = ({ 
@@ -17,7 +18,8 @@ const Filtro: React.FC<FiltroProps> = ({
   onExport, 
   onTextoChange, 
   onReset,
-  initialValues = {}
+  initialValues = {},
+  showSearchBar = true // Valor por defecto: true
 }) => {
   // Inicializar valores con valores por defecto o valores iniciales
   const initializeValues = () => {
@@ -52,7 +54,14 @@ const Filtro: React.FC<FiltroProps> = ({
       }
     }
     
-    onSearch(values);
+    // Convertir las fechas a formato Date para comparación directa
+    const filtrosConvertidos = {
+      ...values,
+      fechaInicio: values.fechaInicio ? new Date(values.fechaInicio) : null,
+      fechaFin: values.fechaFin ? new Date(values.fechaFin) : null
+    };
+    
+    onSearch(filtrosConvertidos);
   };
 
   const handleReset = () => {
@@ -69,36 +78,36 @@ const Filtro: React.FC<FiltroProps> = ({
   };
 
   const renderField = (field: FieldConfig) => {
-  switch (field.tipo) {
-    case 'select':
-      return (
-        <select 
-          id={field.id} 
-          name={field.id} 
-          value={values[field.id] || ''} 
-          onChange={handleChange}
-          className="filtro-select"
-        >
-          <option value="">--Seleccione--</option>
-          {field.options?.map((opt) => {
-            // Manejar ambos tipos de opciones: string u objeto
-            if (typeof opt === 'string') {
-              return (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              );
-            } else {
-              return (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              );
-            }
-          })}
-        </select>
-      );
-      
+    switch (field.tipo) {
+      case 'select':
+        return (
+          <select 
+            id={field.id} 
+            name={field.id} 
+            value={values[field.id] || ''} 
+            onChange={handleChange}
+            className="filtro-select"
+          >
+            <option value="">--Seleccione--</option>
+            {field.options?.map((opt) => {
+              // Manejar ambos tipos de opciones: string u objeto
+              if (typeof opt === 'string') {
+                return (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                );
+              } else {
+                return (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                );
+              }
+            })}
+          </select>
+        );
+        
       case 'date':
         return (
           <input
@@ -110,7 +119,19 @@ const Filtro: React.FC<FiltroProps> = ({
             className="filtro-date"
           />
         );
-      
+        
+      case 'custom-date':
+        return (
+          <input
+            type="datetime-local"
+            id={field.id}
+            name={field.id}
+            value={values[field.id] || ''}
+            onChange={handleChange}
+            className="filtro-date"
+          />
+        );
+        
       case 'number':
         return (
           <input
@@ -160,17 +181,20 @@ const Filtro: React.FC<FiltroProps> = ({
           </div>
         ))}
 
-        <div className="campo campo-busqueda">
-          <label htmlFor="busqueda">Buscar:</label>
-          <input
-            type="text"
-            id="busqueda"
-            placeholder="Producto, proveedor, etc..."
-            value={busqueda}
-            onChange={handleTextoChange}
-            className="filtro-busqueda"
-          />
-        </div>
+        {/* Mostrar la barra de búsqueda solo si showSearchBar es true */}
+        {showSearchBar && (
+          <div className="campo campo-busqueda">
+            <label htmlFor="busqueda">Buscar:</label>
+            <input
+              type="text"
+              id="busqueda"
+              placeholder="Producto, proveedor, etc..."
+              value={busqueda}
+              onChange={handleTextoChange}
+              className="filtro-busqueda"
+            />
+          </div>
+        )}
 
         <div className="grupo-botones">
           <button 
@@ -180,14 +204,7 @@ const Filtro: React.FC<FiltroProps> = ({
           >
             <i className="fas fa-search"></i> Buscar
           </button>
-          
-          <button 
-            type="button" 
-            className="btn-reset" 
-            onClick={handleReset}
-          >
-            <i className="fas fa-redo"></i> Reiniciar
-          </button>
+        
         </div>
       </div>
     </div>

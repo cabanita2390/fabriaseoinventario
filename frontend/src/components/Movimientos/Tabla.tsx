@@ -14,51 +14,9 @@ import {
 import EditModal from '../Movimientos/components/EditModal';
 import Swal from 'sweetalert2';
 import styled from 'styled-components';
+import useFiltroMovimientos from '../Movimientos/components/useFiltroMovimientos';
 
-const CancelButton = styled.button`
-  padding: 0.5rem 1.25rem;
-  background-color: #f44336;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-right: 10px;
 
-  &:hover {
-    background-color: #d32f2f;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
-const SaveButton = styled.button`
-  padding: 0.5rem 1.25rem;
-  background-color: rgb(6, 77, 170);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-  &:hover {
-    background-color: rgb(49, 64, 84);
-    transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
 
 interface TablaProps {
   mostrarFiltro?: boolean; 
@@ -71,15 +29,21 @@ function Tabla({
   mostrarExportar = true,
   reloadTrigger
 }: TablaProps) {
-  const [data, setData] = useState<RowData[]>([]);
-  const [fullData, setFullData] = useState<RowData[]>([]);
-  const [filtroTexto, setFiltroTexto] = useState('');
-  const [filtrosAplicados, setFiltrosAplicados] = useState<Record<string, any>>({});
   const [editando, setEditando] = useState<RowData | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [productosDisponibles, setProductosDisponibles] = useState<any[]>([]);
   const [bodegasDisponibles, setBodegasDisponibles] = useState<any[]>([]);
   const { authFetch } = useAuthFetch();
+
+  // Usamos el hook personalizado para manejar filtros
+  const { 
+    filtroTexto, 
+    setFiltroTexto, 
+    handleBuscar, 
+    dataFiltrada, 
+    actualizarDatos,
+    fullData
+  } = useFiltroMovimientos([]);
 
   const columns = [
     { header: "Tipo", accessor: "tipo" },
@@ -89,25 +53,48 @@ function Tabla({
     { header: "Descripción", accessor: "descripcion" },
     { header: "Proveedor", accessor: "proveedor" },
     { header: "Bodega", accessor: "bodega" },
-    { header: "Fecha", accessor: "fecha" },
+    { header: "Fecha", accessor: "fechaFormateada" },
   ];
 
-  // Función para convertir fechas en formato dd/MM/yyyy HH:mm:ss a Date
-  const parsearFecha = useCallback((fechaStr: string): Date | null => {
-    if (!fechaStr) return null;
+  const formatearFecha = useCallback((fechaISO: string): string => {
+    if (!fechaISO) return '';
     
-    const [datePart, timePart] = fechaStr.split(' ');
-    const [day, month, year] = datePart.split('/').map(Number);
-    const [hours = 0, minutes = 0, seconds = 0] = timePart?.split(':').map(Number) || [];
-    
-    return new Date(year, month - 1, day, hours, minutes, seconds);
+    try {
+      const fecha = new Date(fechaISO);
+      
+      if (isNaN(fecha.getTime())) {
+        return '';
+      }
+      
+      const opciones: Intl.DateTimeFormatOptions = {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      };
+      
+      return fecha.toLocaleDateString('es-ES', opciones);
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      return '';
+    }
   }, []);
 
   const cargarDatos = useCallback(async () => {
     try {
       const movimientos = await fetchMovimientos(authFetch);
-      setData(movimientos);
-      setFullData(movimientos);
+      
+      const movimientosFormateados = movimientos.map(mov => ({
+        ...mov,
+        fechaFormateada: formatearFecha(mov.fechaMovimiento || mov.fecha),
+        fechaOriginal: mov.fechaMovimiento || mov.fecha
+      }));
+      
+      // Actualizamos los datos usando el hook
+      actualizarDatos(movimientosFormateados);
       
       const [productos, bodegas] = await Promise.all([
         fetchProductosAgrupados(authFetch),
@@ -124,87 +111,15 @@ function Tabla({
         text: "No se pudieron cargar los datos. Por favor, inténtalo de nuevo.",
       });
     }
-  }, [authFetch]);
+  }, [authFetch, formatearFecha, actualizarDatos]);
 
   useEffect(() => {
     cargarDatos();
   }, [cargarDatos, reloadTrigger]);
 
-  // Función unificada para aplicar todos los filtros
-  const aplicarFiltros = useCallback(() => {
-    const { fechaInicio, fechaFin } = filtrosAplicados;
-    const texto = filtroTexto.toLowerCase();
-
-    const filtrado = fullData.filter((row) => {
-      let pasaFiltro = true;
-      
-      // Aplicar filtro de fechas
-      if (fechaInicio || fechaFin) {
-        const itemFecha = parsearFecha(row.fecha);
-        
-        // Verificar si la fecha es válida
-        if (!itemFecha || isNaN(itemFecha.getTime())) {
-          return false;
-        }
-
-        const fechaInicioDate = fechaInicio ? new Date(fechaInicio) : null;
-        const fechaFinDate = fechaFin ? new Date(fechaFin) : null;
-        
-        // Ajustar fechaFin para que incluya todo el día
-        if (fechaFinDate) {
-          fechaFinDate.setHours(23, 59, 59, 999);
-        }
-        
-        if (fechaInicioDate && itemFecha < fechaInicioDate) {
-          pasaFiltro = false;
-        }
-        if (fechaFinDate && itemFecha > fechaFinDate) {
-          pasaFiltro = false;
-        }
-      }
-
-      // Aplicar filtro de texto solo si pasa el filtro de fecha
-      if (pasaFiltro && texto) {
-        const textoMatch = (
-          row.producto.toLowerCase().includes(texto) ||
-          row.descripcion.toLowerCase().includes(texto) ||
-          row.proveedor.toLowerCase().includes(texto) ||
-          row.bodega.toLowerCase().includes(texto) ||
-          row.tipo.toLowerCase().includes(texto)
-        );
-        
-        if (!textoMatch) {
-          pasaFiltro = false;
-        }
-      }
-      
-      return pasaFiltro;
-    });
-
-    setData(filtrado);
-  }, [fullData, filtrosAplicados, filtroTexto, parsearFecha]);
-
-  // Aplicar filtros cuando cambien los datos o los filtros
-  useEffect(() => {
-    if (fullData.length > 0) {
-      aplicarFiltros();
-    }
-  }, [fullData, filtrosAplicados, filtroTexto, aplicarFiltros]);
-
-  const handleBuscar = useCallback((values: Record<string, any>) => {
-    const fechaInicio = values.fechaInicio ? new Date(values.fechaInicio).toISOString() : null;
-    const fechaFin = values.fechaFin ? new Date(values.fechaFin).toISOString() : null;
-    
-    setFiltrosAplicados({
-      ...values,
-      fechaInicio,
-      fechaFin
-    });
-  }, []);
-
   const exportToCSV = useCallback(() => {
     const headers = columns.map(c => c.header).join(',');
-    const rows = data.map(row =>
+    const rows = dataFiltrada.map(row =>
       columns.map(c => `"${row[c.accessor as keyof RowData] ?? ""}"`).join(',')
     );
     
@@ -217,7 +132,7 @@ function Tabla({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [data, columns]);
+  }, [dataFiltrada, columns]);
 
   const handleEdit = useCallback((movimiento: RowData) => {
     setEditando(movimiento);
@@ -227,7 +142,6 @@ function Tabla({
   const handleUpdate = useCallback(async (movimientoActualizado: RowData) => {
     if (!movimientoActualizado) return;
 
-    // Validar campos requeridos
     if (!movimientoActualizado.producto || !movimientoActualizado.cantidad || 
         !movimientoActualizado.bodega || movimientoActualizado.bodega === "seleccione una opcion" ||
         movimientoActualizado.cantidad <= 0) {
@@ -263,12 +177,17 @@ function Tabla({
 
       await updateMovimiento(authFetch, movimientoActualizado.id, payload);
 
-      const updatedData = data.map(item => 
-        item.id === movimientoActualizado.id ? movimientoActualizado : item
+      const movimientoConFecha = {
+        ...movimientoActualizado,
+        fechaFormateada: formatearFecha(movimientoActualizado.fechaOriginal || movimientoActualizado.fecha)
+      };
+
+      const updatedData = fullData.map(item => 
+        item.id === movimientoActualizado.id ? movimientoConFecha : item
       );
       
-      setData(updatedData);
-      setFullData(updatedData);
+      // Actualizamos los datos usando el hook
+      actualizarDatos(updatedData);
       
       Swal.fire({
         icon: "success",
@@ -286,7 +205,7 @@ function Tabla({
         text: "Error al actualizar el movimiento. Por favor, inténtalo de nuevo.",
       });
     }
-  }, [authFetch, data, productosDisponibles, bodegasDisponibles]);
+  }, [authFetch, fullData, productosDisponibles, bodegasDisponibles, formatearFecha, actualizarDatos]);
 
   const closeModal = useCallback(() => {
     setShowEditModal(false);
@@ -306,7 +225,7 @@ function Tabla({
       
       <DataTable 
         columns={columns} 
-        data={data} 
+        data={dataFiltrada} 
         onEdit={handleEdit}
       />
       

@@ -53,8 +53,8 @@ const INITIAL_FORM: ProductoForm = {
 const COLUMNS = [
   { header: 'ID', accessor: 'id' },
   { header: 'Nombre', accessor: 'nombre' },
-  { header: 'Presentación', accessor: 'presentacion.nombre' },
-  { header: 'Unidad', accessor: 'unidadMedida.nombre' },
+  { header: 'Presentación', accessor: 'presentacionNombre' },
+  { header: 'Unidad', accessor: 'unidadMedidaNombre' },
   { header: 'Tipo', accessor: 'tipoProducto' }
 ];
 
@@ -73,6 +73,27 @@ const ProductosBasePage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [filtro, setFiltro] = useState('');
+
+  // Transformar datos para la tabla
+  const transformedData = useMemo(() => {
+    return data.map(producto => ({
+      ...producto,
+      presentacionNombre: producto.presentacion?.nombre || 'N/A',
+      unidadMedidaNombre: producto.unidadMedida?.nombre || 'N/A'
+    }));
+  }, [data]);
+
+  // Datos filtrados
+  const filteredData = useMemo(() => {
+    if (!filtro) return transformedData;
+    const searchTerm = filtro.toLowerCase();
+    return transformedData.filter(p => 
+      p.nombre.toLowerCase().includes(searchTerm) ||
+      p.tipoProducto.toLowerCase().includes(searchTerm) ||
+      p.presentacionNombre.toLowerCase().includes(searchTerm) ||
+      p.unidadMedidaNombre.toLowerCase().includes(searchTerm)
+    );
+  }, [transformedData, filtro]);
 
   // Data fetching
   useEffect(() => {
@@ -178,6 +199,7 @@ const ProductosBasePage: React.FC = () => {
       handleError(error, 'Error al eliminar el producto');
     }
   };
+  
 
   const handleEdit = (id: number) => {
     const producto = data.find(p => p.id === id);
@@ -204,18 +226,6 @@ const ProductosBasePage: React.FC = () => {
     setForm(INITIAL_FORM);
     setIsEditMode(false);
   };
-
-  // Filtered data
-  const filteredData = useMemo(() => {
-    if (!filtro) return data;
-    const searchTerm = filtro.toLowerCase();
-    return data.filter(p => 
-      p.nombre.toLowerCase().includes(searchTerm) ||
-      p.tipoProducto.toLowerCase().includes(searchTerm) ||
-      p.presentacion.nombre.toLowerCase().includes(searchTerm) ||
-      p.unidadMedida.nombre.toLowerCase().includes(searchTerm)
-    );
-  }, [data, filtro]);
 
   return (
     <Home>
@@ -269,6 +279,7 @@ const ProductosBasePage: React.FC = () => {
             onChange={handleChange}
             placeholder="Elija una presentación"
             required
+            searchable={true}
           />
 
           <Select
@@ -288,6 +299,7 @@ const ProductosBasePage: React.FC = () => {
             options={opciones.proveedores}
             onChange={handleChange}
             placeholder="Elija un proveedor"
+            searchable={true}
           />
 
           {isEditMode && (
