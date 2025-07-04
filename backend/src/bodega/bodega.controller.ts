@@ -19,27 +19,35 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(ADMIN)
 @Controller('bodega')
 export class BodegaController {
   constructor(private readonly bodegaService: BodegaService) {}
 
   @Post()
+  @Roles(ADMIN)
   create(@Body() createBodegaDto: CreateBodegaDto) {
     return this.bodegaService.create(createBodegaDto);
   }
 
   @Get()
+  @Roles(ADMIN)
   findAll() {
     return this.bodegaService.findAll();
   }
 
+  @Get('all')
+  findAllNames() {
+    return this.bodegaService.findAllNames();
+  }
+
   @Get(':id')
+  @Roles(ADMIN)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.bodegaService.findOne(id);
   }
 
   @Patch(':id')
+  @Roles(ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBodegaDto: UpdateBodegaDto,
@@ -48,6 +56,7 @@ export class BodegaController {
   }
 
   @Delete(':id')
+  @Roles(ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.bodegaService.remove(id);
   }
