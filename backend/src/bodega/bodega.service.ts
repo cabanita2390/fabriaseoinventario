@@ -36,6 +36,16 @@ export class BodegaService {
     }
   }
 
+  async findAllNames(): Promise<string[]> {
+    try {
+      const allNames = await this.bodegaRepo.find();
+      const names = allNames.map((bodega) => bodega.nombre);
+      return names;
+    } catch (error) {
+      throw new InternalServerErrorException('Error al consultar bodegas');
+    }
+  }
+
   async findOne(id: number): Promise<Bodega> {
     const entidad = await this.bodegaRepo.findOne({ where: { id } });
     if (!entidad) {
