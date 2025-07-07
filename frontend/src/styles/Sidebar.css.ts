@@ -5,6 +5,7 @@ export const SidebarContainer = styled.aside<{
   $isExpanded: boolean;
   $isMobileOpen: boolean;
   $isTransitioning?: boolean;
+  $showText?: boolean;
 }>`
   width: ${({ $isExpanded }) => ($isExpanded ? '240px' : '80px')};
   height: 100vh;
@@ -17,7 +18,7 @@ export const SidebarContainer = styled.aside<{
   position: fixed;
   left: 0;
   top: 0;
-  transition: width 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  transition: width 0.3s ease;
   z-index: 100;
   overflow-y: auto;
   overflow-x: hidden;
@@ -36,21 +37,17 @@ export const SidebarContainer = styled.aside<{
     border-radius: 2px;
   }
 
-  &:hover {
-    width: 240px;
-  }
-
   @media (max-width: 768px) {
     width: 240px;
     transform: ${({ $isMobileOpen }) => 
       $isMobileOpen ? 'translateX(0)' : 'translateX(-100%)'};
     opacity: ${({ $isMobileOpen }) => ($isMobileOpen ? 1 : 0)};
     pointer-events: ${({ $isMobileOpen }) => ($isMobileOpen ? 'all' : 'none')};
+    transition: transform 0.3s ease, opacity 0.3s ease;
   }
 `;
 
 export const HamburgerButton = styled.button`
-  display: none;
   position: fixed;
   top: 1rem;
   left: 1rem;
@@ -69,7 +66,7 @@ export const HamburgerButton = styled.button`
   transition: all 0.3s ease;
 
   &:hover {
-    background: ${({ theme }) => theme.colors.primary};
+    background: ${({ theme }) => theme.colors.primaryDark || theme.colors.primary};
     transform: scale(1.05);
   }
 
@@ -79,7 +76,6 @@ export const HamburgerButton = styled.button`
 `;
 
 export const CloseButton = styled.button`
-  display: none;
   position: absolute;
   top: 1rem;
   right: 1rem;
@@ -163,6 +159,7 @@ export const NavSection = styled.nav`
 export const NavItem = styled(NavLink)<{ 
   $isExpanded: boolean;
   $isTransitioning?: boolean;
+  $showText?: boolean;
 }>`
   display: flex;
   align-items: center;
@@ -171,8 +168,9 @@ export const NavItem = styled(NavLink)<{
   text-decoration: none;
   padding: 0.8rem 1rem;
   border-radius: 6px;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease;
   white-space: nowrap;
+  position: relative;
   
   .nav-icon {
     font-size: 1.3rem;
@@ -180,27 +178,19 @@ export const NavItem = styled(NavLink)<{
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
 
   .nav-text {
     font-size: 0.9rem;
     font-weight: 500;
-    
-    &.visible {
-      opacity: 1;
-      transform: translateX(0);
-      transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
-    }
-    
-    &.hidden {
-      opacity: 0;
-      transform: translateX(-10px);
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    white-space: nowrap;
   }
 
   &.active {
     background: rgba(255, 255, 255, 0.15);
+    color: white;
     
     &::before {
       content: '';
@@ -218,11 +208,17 @@ export const NavItem = styled(NavLink)<{
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
+
+  &:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.3);
+    outline-offset: 2px;
+  }
 `;
 
 export const LogoutButton = styled.div<{ 
   $isExpanded: boolean;
   $isTransitioning?: boolean;
+  $showText?: boolean;
 }>`
   display: flex;
   align-items: center;
@@ -231,7 +227,7 @@ export const LogoutButton = styled.div<{
   padding: 0.8rem 1rem;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease;
   
   .nav-icon {
     font-size: 1.2rem;
@@ -239,27 +235,24 @@ export const LogoutButton = styled.div<{
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
 
   .nav-text {
     font-size: 0.9rem;
     font-weight: 500;
-    
-    &.visible {
-      opacity: 1;
-      transform: translateX(0);
-      transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
-    }
-    
-    &.hidden {
-      opacity: 0;
-      transform: translateX(-10px);
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    white-space: nowrap;
   }
 
   &:hover {
     background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  &:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.3);
+    outline-offset: 2px;
   }
 `;
 

@@ -25,6 +25,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showText, setShowText] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -43,47 +44,80 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
   const handleCloseSidebar = useCallback(() => {
     setIsTransitioning(true);
+    setShowText(false);
     setIsMobileOpen(false);
     setIsHovered(false);
     
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setIsTransitioning(false);
     }, 300);
-    
-    return () => clearTimeout(timer);
   }, []);
 
   const handleMouseEnter = useCallback(() => {
-    if (!isMobileOpen) {
+    if (!isMobileOpen && window.innerWidth > 768) {
       setIsTransitioning(true);
       setIsHovered(true);
-      setTimeout(() => setIsTransitioning(false), 300);
+      
+      // Mostrar texto después de que empiece la animación de expansión
+      setTimeout(() => {
+        setShowText(true);
+        setIsTransitioning(false);
+      }, 150);
     }
   }, [isMobileOpen]);
 
   const handleMouseLeave = useCallback(() => {
-    if (!isMobileOpen) {
+    if (!isMobileOpen && window.innerWidth > 768) {
       setIsTransitioning(true);
-      setIsHovered(false);
-      setTimeout(() => setIsTransitioning(false), 300);
+      setShowText(false);
+      
+      // Colapsar después de que el texto desaparezca
+      setTimeout(() => {
+        setIsHovered(false);
+        setIsTransitioning(false);
+      }, 150);
     }
   }, [isMobileOpen]);
 
   const handleMobileOpen = useCallback(() => {
     setIsTransitioning(true);
     setIsMobileOpen(true);
-    setTimeout(() => setIsTransitioning(false), 300);
+    setShowText(true);
+    
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300);
   }, []);
+
+  // Efecto para manejar el texto cuando se expande
+  useEffect(() => {
+    if (isExpanded && !showText) {
+      const timer = setTimeout(() => {
+        setShowText(true);
+      }, 150);
+      return () => clearTimeout(timer);
+    } else if (!isExpanded && showText) {
+      setShowText(false);
+    }
+  }, [isExpanded, showText]);
 
   useEffect(() => {
     handleCloseSidebar();
   }, [location.pathname, handleCloseSidebar]);
 
   useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768 && isMobileOpen) {
+        handleCloseSidebar();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
     return () => {
+      window.removeEventListener('resize', handleResize);
       document.body.classList.remove('no-scroll', 'sidebar-expanded', 'sidebar-collapsed');
     };
-  }, []);
+  }, [isMobileOpen, handleCloseSidebar]);
 
   const menuItems: MenuItem[] = [
     { to: "/dashboard", icon: <FaHome />, text: "Dashboard" },
@@ -113,6 +147,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         $isExpanded={isExpanded}
         $isMobileOpen={isMobileOpen}
         $isTransitioning={isTransitioning}
+        $showText={showText}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         role="navigation"
@@ -148,12 +183,19 @@ const Sidebar: React.FC<SidebarProps> = () => {
                 to={item.to}
                 $isExpanded={isExpanded}
                 $isTransitioning={isTransitioning}
+                $showText={showText}
                 aria-label={item.text}
               >
                 <span className="nav-icon" aria-hidden="true">
                   {item.icon}
                 </span>
-                <span className={`nav-text ${isExpanded && !isTransitioning ? 'visible' : 'hidden'}`}>
+                <span 
+                  className={`nav-text ${showText ? 'visible' : 'hidden'}`}
+                  style={{ 
+                    opacity: showText ? 1 : 0,
+                    transform: showText ? 'translateX(0)' : 'translateX(-10px)'
+                  }}
+                >
                   {item.text}
                 </span>
               </NavItem>
@@ -170,6 +212,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
             onClick={handleLogout}
             $isExpanded={isExpanded}
             $isTransitioning={isTransitioning}
+            $showText={showText}
             aria-label="Cerrar sesión"
             role="button"
             tabIndex={0}
@@ -183,7 +226,13 @@ const Sidebar: React.FC<SidebarProps> = () => {
             <span className="nav-icon" aria-hidden="true">
               <FaSignOutAlt />
             </span>
-            <span className={`nav-text ${isExpanded && !isTransitioning ? 'visible' : 'hidden'}`}>
+            <span 
+              className={`nav-text ${showText ? 'visible' : 'hidden'}`}
+              style={{ 
+                opacity: showText ? 1 : 0,
+                transform: showText ? 'translateX(0)' : 'translateX(-10px)'
+              }}
+            >
               Cerrar sesión
             </span>
           </LogoutButton>
