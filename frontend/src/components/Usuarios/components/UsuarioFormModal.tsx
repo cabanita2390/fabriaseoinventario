@@ -103,3 +103,4 @@ export const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
     </Modal>
   );
 };
+export {};

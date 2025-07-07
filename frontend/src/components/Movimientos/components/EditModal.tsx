@@ -133,12 +133,14 @@ const EditModal: React.FC<EditModalProps> = ({
       />
       
       <Input 
+        name="unidad"
         label="Unidad"
         value={movimientoEditado.unidad}
         disabled={true}
       />
       
       <Input 
+        name="proveedor"
         label="Proveedor"
         value={movimientoEditado.proveedor}
         disabled={true}

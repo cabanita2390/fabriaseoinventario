@@ -1,23 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  FaHome, 
-  FaBoxOpen, 
-  FaExchangeAlt, 
-  FaChartBar, 
-  FaCog, 
-  FaSignOutAlt,
-  FaBars,
-  FaTimes
+  FaHome, FaBoxOpen, FaExchangeAlt, FaChartBar, FaCog, 
+  FaSignOutAlt, FaBars, FaTimes 
 } from 'react-icons/fa';
 import { 
-  SidebarContainer, 
-  NavSection, 
-  NavItem, 
-  LogoSection, 
-  LogoutButton,
-  HamburgerButton,
-  CloseButton,
-  Overlay
+  SidebarContainer, NavSection, NavItem, LogoSection, 
+  LogoutButton, HamburgerButton, CloseButton, Overlay 
 } from '../../styles/Sidebar.css';
 import { NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
 import logoFabriAseo from '../../assets/logo-fabriaseo.png';
@@ -36,54 +24,66 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
+  const handleLogout = useCallback(() => {
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/login');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      navigate('/login');
+    }
+  }, [navigate]);
 
-  // Controla el estado expandido/colapsado del sidebar
   const isExpanded = isHovered || isMobileOpen;
 
-  useEffect(() => {
-    // Actualiza las clases del body y del contenido principal
-    if (isMobileOpen) {
-      document.body.classList.add('no-scroll');
-      document.body.classList.add('sidebar-expanded');
-      document.body.classList.remove('sidebar-collapsed');
-    } else {
-      document.body.classList.remove('no-scroll');
-      
-      if (isHovered) {
-        document.body.classList.add('sidebar-expanded');
-        document.body.classList.remove('sidebar-collapsed');
-      } else {
-        document.body.classList.add('sidebar-collapsed');
-        document.body.classList.remove('sidebar-expanded');
-      }
-    }
-
-    // Para desktop: actualiza las clases cuando cambia el hover
-    if (!isMobileOpen) {
-      const mainContent = document.querySelector('.main-content');
-      if (mainContent) {
-        if (isHovered) {
-          mainContent.classList.add('sidebar-expanded');
-          mainContent.classList.remove('sidebar-collapsed');
-        } else {
-          mainContent.classList.add('sidebar-collapsed');
-          mainContent.classList.remove('sidebar-expanded');
-        }
-      }
-    }
-  }, [isHovered, isMobileOpen]);
-
-  useEffect(() => {
+  const handleCloseSidebar = useCallback(() => {
+    setIsTransitioning(true);
     setIsMobileOpen(false);
-  }, [location]);
+    setIsHovered(false);
+    
+    const timer = setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    if (!isMobileOpen) {
+      setIsTransitioning(true);
+      setIsHovered(true);
+      setTimeout(() => setIsTransitioning(false), 300);
+    }
+  }, [isMobileOpen]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (!isMobileOpen) {
+      setIsTransitioning(true);
+      setIsHovered(false);
+      setTimeout(() => setIsTransitioning(false), 300);
+    }
+  }, [isMobileOpen]);
+
+  const handleMobileOpen = useCallback(() => {
+    setIsTransitioning(true);
+    setIsMobileOpen(true);
+    setTimeout(() => setIsTransitioning(false), 300);
+  }, []);
+
+  useEffect(() => {
+    handleCloseSidebar();
+  }, [location.pathname, handleCloseSidebar]);
+
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove('no-scroll', 'sidebar-expanded', 'sidebar-collapsed');
+    };
+  }, []);
 
   const menuItems: MenuItem[] = [
     { to: "/dashboard", icon: <FaHome />, text: "Dashboard" },
@@ -96,53 +96,96 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
   return (
     <>
-      <HamburgerButton onClick={() => setIsMobileOpen(true)}>
+      <HamburgerButton 
+        onClick={handleMobileOpen}
+        aria-label="Abrir menú"
+      >
         <FaBars size={20} />
       </HamburgerButton>
 
-      <Overlay $isVisible={isMobileOpen} onClick={() => setIsMobileOpen(false)} />
+      <Overlay 
+        $isVisible={isMobileOpen} 
+        onClick={handleCloseSidebar}
+        data-testid="sidebar-overlay"
+      />
 
       <SidebarContainer 
         $isExpanded={isExpanded}
         $isMobileOpen={isMobileOpen}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        $isTransitioning={isTransitioning}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        role="navigation"
+        aria-label="Navegación principal"
       >
-        <CloseButton onClick={() => setIsMobileOpen(false)}>
+        <CloseButton 
+          onClick={handleCloseSidebar}
+          aria-label="Cerrar menú"
+        >
           <FaTimes size={20} />
         </CloseButton>
 
         <LogoSection>
-          <Link to="/dashboard">
-            {isExpanded ? (
-              <img src={logoFabriAseo} alt="FabriAseo Logo" className="logo-expanded" />
-            ) : (
-              <img src={logoFabriAseo} alt="FabriAseo" className="logo-collapsed" />
-            )}
+          <Link to="/dashboard" aria-label="Ir al dashboard">
+            <img 
+              src={logoFabriAseo} 
+              alt="FabriAseo Logo" 
+              className={isExpanded ? "logo-expanded" : "logo-collapsed"}
+              loading="lazy"
+            />
           </Link>
         </LogoSection>
 
         <NavSection>
           {menuItems.map((item) => (
-            <Tooltip key={item.to} content={item.text} disabled={isExpanded} position="right">
+            <Tooltip 
+              key={item.to} 
+              content={item.text} 
+              disabled={isExpanded || isTransitioning} 
+              position="right"
+            >
               <NavItem 
                 to={item.to}
                 $isExpanded={isExpanded}
+                $isTransitioning={isTransitioning}
+                aria-label={item.text}
               >
-                {item.icon}
-                {isExpanded && <span>{item.text}</span>}
+                <span className="nav-icon" aria-hidden="true">
+                  {item.icon}
+                </span>
+                <span className={`nav-text ${isExpanded && !isTransitioning ? 'visible' : 'hidden'}`}>
+                  {item.text}
+                </span>
               </NavItem>
             </Tooltip>
           ))}
         </NavSection>
 
-        <Tooltip content="Cerrar sesión" disabled={isExpanded} position="right">
+        <Tooltip 
+          content="Cerrar sesión" 
+          disabled={isExpanded || isTransitioning} 
+          position="right"
+        >
           <LogoutButton 
             onClick={handleLogout}
             $isExpanded={isExpanded}
+            $isTransitioning={isTransitioning}
+            aria-label="Cerrar sesión"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleLogout();
+              }
+            }}
           >
-            <FaSignOutAlt />
-            {isExpanded && <span>Cerrar sesión</span>}
+            <span className="nav-icon" aria-hidden="true">
+              <FaSignOutAlt />
+            </span>
+            <span className={`nav-text ${isExpanded && !isTransitioning ? 'visible' : 'hidden'}`}>
+              Cerrar sesión
+            </span>
           </LogoutButton>
         </Tooltip>
       </SidebarContainer>

@@ -1,3 +1,4 @@
+// src/components/Sidebar/Tooltip.tsx
 import React from 'react';
 import styled from 'styled-components';
 
@@ -17,8 +18,8 @@ const TooltipContainer = styled.div`
 const TooltipText = styled.span<{ position?: string }>`
   visibility: hidden;
   width: max-content;
-  background-color: #333;
-  color: #fff;
+  background-color: ${({ theme }) => theme.colors.primaryDark};
+  color: ${({ theme }) => theme.colors.white};
   text-align: center;
   border-radius: 6px;
   padding: 5px 10px;

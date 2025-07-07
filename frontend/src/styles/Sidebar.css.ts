@@ -4,6 +4,7 @@ import { NavLink } from 'react-router-dom';
 export const SidebarContainer = styled.aside<{ 
   $isExpanded: boolean;
   $isMobileOpen: boolean;
+  $isTransitioning?: boolean;
 }>`
   width: ${({ $isExpanded }) => ($isExpanded ? '240px' : '80px')};
   height: 100vh;
@@ -16,10 +17,24 @@ export const SidebarContainer = styled.aside<{
   position: fixed;
   left: 0;
   top: 0;
-  transition: all 0.3s ease;
+  transition: width 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
   z-index: 100;
   overflow-y: auto;
+  overflow-x: hidden;
   box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
 
   &:hover {
     width: 240px;
@@ -29,14 +44,8 @@ export const SidebarContainer = styled.aside<{
     width: 240px;
     transform: ${({ $isMobileOpen }) => 
       $isMobileOpen ? 'translateX(0)' : 'translateX(-100%)'};
-    transition: transform 0.3s ease;
-    z-index: 1000;
-    box-shadow: ${({ $isMobileOpen }) => 
-      $isMobileOpen ? '4px 0 15px rgba(0, 0, 0, 0.2)' : 'none'};
-
-    &:hover {
-      width: 240px;
-    }
+    opacity: ${({ $isMobileOpen }) => ($isMobileOpen ? 1 : 0)};
+    pointer-events: ${({ $isMobileOpen }) => ($isMobileOpen ? 'all' : 'none')};
   }
 `;
 
@@ -56,12 +65,12 @@ export const HamburgerButton = styled.button`
   justify-content: center;
   cursor: pointer;
   z-index: 900;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
 
   &:hover {
-    background: ${({ theme }) => theme.colors.primaryDark};
-    transform: scale(1.1);
+    background: ${({ theme }) => theme.colors.primary};
+    transform: scale(1.05);
   }
 
   @media (min-width: 769px) {
@@ -78,8 +87,8 @@ export const CloseButton = styled.button`
   color: white;
   border: none;
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -105,8 +114,9 @@ export const Overlay = styled.div<{ $isVisible: boolean }>`
   background: rgba(0,0,0,0.5);
   z-index: 999;
   opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
-  pointer-events: ${({ $isVisible }) => ($isVisible ? 'auto' : 'none')};
-  transition: opacity 0.3s ease;
+  visibility: ${({ $isVisible }) => ($isVisible ? 'visible' : 'hidden')};
+  pointer-events: ${({ $isVisible }) => ($isVisible ? 'all' : 'none')};
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 
   @media (min-width: 769px) {
     display: none;
@@ -124,6 +134,7 @@ export const LogoSection = styled.div`
   .logo-expanded {
     width: 100%;
     max-width: 160px;
+    height: auto;
     transition: all 0.3s ease;
   }
 
@@ -131,11 +142,13 @@ export const LogoSection = styled.div`
     width: 36px;
     height: 36px;
     object-fit: contain;
+    transition: all 0.3s ease;
   }
 
   a {
     display: flex;
     justify-content: center;
+    align-items: center;
     width: 100%;
   }
 `;
@@ -147,7 +160,10 @@ export const NavSection = styled.nav`
   flex: 1;
 `;
 
-export const NavItem = styled(NavLink)<{ $isExpanded: boolean }>`
+export const NavItem = styled(NavLink)<{ 
+  $isExpanded: boolean;
+  $isTransitioning?: boolean;
+}>`
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -155,17 +171,43 @@ export const NavItem = styled(NavLink)<{ $isExpanded: boolean }>`
   text-decoration: none;
   padding: 0.8rem 1rem;
   border-radius: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   white-space: nowrap;
+  
+  .nav-icon {
+    font-size: 1.3rem;
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    
+    &.visible {
+      opacity: 1;
+      transform: translateX(0);
+      transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
+    }
+    
+    &.hidden {
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+  }
 
   &.active {
     background: rgba(255, 255, 255, 0.15);
-    color: white;
     
     &::before {
       content: '';
       position: absolute;
       left: 0;
+      top: 50%;
+      transform: translateY(-50%);
       height: 24px;
       width: 3px;
       background: white;
@@ -176,20 +218,12 @@ export const NavItem = styled(NavLink)<{ $isExpanded: boolean }>`
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
-
-  svg {
-    font-size: 1.3rem;
-    min-width: 24px;
-  }
-
-  span {
-    opacity: ${({ $isExpanded }) => ($isExpanded ? 1 : 0)};
-    transition: opacity 0.2s ease 0.1s;
-    overflow: hidden;
-  }
 `;
 
-export const LogoutButton = styled.div<{ $isExpanded: boolean }>`
+export const LogoutButton = styled.div<{ 
+  $isExpanded: boolean;
+  $isTransitioning?: boolean;
+}>`
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -197,21 +231,61 @@ export const LogoutButton = styled.div<{ $isExpanded: boolean }>`
   padding: 0.8rem 1rem;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+  transition: all 0.3s ease;
+  
+  .nav-icon {
+    font-size: 1.2rem;
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    
+    &.visible {
+      opacity: 1;
+      transform: translateX(0);
+      transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
+    }
+    
+    &.hidden {
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+  }
 
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
+`;
 
-  svg {
-    font-size: 1.2rem;
-    min-width: 24px;
+export const GlobalSidebarStyles = css`
+  body.sidebar-expanded {
+    .main-content {
+      margin-left: 240px;
+      transition: margin-left 0.3s ease;
+    }
   }
 
-  span {
-    opacity: ${({ $isExpanded }) => ($isExpanded ? 1 : 0)};
-    transition: opacity 0.2s ease 0.1s;
+  body.sidebar-collapsed {
+    .main-content {
+      margin-left: 80px;
+      transition: margin-left 0.3s ease;
+    }
+  }
+
+  body.no-scroll {
     overflow: hidden;
+  }
+
+  @media (max-width: 768px) {
+    body.sidebar-expanded .main-content,
+    body.sidebar-collapsed .main-content {
+      margin-left: 0;
+    }
   }
 `;
