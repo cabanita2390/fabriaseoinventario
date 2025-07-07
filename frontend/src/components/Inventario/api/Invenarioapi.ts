@@ -55,3 +55,10 @@ export const transformInventarioData = (data: InventarioItemAPI[]): InventarioIt
     bodega_id: item.bodega.id
   }));
 };
+
+export const deleteInventarioItem = async (id: number): Promise<void> => {
+  const response = await authFetch(`${API_BASE_URL}/inventario/${id}`, {
+    method: 'DELETE'
+  });
+  if (!response.ok) throw new Error('Error al eliminar el item del inventario');
+};

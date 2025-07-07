@@ -97,22 +97,41 @@ const ProductosBasePage: React.FC = () => {
 
   // Data fetching
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [productos, presentaciones, unidades, proveedores] = await Promise.all([
-          authFetch(`${API_BASE}/producto`).then(r => r.json()),
-          authFetch(`${API_BASE}/presentacion`).then(r => r.json()),
-          authFetch(`${API_BASE}/unidadmedida`).then(r => r.json()),
-          authFetch(`${API_BASE}/proveedor`).then(r => r.json())
+  const fetchData = async () => {
+    try {
+      const [productosRes, presentacionesRes, unidadesRes, proveedoresRes] = 
+        await Promise.allSettled([
+          authFetch(`${API_BASE}/producto`),
+          authFetch(`${API_BASE}/presentacion`),
+          authFetch(`${API_BASE}/unidadmedida`),
+          authFetch(`${API_BASE}/proveedor`)
         ]);
-        setData(productos);
-        setOpciones({ presentaciones, unidades, proveedores });
-      } catch (error) {
-        handleError(error, 'Error al cargar datos');
-      }
-    };
-    fetchData();
-  }, []);
+
+      // Procesar cada respuesta individualmente
+      const productos = productosRes.status === 'fulfilled' 
+        ? await productosRes.value.json() 
+        : [];
+      
+      const presentaciones = presentacionesRes.status === 'fulfilled' 
+        ? await presentacionesRes.value.json() 
+        : [];
+      
+      const unidades = unidadesRes.status === 'fulfilled' 
+        ? await unidadesRes.value.json() 
+        : [];
+      
+      const proveedores = proveedoresRes.status === 'fulfilled' 
+        ? await proveedoresRes.value.json() 
+        : [];
+
+      setData(productos);
+      setOpciones({ presentaciones, unidades, proveedores });
+    } catch (error) {
+      handleError(error, 'Error al cargar datos');
+    }
+  };
+  fetchData();
+}, []);
 
   // Handlers
   const handleError = (error: unknown, defaultMessage: string) => {

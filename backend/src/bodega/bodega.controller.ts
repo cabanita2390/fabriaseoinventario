@@ -14,32 +14,40 @@ import { BodegaService } from './bodega.service';
 import { CreateBodegaDto } from './dto/create-bodega.dto';
 import { UpdateBodegaDto } from './dto/update-bodega.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { ADMIN } from 'src/auth/constants/roles.constant';
+import {  ADMIN, RECEPTOR_INSUMOS, RECEPTOR_MP} from 'src/auth/constants/roles.constant';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(ADMIN)
 @Controller('bodega')
 export class BodegaController {
   constructor(private readonly bodegaService: BodegaService) {}
 
   @Post()
+  @Roles(ADMIN)
   create(@Body() createBodegaDto: CreateBodegaDto) {
     return this.bodegaService.create(createBodegaDto);
   }
 
   @Get()
+  @Roles(ADMIN,RECEPTOR_INSUMOS, RECEPTOR_MP)
   findAll() {
     return this.bodegaService.findAll();
   }
 
+  @Get('all')
+  findAllNames() {
+    return this.bodegaService.findAllNames();
+  }
+
   @Get(':id')
+  @Roles(ADMIN)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.bodegaService.findOne(id);
   }
 
   @Patch(':id')
+  @Roles(ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBodegaDto: UpdateBodegaDto,
@@ -48,6 +56,7 @@ export class BodegaController {
   }
 
   @Delete(':id')
+  @Roles(ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.bodegaService.remove(id);
   }
