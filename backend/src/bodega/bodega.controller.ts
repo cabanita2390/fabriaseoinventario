@@ -14,7 +14,7 @@ import { BodegaService } from './bodega.service';
 import { CreateBodegaDto } from './dto/create-bodega.dto';
 import { UpdateBodegaDto } from './dto/update-bodega.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { ADMIN } from 'src/auth/constants/roles.constant';
+import {  ADMIN, RECEPTOR_INSUMOS, RECEPTOR_MP} from 'src/auth/constants/roles.constant';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 
@@ -30,7 +30,7 @@ export class BodegaController {
   }
 
   @Get()
-  @Roles(ADMIN)
+  @Roles(ADMIN,RECEPTOR_INSUMOS, RECEPTOR_MP)
   findAll() {
     return this.bodegaService.findAll();
   }

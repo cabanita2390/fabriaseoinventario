@@ -28,7 +28,7 @@ export class ProductoController {
   constructor(private readonly productoService: ProductoService) {}
 
   @Post()
-  @Roles(ADMIN, RECEPTOR_MP, RECEPTOR_INSUMOS, LIDER_PRODUCCION)
+  @Roles(ADMIN,  LIDER_PRODUCCION)
   async create(@Body() dto: CreateProductoDto) {
     return this.productoService.create(dto);
   }
@@ -46,7 +46,7 @@ export class ProductoController {
   }
 
   @Patch(':id')
-  @Roles(ADMIN, RECEPTOR_MP, RECEPTOR_INSUMOS, LIDER_PRODUCCION)
+  @Roles(ADMIN, )
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateProductoDto,
@@ -55,7 +55,7 @@ export class ProductoController {
   }
 
   @Delete(':id')
-  @Roles(ADMIN, RECEPTOR_MP, RECEPTOR_INSUMOS, LIDER_PRODUCCION)
+  @Roles(ADMIN,)
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.productoService.remove(id);
   }

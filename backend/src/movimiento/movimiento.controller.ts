@@ -33,7 +33,7 @@ export class MovimientoController {
   }
 
   @Get()
-  @Roles(ADMIN)
+  @Roles(ADMIN, RECEPTOR_INSUMOS, RECEPTOR_MP)
   async findAll() {
     return this.movimientoService.findAll();
   }
