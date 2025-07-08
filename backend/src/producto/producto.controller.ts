@@ -21,7 +21,7 @@ import {
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
+// @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('producto')
 export class ProductoController {
   constructor(private readonly productoService: ProductoService) {}

@@ -8,9 +8,6 @@ import { UnidadMedida } from 'src/entities/unidadmedida.entity';
 import { Repository, DeepPartial } from 'typeorm';
 import { defaultProductRows, DefaultProductRow } from './default_products_data';
 import { Not, IsNull } from 'typeorm';
-import * as bcrypt from 'bcrypt'; // Asegúrate de tener instalado bcrypt
-import { Rol } from 'src/entities/rol.entity';
-import { Usuario } from 'src/entities/usuario.entity';
 
 interface SeedRow {
   PRODUCTO: string;
@@ -38,12 +35,6 @@ export class SeedService implements OnApplicationBootstrap {
 
     @InjectRepository(Bodega)
     private readonly bodegaRepo: Repository<Bodega>,
-
-    @InjectRepository(Rol)
-    private readonly rolRepo: Repository<Rol>,
-
-    @InjectRepository(Usuario)
-    private readonly usuarioRepo: Repository<Usuario>,
   ) {}
 
   async seedProductosPredeterminados(): Promise<{
@@ -330,165 +321,82 @@ export class SeedService implements OnApplicationBootstrap {
     }
 
     await this.seedBodegas();
-    await this.seedRolesYAdmin();
   }
 
   private async seedProductosPorTipo(rows: DefaultProductRow[]) {
-    // Crear un mapa de combinaciones únicas de presentacion + tipo
-    const combinacionesUnicas = new Map<
-      string,
-      { nombre: string; tipoProducto: Producto['tipoProducto'] }
-    >();
+  // Crear un mapa de combinaciones únicas de presentacion + tipo
+  const combinacionesUnicas = new Map<
+    string,
+    { nombre: string; tipoProducto: Producto['tipoProducto'] }
+  >();
 
-    for (const row of rows) {
-      const nombre = row.PRESENTACION.trim();
-      const tipo = row.TIPO_PRODUCTO.trim() as Producto['tipoProducto'];
-      const key = `${nombre}__${tipo}`;
-      combinacionesUnicas.set(key, { nombre, tipoProducto: tipo });
+  for (const row of rows) {
+    const nombre = row.PRESENTACION.trim();
+    const tipo = row.TIPO_PRODUCTO.trim() as Producto['tipoProducto'];
+    const key = `${nombre}__${tipo}`;
+    combinacionesUnicas.set(key, { nombre, tipoProducto: tipo });
+  }
+
+  // Crear las presentaciones si no existen
+  const presMap = new Map<string, Presentacion>();
+
+  for (const [key, { nombre, tipoProducto }] of combinacionesUnicas.entries()) {
+    let pres = await this.presRepo.findOne({ where: { nombre, tipoProducto } });
+    if (!pres) {
+      pres = this.presRepo.create({ nombre, tipoProducto });
+      pres = await this.presRepo.save(pres);
     }
+    presMap.set(key, pres);
+  }
 
-    // Crear las presentaciones si no existen
-    const presMap = new Map<string, Presentacion>();
+  // Crear productos
+  for (const row of rows) {
+    const nombreProducto = row.PRODUCTO.trim();
+    const tipo = row.TIPO_PRODUCTO.trim() as Producto['tipoProducto'];
+    const nombrePres = row.PRESENTACION.trim();
+    const key = `${nombrePres}__${tipo}`;
+    const presentacion = presMap.get(key);
 
-    for (const [
-      key,
-      { nombre, tipoProducto },
-    ] of combinacionesUnicas.entries()) {
-      let pres = await this.presRepo.findOne({
-        where: { nombre, tipoProducto },
-      });
-      if (!pres) {
-        pres = this.presRepo.create({ nombre, tipoProducto });
-        pres = await this.presRepo.save(pres);
-      }
-      presMap.set(key, pres);
-    }
+    const unidad = await this.obtenerOUcrearUM(row.UNIDADES || 'KG');
 
-    // Crear productos
-    for (const row of rows) {
-      const nombreProducto = row.PRODUCTO.trim();
-      const tipo = row.TIPO_PRODUCTO.trim() as Producto['tipoProducto'];
-      const nombrePres = row.PRESENTACION.trim();
-      const key = `${nombrePres}__${tipo}`;
-      const presentacion = presMap.get(key);
-
-      const unidad = await this.obtenerOUcrearUM(row.UNIDADES || 'KG');
-
-      const yaExiste = await this.productoRepo.findOne({
-        where: {
-          nombre: nombreProducto,
-          tipoProducto: tipo,
-          presentacion: {
-            nombre: presentacion?.nombre,
-          },
+    const yaExiste = await this.productoRepo.findOne({
+      where: {
+        nombre: nombreProducto,
+        tipoProducto: tipo,
+        presentacion: {
+          nombre: presentacion?.nombre,
         },
+      },
+    });
+
+    if (!yaExiste) {
+      const producto = this.productoRepo.create({
+        nombre: nombreProducto,
+        tipoProducto: tipo,
+        estado: 'ACTIVO',
+        presentacion,
+        unidadMedida: unidad,
       });
-
-      if (!yaExiste) {
-        const producto = this.productoRepo.create({
-          nombre: nombreProducto,
-          tipoProducto: tipo,
-          estado: 'ACTIVO',
-          presentacion,
-          unidadMedida: unidad,
-        });
-        await this.productoRepo.save(producto);
-        this.logger.log(
-          `Producto creado: ${nombreProducto} (${row.PRESENTACION})`,
-        );
-      } else {
-        this.logger.log(
-          `Producto ya existe: ${nombreProducto} (${row.PRESENTACION})`,
-        );
-      }
+      await this.productoRepo.save(producto);
+      this.logger.log(
+        `Producto creado: ${nombreProducto} (${row.PRESENTACION})`,
+      );
+    } else {
+      this.logger.log(
+        `Producto ya existe: ${nombreProducto} (${row.PRESENTACION})`,
+      );
     }
+  }
 
-    // Actualizar secuencia
-    await this.productoRepo.query(`
+  // Actualizar secuencia
+  await this.productoRepo.query(`
     SELECT setval(
       pg_get_serial_sequence('"producto"', 'idproducto'),
       (SELECT MAX(idproducto) FROM "producto")
     );
   `);
-  }
+}
 
-  async seedRolesYAdmin(): Promise<{ message: string; resumen: any }> {
-    this.logger.log('Iniciando seed de roles y usuario admin...');
-
-    const rolesIniciales = [
-      'ADMIN',
-      'LIDER_PRODUCCION',
-      'RECEPTOR_MP',
-      'RECEPTOR_ENVASE',
-      'RECEPTOR_ETIQUETAS',
-      'USUARIO',
-    ];
-
-    const resumen = {
-      rolesCreados: 0,
-      rolesExistentes: 0,
-      adminCreado: false,
-      adminExistente: false,
-    };
-
-    const rolMap = new Map<string, Rol>();
-
-    for (const nombre of rolesIniciales) {
-      const existente = await this.rolRepo.findOne({ where: { nombre } });
-
-      if (existente) {
-        resumen.rolesExistentes++;
-        this.logger.log(`Rol ya existe: ${nombre}`);
-        rolMap.set(nombre, existente);
-      } else {
-        const nuevo = this.rolRepo.create({ nombre });
-        const rol = await this.rolRepo.save(nuevo);
-        resumen.rolesCreados++;
-        this.logger.log(`Rol creado: ${nombre}`);
-        rolMap.set(nombre, rol);
-      }
-    }
-
-    // Verificar si ya existe el admin (por username)
-    const adminUsername = 'admin';
-    const adminCorreo = 'admin@sistema.com';
-
-    let admin = await this.usuarioRepo.findOne({
-      where: { username: adminUsername },
-    });
-
-    if (!admin) {
-      const adminPassword = 'Secreto456*'; // Puedes cambiarla según necesidades
-      const hashed = await bcrypt.hash(adminPassword, 10);
-
-      const rolAdmin = rolMap.get('ADMIN');
-      if (!rolAdmin) {
-        throw new Error(
-          'No se encontró el rol ADMIN para asignar al usuario admin',
-        );
-      }
-
-      admin = this.usuarioRepo.create({
-        username: adminUsername,
-        nombre: 'Administrador',
-        email: adminCorreo,
-        password: hashed,
-        rol: rolAdmin,
-      });
-
-      await this.usuarioRepo.save(admin);
-      resumen.adminCreado = true;
-      this.logger.log(`Usuario admin creado con username: ${adminUsername}`);
-    } else {
-      resumen.adminExistente = true;
-      this.logger.log(`Usuario admin ya existe: ${adminUsername}`);
-    }
-
-    return {
-      message: 'Seed de roles y admin completado',
-      resumen,
-    };
-  }
 
   private async obtenerOUcrearUM(nombre: string): Promise<UnidadMedida> {
     const normalized = nombre.trim().toUpperCase();

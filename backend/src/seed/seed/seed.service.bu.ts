@@ -7,9 +7,6 @@ import { Producto } from 'src/entities/producto.entity';
 import { UnidadMedida } from 'src/entities/unidadmedida.entity';
 import { Repository, DeepPartial } from 'typeorm';
 import { defaultProductRows } from './default_products_data';
-import * as bcrypt from 'bcrypt';
-import { Rol } from 'src/entities/rol.entity';
-import { Usuario } from 'src/entities/usuario.entity';
 
 interface SeedRow {
   PRODUCTO: string;
@@ -38,12 +35,6 @@ export class SeedService {
 
     @InjectRepository(Bodega)
     private readonly bodegaRepo: Repository<Bodega>,
-
-    @InjectRepository(Rol)
-    private readonly rolRepo: Repository<Rol>,
-
-    @InjectRepository(Usuario)
-    private readonly usuarioRepo: Repository<Usuario>,
   ) {}
 
   async seedMateriasPrimas(): Promise<{ message: string; resumen: any }> {
@@ -252,74 +243,5 @@ export class SeedService {
       this.logger.error('Error en seedProductosPredeterminados', error);
       throw error;
     }
-  }
-
-  async seedRolesYAdmin(): Promise<{ message: string; resumen: any }> {
-    this.logger.log('Iniciando seed de roles y usuario admin...');
-
-    const rolesIniciales = [
-      'ADMIN',
-      'LIDER_PRODUCCION',
-      'RECEPTOR_MP',
-      'RECEPTOR_ENVASE',
-      'RECEPTOR_ETIQUETAS',
-      'USUARIO',
-    ];
-
-    const resumen = {
-      rolesCreados: 0,
-      rolesExistentes: 0,
-      adminCreado: false,
-      adminExistente: false,
-    };
-
-    const rolMap = new Map<string, Rol>();
-
-    for (const nombre of rolesIniciales) {
-      let rol = await this.rolRepo.findOne({ where: { nombre } });
-      if (!rol) {
-        rol = this.rolRepo.create({ nombre });
-        rol = await this.rolRepo.save(rol);
-        resumen.rolesCreados++;
-        this.logger.log(`Rol creado: ${nombre}`);
-      } else {
-        resumen.rolesExistentes++;
-        this.logger.log(`Rol ya existe: ${nombre}`);
-      }
-      rolMap.set(nombre, rol);
-    }
-
-    // Verificar si ya existe el admin (por username)
-    const adminUsername = 'admin';
-    const adminCorreo = 'admin@sistema.com';
-
-    let admin = await this.usuarioRepo.findOne({
-      where: { username: adminUsername },
-    });
-
-    if (!admin) {
-      const adminPassword = 'Admin123*'; // Cambia esto solo si deseas una clave distinta
-      const hashed = await bcrypt.hash(adminPassword, 10);
-
-      admin = this.usuarioRepo.create({
-        username: adminUsername,
-        nombre: 'Administrador',
-        email: adminCorreo,
-        password: hashed,
-        rol: rolMap.get('ADMIN'),
-      });
-
-      await this.usuarioRepo.save(admin);
-      resumen.adminCreado = true;
-      this.logger.log(`Usuario admin creado con username: ${adminUsername}`);
-    } else {
-      resumen.adminExistente = true;
-      this.logger.log(`Usuario admin ya existe: ${adminUsername}`);
-    }
-
-    return {
-      message: 'Seed de roles y admin completado',
-      resumen,
-    };
   }
 }
