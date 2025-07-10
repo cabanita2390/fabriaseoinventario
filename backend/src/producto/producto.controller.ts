@@ -21,7 +21,7 @@ import {
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
-// @UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('producto')
 export class ProductoController {
   constructor(private readonly productoService: ProductoService) {}
@@ -45,7 +45,7 @@ export class ProductoController {
   }
 
   @Patch(':id')
-  @Roles(ADMIN, RECEPTOR_MP,  LIDER_PRODUCCION)
+  @Roles(ADMIN, RECEPTOR_MP, RECEPTOR_INSUMOS, LIDER_PRODUCCION)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateProductoDto,
@@ -54,7 +54,7 @@ export class ProductoController {
   }
 
   @Delete(':id')
-  @Roles(ADMIN, RECEPTOR_MP,  LIDER_PRODUCCION)
+  @Roles(ADMIN, RECEPTOR_MP, RECEPTOR_INSUMOS, LIDER_PRODUCCION)
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.productoService.remove(id);
   }
