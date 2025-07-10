@@ -15,7 +15,7 @@ import EditModal from '../Movimientos/components/EditModal';
 import Swal from 'sweetalert2';
 import styled from 'styled-components';
 import useFiltroMovimientos from '../Movimientos/components/useFiltroMovimientos';
-
+import ExportToExcel from '../ui/ExportToExcel';
 
 
 interface TablaProps {
@@ -219,10 +219,24 @@ function Tabla({
           fields={filtrosConfig}
           onSearch={handleBuscar}
           onTextoChange={setFiltroTexto}
-          onExport={mostrarExportar ? exportToCSV : undefined}
+          
+          
+
         />
       )}
-      
+      <div>
+        {mostrarExportar && (
+        <div style={{ marginBottom: '1rem', textAlign: 'right' }}>
+          <ExportToExcel 
+            data={dataFiltrada}
+            filename="movimientos_inventario"
+            buttonText="Exportar a Excel"
+            className="btn-exportar" // Puedes añadir tus clases CSS aquí
+          />
+        </div>
+      )}
+
+      </div>
       <DataTable 
         columns={columns} 
         data={dataFiltrada} 
