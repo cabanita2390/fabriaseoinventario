@@ -14,7 +14,11 @@ import { CreateMovimientoDto } from './dto/create-movimiento.dto';
 import { UpdateMovimientoDto } from './dto/update-movimiento.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { ADMIN, RECEPTOR_MP } from 'src/auth/constants/roles.constant';
+import {
+  ADMIN,
+  RECEPTOR_INSUMOS,
+  RECEPTOR_MP,
+} from 'src/auth/constants/roles.constant';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,7 +27,7 @@ export class MovimientoController {
   constructor(private readonly movimientoService: MovimientoService) {}
 
   @Post()
-  @Roles(ADMIN, RECEPTOR_MP)
+  @Roles(ADMIN, RECEPTOR_INSUMOS, RECEPTOR_MP)
   async create(@Body() createMovimientoDto: CreateMovimientoDto) {
     return this.movimientoService.create(createMovimientoDto);
   }

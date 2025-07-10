@@ -6,20 +6,11 @@ import { UnidadMedida } from 'src/entities/unidadmedida.entity';
 import { Producto } from 'src/entities/producto.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Bodega } from 'src/entities/bodega.entity';
-import { Rol } from 'src/entities/rol.entity';
-import { Usuario } from 'src/entities/usuario.entity';
 
 @Module({
   imports: [
     // Registra aquí todas las entidades que usas en SeedService
-    TypeOrmModule.forFeature([
-      Presentacion,
-      UnidadMedida,
-      Producto,
-      Bodega,
-      Rol,
-      Usuario,
-    ]),
+    TypeOrmModule.forFeature([Presentacion, UnidadMedida, Producto, Bodega]),
   ],
   providers: [SeedService],
   controllers: [SeedController],

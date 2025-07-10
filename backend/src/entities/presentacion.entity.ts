@@ -7,14 +7,7 @@ export class Presentacion {
   id: number;
 
   @Column({ length: 45 })
-  nombre: string;
-
-  @Column({
-    name: 'tipo_producto',
-    type: 'enum',
-    enum: ['MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'],
-  })
-  tipoProducto: 'MATERIA_PRIMA' | 'MATERIAL_DE_ENVASE' | 'ETIQUETAS';
+  nombre: string; // p.ej. caja, caneca, garrafa
 
   @OneToMany(() => Producto, (producto) => producto.presentacion)
   productos: Producto[];
