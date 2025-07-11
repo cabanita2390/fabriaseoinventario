@@ -13,6 +13,7 @@ export class Presentacion {
     name: 'tipo_producto',
     type: 'enum',
     enum: ['MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'],
+    default: 'MATERIA_PRIMA', // ← IMPORTANTE PARA synchronize:true
   })
   tipoProducto: 'MATERIA_PRIMA' | 'MATERIAL_DE_ENVASE' | 'ETIQUETAS';
 

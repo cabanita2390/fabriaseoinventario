@@ -187,9 +187,13 @@ export class SeedService implements OnApplicationBootstrap {
       let presentacionesCreadas = 0;
 
       for (const nombre of presentaciones) {
-        let pres = await this.presRepo.findOne({ where: { nombre } });
+        const tipo = 'MATERIA_PRIMA'; // porque este método solo se usa para materias primas
+
+        let pres = await this.presRepo.findOne({
+          where: { nombre, tipoProducto: tipo },
+        });
         if (!pres) {
-          pres = this.presRepo.create({ nombre });
+          pres = this.presRepo.create({ nombre, tipoProducto: tipo });
           pres = await this.presRepo.save(pres);
           presentacionesCreadas++;
         }
