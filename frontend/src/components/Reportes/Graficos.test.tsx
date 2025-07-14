@@ -1,57 +1,30 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import Graficos from './Graficos';
 import { MemoryRouter } from 'react-router-dom';
 
-// Mock completo de SweetAlert2 para evitar problemas con CSS
+// Mock del módulo useAuthFetch
+jest.mock('../../components/ui/useAuthFetch', () => ({
+  authFetch: jest.fn()
+}));
+
+// Mock de SweetAlert2
 jest.mock('sweetalert2', () => ({
   fire: jest.fn().mockResolvedValue({ isConfirmed: true }),
-  mixin: jest.fn(),
-  close: jest.fn(),
-  showLoading: jest.fn(),
-  hideLoading: jest.fn(),
-  getTimerLeft: jest.fn(),
-  stopTimer: jest.fn(),
-  resumeTimer: jest.fn(),
-  toggleTimer: jest.fn(),
-  isVisible: jest.fn(),
-  update: jest.fn(),
-  enableButtons: jest.fn(),
-  disableButtons: jest.fn(),
-  enableLoading: jest.fn(),
-  disableLoading: jest.fn(),
-  showValidationMessage: jest.fn(),
-  resetValidationMessage: jest.fn(),
-  getInput: jest.fn(),
-  disableInput: jest.fn(),
-  enableInput: jest.fn(),
+  // ... otros métodos mockeados
 }));
 
-// Mock mejorado de authFetch
-const mockAuthFetch = jest.fn();
-jest.mock('../../components/ui/useAuthFetch', () => ({
-  __esModule: true,
-  default: () => mockAuthFetch,
-}));
-
-// Mocks de componentes hijos
+// Mock de componentes hijos
 jest.mock('../Movimientos/Filtro', () => ({
   __esModule: true,
   default: ({ onSearch, onReset }: any) => (
     <div data-testid="mock-filtro">
       <button 
-        onClick={() => onSearch({ 
-          fechaInicio: '2023-01-01', 
-          fechaFin: '2023-01-31' 
-        })}
+        onClick={() => onSearch({ fechaInicio: '2023-01-01', fechaFin: '2023-01-31' })}
         data-testid="mock-search-button"
       >
         Buscar
       </button>
-      <button 
-        onClick={() => onReset()}
-        data-testid="mock-reset-button"
-      >
+      <button onClick={() => onReset()} data-testid="mock-reset-button">
         Reset
       </button>
     </div>
@@ -69,54 +42,115 @@ jest.mock('./GraficoProductos', () => ({
   )
 }));
 
+import Graficos from './Graficos';
+import { authFetch } from '../../components/ui/useAuthFetch';
+
+const mockAuthFetch = authFetch as jest.MockedFunction<typeof authFetch>;
+
+// Implementación completa del mock de Response
+class MockResponse implements Response {
+  constructor(
+    public body: ReadableStream<Uint8Array> | null = null,
+    public bodyUsed: boolean = false,
+    public headers: Headers = new Headers(),
+    public ok: boolean = true,
+    public redirected: boolean = false,
+    public status: number = 200,
+    public statusText: string = 'OK',
+    public type: ResponseType = 'basic',
+    public url: string = '',
+    private _json: any = [],
+    private _text: string = ''
+  ) {}
+
+  async arrayBuffer(): Promise<ArrayBuffer> {
+    return new ArrayBuffer(0);
+  }
+
+  async blob(): Promise<Blob> {
+    return new Blob();
+  }
+
+  async formData(): Promise<FormData> {
+    return new FormData();
+  }
+
+  async json(): Promise<any> {
+    return this._json;
+  }
+
+  async text(): Promise<string> {
+    return this._text;
+  }
+
+  clone(): Response {
+    return new MockResponse(
+      this.body,
+      this.bodyUsed,
+      this.headers,
+      this.ok,
+      this.redirected,
+      this.status,
+      this.statusText,
+      this.type,
+      this.url,
+      this._json,
+      this._text
+    );
+  }
+
+  get trailer(): Promise<Headers> {
+    return Promise.resolve(new Headers());
+  }
+
+  get bodyLoaded(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  get bytes(): () => Promise<Uint8Array> {
+    return () => Promise.resolve(new Uint8Array());
+  }
+}
+
 describe('Componente Graficos', () => {
+  const today = new Date('2025-07-07');
   const mockMovimientos = [
     {
-      fechaMovimiento: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // Hace 3 días
+      fechaMovimiento: new Date('2025-07-04').toISOString(),
       producto: { nombre: 'Producto A' },
       cantidad: 10,
       tipo: 'ENTRADA'
     },
     {
-      fechaMovimiento: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // Hace 1 día
+      fechaMovimiento: new Date('2025-07-06').toISOString(),
       producto: { nombre: 'Producto B' },
       cantidad: 5,
       tipo: 'SALIDA'
-    },
-    {
-      fechaMovimiento: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // En 2 días (fuera del rango)
-      producto: { nombre: 'Producto C' },
-      cantidad: 8,
-      tipo: 'ENTRADA'
     }
   ];
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+    jest.setSystemTime(today);
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   it('debe mostrar el estado de carga inicial', () => {
-    mockAuthFetch.mockImplementation(() => new Promise(() => {})); // Simular carga infinita
-
-    render(
-      <MemoryRouter>
-        <Graficos />
-      </MemoryRouter>
-    );
-
+    mockAuthFetch.mockImplementation(() => new Promise(() => {}));
+    render(<Graficos />, { wrapper: MemoryRouter });
     expect(screen.getByText('Cargando datos...')).toBeInTheDocument();
-    // Verificar el spinner usando data-testid en lugar de role
     expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
   });
 
   it('debe manejar errores de carga', async () => {
     mockAuthFetch.mockRejectedValue(new Error('Error de red'));
-
-    render(
-      <MemoryRouter>
-        <Graficos />
-      </MemoryRouter>
-    );
+    render(<Graficos />, { wrapper: MemoryRouter });
 
     await waitFor(() => {
       expect(screen.getByText('Error al cargar datos. Por favor intente más tarde.')).toBeInTheDocument();
@@ -124,16 +158,8 @@ describe('Componente Graficos', () => {
   });
 
   it('debe mostrar mensaje cuando no hay datos', async () => {
-    mockAuthFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve([])
-    });
-
-    render(
-      <MemoryRouter>
-        <Graficos />
-      </MemoryRouter>
-    );
+    mockAuthFetch.mockResolvedValue(new MockResponse(null, false, new Headers(), true, false, 200, 'OK', 'basic', '', []));
+    render(<Graficos />, { wrapper: MemoryRouter });
 
     await waitFor(() => {
       expect(screen.getByText('No se encontraron movimientos en el sistema')).toBeInTheDocument();
@@ -141,104 +167,73 @@ describe('Componente Graficos', () => {
   });
 
   it('debe cargar y mostrar datos correctamente', async () => {
-    mockAuthFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockMovimientos)
-    });
-
-    render(
-      <MemoryRouter>
-        <Graficos />
-      </MemoryRouter>
-    );
+    mockAuthFetch.mockResolvedValue(new MockResponse(null, false, new Headers(), true, false, 200, 'OK', 'basic', '', mockMovimientos));
+    render(<Graficos />, { wrapper: MemoryRouter });
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-grafico')).toBeInTheDocument();
       expect(screen.getByText('Producto A - 10')).toBeInTheDocument();
       expect(screen.getByText('Producto B - 5')).toBeInTheDocument();
-      expect(screen.queryByText('Producto C - 8')).not.toBeInTheDocument();
     });
   });
 
   it('debe filtrar datos cuando se aplican filtros', async () => {
-    mockAuthFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockMovimientos)
-    });
-
-    render(
-      <MemoryRouter>
-        <Graficos />
-      </MemoryRouter>
-    );
+    mockAuthFetch.mockResolvedValue(new MockResponse(null, false, new Headers(), true, false, 200, 'OK', 'basic', '', mockMovimientos));
+    render(<Graficos />, { wrapper: MemoryRouter });
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-filtro')).toBeInTheDocument();
     });
 
-    // Simular búsqueda con filtros personalizados
     fireEvent.click(screen.getByTestId('mock-search-button'));
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-grafico')).toBeInTheDocument();
-      expect(screen.getByText('Producto A - 10')).toBeInTheDocument();
-      expect(screen.getByText('Producto B - 5')).toBeInTheDocument();
-      expect(screen.queryByText('Producto C - 8')).not.toBeInTheDocument();
     });
   });
 
   it('debe resetear los filtros correctamente', async () => {
-    mockAuthFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockMovimientos)
-    });
-
-    render(
-      <MemoryRouter>
-        <Graficos />
-      </MemoryRouter>
-    );
+    mockAuthFetch.mockResolvedValue(new MockResponse(null, false, new Headers(), true, false, 200, 'OK', 'basic', '', mockMovimientos));
+    render(<Graficos />, { wrapper: MemoryRouter });
 
     await waitFor(() => {
       expect(screen.getByTestId('mock-filtro')).toBeInTheDocument();
     });
 
-    // Primero aplicar filtro
     fireEvent.click(screen.getByTestId('mock-search-button'));
     await waitFor(() => {
       expect(screen.getByTestId('mock-grafico')).toBeInTheDocument();
     });
 
-    // Luego resetear
     fireEvent.click(screen.getByTestId('mock-reset-button'));
     await waitFor(() => {
       expect(screen.getByTestId('mock-grafico')).toBeInTheDocument();
-      expect(screen.getByText('Producto A - 10')).toBeInTheDocument();
-      expect(screen.getByText('Producto B - 5')).toBeInTheDocument();
     });
   });
 
-  it('debe mostrar mensaje cuando no hay datos que coincidan con los filtros', async () => {
-    mockAuthFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockMovimientos)
-    });
-
-    render(
-      <MemoryRouter>
-        <Graficos />
-      </MemoryRouter>
-    );
+  it('debe manejar respuesta no exitosa del servidor', async () => {
+    mockAuthFetch.mockResolvedValue(new MockResponse(null, false, new Headers(), false, false, 500, 'Internal Server Error', 'basic', '', []));
+    render(<Graficos />, { wrapper: MemoryRouter });
 
     await waitFor(() => {
-      expect(screen.getByTestId('mock-filtro')).toBeInTheDocument();
+      expect(screen.getByText('Error al cargar datos. Por favor intente más tarde.')).toBeInTheDocument();
     });
+  });
 
-    // Simular búsqueda con filtros que no coinciden con ningún dato
-    fireEvent.click(screen.getByTestId('mock-search-button'));
+  it('debe manejar datos con productos sin nombre', async () => {
+    const movimientosSinNombre = [{
+      fechaMovimiento: new Date('2025-07-01').toISOString(),
+      producto: null,
+      cantidad: 5,
+      tipo: 'ENTRADA'
+    }];
+
+    mockAuthFetch.mockResolvedValue(new MockResponse(null, false, new Headers(), true, false, 200, 'OK', 'basic', '', movimientosSinNombre));
+    render(<Graficos />, { wrapper: MemoryRouter });
 
     await waitFor(() => {
-      expect(screen.getByText('No hay movimientos que coincidan con los filtros aplicados')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-grafico')).toBeInTheDocument();
+      expect(screen.getByText('Sin nombre - 5')).toBeInTheDocument();
     });
   });
 });

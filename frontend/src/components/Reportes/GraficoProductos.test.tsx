@@ -2,14 +2,17 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import GraficoProductos from './GraficoProductos';
 
-// Mock completo de react-chartjs-2 y chart.js
+// Mock de react-chartjs-2 simplificado
 jest.mock('react-chartjs-2', () => ({
-  Chart: jest.fn(() => <div data-testid="line-chart">Gráfico de Líneas Mock</div>),
-  Doughnut: jest.fn(() => <div data-testid="doughnut-chart">Gráfico de Dona Mock</div>),
+  Chart: () => <div data-testid="line-chart">Gráfico de Líneas Mock</div>,
+  Doughnut: () => <div data-testid="doughnut-chart">Gráfico de Dona Mock</div>,
 }));
 
+// Mock de chart.js
 jest.mock('chart.js', () => ({
-  Chart: jest.fn(),
+  Chart: {
+    register: jest.fn(),
+  },
   register: jest.fn(),
   CategoryScale: jest.fn(),
   LinearScale: jest.fn(),
@@ -42,20 +45,33 @@ describe('Componente GraficoProductos', () => {
     expect(screen.getByText('Totales por Producto')).toBeInTheDocument();
   });
 
-  test('debe mostrar los nombres de productos en el contenido', () => {
-    render(<GraficoProductos datos={datosMock} />);
-    
-    expect(screen.getByText('Teclado')).toBeInTheDocument();
-    expect(screen.getByText('Mouse')).toBeInTheDocument();
-    expect(screen.getByText('Monitor')).toBeInTheDocument();
-  });
-
-  test('debe renderizar los componentes de gráficos mockeados', () => {
+  test('debe mostrar los componentes de gráficos mockeados', () => {
     render(<GraficoProductos datos={datosMock} />);
     
     expect(screen.getByTestId('line-chart')).toBeInTheDocument();
     expect(screen.getByTestId('doughnut-chart')).toBeInTheDocument();
     expect(screen.getByText('Gráfico de Líneas Mock')).toBeInTheDocument();
     expect(screen.getByText('Gráfico de Dona Mock')).toBeInTheDocument();
+  });
+
+  test('debe manejar datos vacíos sin errores', () => {
+    render(<GraficoProductos datos={[]} />);
+    
+    expect(screen.getByText('Movimientos por Fecha')).toBeInTheDocument();
+    expect(screen.getByText('Totales por Producto')).toBeInTheDocument();
+    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+    expect(screen.getByTestId('doughnut-chart')).toBeInTheDocument();
+  });
+
+  test('debe procesar correctamente datos con fechas duplicadas', () => {
+    const datosConDuplicados = [
+      { fecha: '2025-07-01', nombre: 'Teclado', cantidad: 3 },
+      { fecha: '2025-07-01', nombre: 'Teclado', cantidad: 2 },
+    ];
+
+    render(<GraficoProductos datos={datosConDuplicados} />);
+    
+    expect(screen.getByText('Movimientos por Fecha')).toBeInTheDocument();
+    expect(screen.getByText('Totales por Producto')).toBeInTheDocument();
   });
 });

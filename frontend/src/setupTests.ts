@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom';
 import 'jest-canvas-mock';
 import { TextEncoder, TextDecoder } from 'util';
+import '@testing-library/jest-dom';
+import 'jest-styled-components';
 
 // Solución para algunos errores de JSDOM
 global.TextEncoder = TextEncoder;

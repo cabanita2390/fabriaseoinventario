@@ -124,7 +124,7 @@ const Graficos = () => {
         onReset={() => setData(allData)}
         showSearchBar={false}
       />
-      // En el JSX del componente, modifica el spinner para incluir un data-testid
+      
       {loading ? (
         <div className="text-center p-8">
           <div 
