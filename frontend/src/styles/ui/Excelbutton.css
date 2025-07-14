@@ -1,7 +1,7 @@
 .export-excel-container {
   width: 100%; 
   padding: 12px;
-  background-color: #ffffff; 
+  background-color:#f9f9f9; 
   border-top: 1px solid rgb(226, 222, 222); 
   border-bottom: 1px solid rgb(224, 219, 219); 
   border-radius: 2px; 

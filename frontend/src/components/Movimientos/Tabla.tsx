@@ -117,22 +117,6 @@ function Tabla({
     cargarDatos();
   }, [cargarDatos, reloadTrigger]);
 
-  const exportToCSV = useCallback(() => {
-    const headers = columns.map(c => c.header).join(',');
-    const rows = dataFiltrada.map(row =>
-      columns.map(c => `"${row[c.accessor as keyof RowData] ?? ""}"`).join(',')
-    );
-    
-    const csvContent = [headers, ...rows].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'movimientos.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, [dataFiltrada, columns]);
 
   const handleEdit = useCallback((movimiento: RowData) => {
     setEditando(movimiento);
@@ -214,6 +198,20 @@ function Tabla({
 
   return (
     <div>
+
+      <div>
+        {mostrarExportar && (
+        <div className="export-excel-container" >
+          <ExportToExcel 
+            data={dataFiltrada}
+            filename="movimientos_inventario"
+            buttonText="Exportar a Excel"
+          />
+        </div>
+      )}
+
+      </div>
+
       {mostrarFiltro && (
         <Filtro
           fields={filtrosConfig}
@@ -224,19 +222,7 @@ function Tabla({
 
         />
       )}
-      <div>
-        {mostrarExportar && (
-        <div style={{ marginBottom: '1rem', textAlign: 'right' }}>
-          <ExportToExcel 
-            data={dataFiltrada}
-            filename="movimientos_inventario"
-            buttonText="Exportar a Excel"
-            className="btn-exportar" // Puedes añadir tus clases CSS aquí
-          />
-        </div>
-      )}
-
-      </div>
+      
       <DataTable 
         columns={columns} 
         data={dataFiltrada} 
