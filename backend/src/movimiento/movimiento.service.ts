@@ -1,4 +1,3 @@
-// src/movimiento/movimiento.service.ts
 import {
   Injectable,
   NotFoundException,
@@ -30,11 +29,17 @@ export class MovimientoService {
   ) {}
 
   async createMateriaPrima(dto: CreateMovimientoDto) {
-    return this.create({ ...dto, descripcion: dto.descripcion ?? 'Materia Prima' });
+    return this.create({
+      ...dto,
+      descripcion: dto.descripcion ?? 'Materia Prima',
+    });
   }
 
   async createMaterialEnvase(dto: CreateMovimientoDto) {
-    return this.create({ ...dto, descripcion: dto.descripcion ?? 'Material Envase' });
+    return this.create({
+      ...dto,
+      descripcion: dto.descripcion ?? 'Material Envase',
+    });
   }
 
   async createEtiquetas(dto: CreateMovimientoDto) {
