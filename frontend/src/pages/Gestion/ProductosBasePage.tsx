@@ -16,6 +16,14 @@ import { useAuthFetch, ApiError } from '../../components/ui/useAuthFetch';
 // Types
 type Opcion = { id: number; nombre: string };
 
+type Proveedor = {
+  id: number;
+  nombre: string;
+  telefono: string;
+  email: string;
+  direccion: string;
+};
+
 type Producto = {
   id: number;
   nombre: string;
@@ -24,7 +32,7 @@ type Producto = {
   estado: string;
   presentacion: Opcion;
   unidadMedida: Opcion;
-  proveedor: string | null;
+  proveedor: Proveedor | null; // Cambiado de string | null a Proveedor | null
 };
 
 type ProductoForm = {
@@ -56,7 +64,7 @@ const COLUMNS = [
   { header: 'Presentación', accessor: 'presentacionNombre' },
   { header: 'Unidad', accessor: 'unidadMedidaNombre' },
   { header: 'Tipo', accessor: 'tipoProducto' },
-  { header: 'Proveedor', accessor: 'proveedorNombre' },
+  { header: 'Proveedor', accessor: 'proveedorNombre' }, // Esto mostrará el string directamente
   { header: 'Estado', accessor: 'estadoFormateado' }
 ];
 
@@ -90,7 +98,7 @@ const transformedData = useMemo(() => {
     // Campos adicionales para las columnas
     presentacionNombre: producto.presentacion?.nombre || 'N/A',
     unidadMedidaNombre: producto.unidadMedida?.nombre || 'N/A',
-    proveedorNombre: producto.proveedor || 'N/A',
+    proveedorNombre: producto.proveedor?.nombre || 'N/A', // Accedemos al nombre del objeto proveedor
     estadoFormateado: producto.estado === 'ACTIVO' ? '✅ Activo' : '❌ Inactivo'
   }));
 }, [data]);
@@ -232,25 +240,23 @@ const filteredData = useMemo(() => {
   };
 
 
-  const handleEdit = (id: number) => {
-    const producto = data.find(p => p.id === id);
-    if (!producto) return;
+const handleEdit = (id: number) => {
+  const producto = data.find(p => p.id === id);
+  if (!producto) return;
 
-    setForm({
-      id: producto.id,
-      nombre: producto.nombre,
-      tipoProducto: producto.tipoProducto,
-      subtipoInsumo: producto.subtipoInsumo,
-      estado: producto.estado,
-      presentacion_id: producto.presentacion.id,
-      unidadmedida_id: producto.unidadMedida.id,
-      proveedor_id: producto.proveedor
-        ? opciones.proveedores.find(p => p.nombre === producto.proveedor)?.id || null
-        : null
-    });
-    setIsEditMode(true);
-    setShowModal(true);
-  };
+  setForm({
+    id: producto.id,
+    nombre: producto.nombre,
+    tipoProducto: producto.tipoProducto,
+    subtipoInsumo: producto.subtipoInsumo,
+    estado: producto.estado,
+    presentacion_id: producto.presentacion.id,
+    unidadmedida_id: producto.unidadMedida.id,
+    proveedor_id: producto.proveedor?.id || null // Accedemos al id del objeto proveedor
+  });
+  setIsEditMode(true);
+  setShowModal(true);
+};
 
   const closeModal = () => {
     setShowModal(false);
