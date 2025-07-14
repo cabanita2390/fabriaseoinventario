@@ -22,18 +22,45 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 export class MovimientoController {
   constructor(private readonly movimientoService: MovimientoService) {}
 
-  @Post()
+  // Crear
+  @Post('materia-prima')
   @Roles(ADMIN, RECEPTOR_MP)
-  async create(@Body() createMovimientoDto: CreateMovimientoDto) {
-    return this.movimientoService.create(createMovimientoDto);
+  createMateriaPrima(@Body() dto: CreateMovimientoDto) {
+    return this.movimientoService.createMateriaPrima(dto);
   }
 
-  @Get()
+  @Post('material-envase')
   @Roles(ADMIN)
-  async findAll() {
-    return this.movimientoService.findAll();
+  createMaterialEnvase(@Body() dto: CreateMovimientoDto) {
+    return this.movimientoService.createMaterialEnvase(dto);
   }
 
+  @Post('etiquetas')
+  @Roles(ADMIN)
+  createEtiquetas(@Body() dto: CreateMovimientoDto) {
+    return this.movimientoService.createEtiquetas(dto);
+  }
+
+  // Listar todos
+  @Get('materia-prima')
+  @Roles(ADMIN)
+  findMateriaPrima() {
+    return this.movimientoService.findByTipo('materia-prima');
+  }
+
+  @Get('material-envase')
+  @Roles(ADMIN)
+  findMaterialEnvase() {
+    return this.movimientoService.findByTipo('material-envase');
+  }
+
+  @Get('etiquetas')
+  @Roles(ADMIN)
+  findEtiquetas() {
+    return this.movimientoService.findByTipo('etiquetas');
+  }
+
+  // Ver uno, actualizar o eliminar siguen siendo por ID genérico
   @Get(':id')
   @Roles(ADMIN)
   async findOne(@Param('id', ParseIntPipe) id: number) {
@@ -44,10 +71,9 @@ export class MovimientoController {
   @Roles(ADMIN)
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateMovimientoDto: UpdateMovimientoDto,
+    @Body() dto: UpdateMovimientoDto,
   ) {
-    console.log('En mov.controller: ', id, updateMovimientoDto);
-    return this.movimientoService.update(id, updateMovimientoDto);
+    return this.movimientoService.update(id, dto);
   }
 
   @Delete(':id')

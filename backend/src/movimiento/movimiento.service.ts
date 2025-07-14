@@ -29,7 +29,31 @@ export class MovimientoService {
     private readonly inventarioRepo: Repository<Inventario>,
   ) {}
 
-  /** Lista todos los movimientos */
+  async createMateriaPrima(dto: CreateMovimientoDto) {
+    return this.create({ ...dto, descripcion: dto.descripcion ?? 'Materia Prima' });
+  }
+
+  async createMaterialEnvase(dto: CreateMovimientoDto) {
+    return this.create({ ...dto, descripcion: dto.descripcion ?? 'Material Envase' });
+  }
+
+  async createEtiquetas(dto: CreateMovimientoDto) {
+    return this.create({ ...dto, descripcion: dto.descripcion ?? 'Etiquetas' });
+  }
+
+  async findByTipo(tipoDescripcion: string): Promise<Movimiento[]> {
+    return this.movimientoRepo.find({
+      where: { descripcion: tipoDescripcion },
+      relations: [
+        'producto',
+        'producto.presentacion',
+        'producto.unidadMedida',
+        'producto.proveedor',
+        'bodega',
+      ],
+    });
+  }
+
   async findAll(): Promise<Movimiento[]> {
     return this.movimientoRepo.find({
       relations: [
@@ -42,7 +66,6 @@ export class MovimientoService {
     });
   }
 
-  /** Busca un movimiento por id */
   async findOne(id: number): Promise<any> {
     const ent = await this.movimientoRepo.findOne({
       where: { id },
@@ -61,7 +84,6 @@ export class MovimientoService {
     };
   }
 
-  /** Crea un nuevo movimiento e impacta el inventario */
   async create(dto: CreateMovimientoDto): Promise<any> {
     const tipo = dto.tipo ?? TipoMovimiento.INGRESO;
     const now = new Date();
@@ -79,7 +101,6 @@ export class MovimientoService {
     try {
       guardado = await this.movimientoRepo.save(mov);
     } catch (err) {
-      // aquí podrías mapear errores de FK a BadRequestException
       throw err;
     }
 
@@ -110,7 +131,6 @@ export class MovimientoService {
     };
   }
 
-  /** Actualiza un movimiento: revierte el viejo impacto y aplica el nuevo */
   async update(id: number, dto: UpdateMovimientoDto): Promise<any> {
     const anterior = await this.movimientoRepo.findOne({
       where: { id },
@@ -124,7 +144,6 @@ export class MovimientoService {
       tipo: dto.tipo ?? TipoMovimiento.INGRESO,
       cantidad: dto.cantidad,
       descripcion: dto.descripcion,
-      // si no vinieron en el DTO, reutilizo la anterior:
       producto: { id: anterior.producto.id },
       bodega: { id: anterior.bodega.id },
     };
@@ -133,7 +152,6 @@ export class MovimientoService {
     if (!entidad)
       throw new NotFoundException(`Movimiento ${id} no existe tras preload`);
 
-    // 1) Revertir impacto antiguo
     await this.upsertInventario(
       anterior.producto.id,
       anterior.bodega.id,
@@ -143,7 +161,7 @@ export class MovimientoService {
       anterior.cantidad,
       new Date(),
     );
-    // 2) Aplicar impacto actualizado
+
     await this.upsertInventario(
       entidad.producto.id,
       entidad.bodega.id,
@@ -173,7 +191,6 @@ export class MovimientoService {
     };
   }
 
-  /** Elimina un movimiento (no revierte inventario) */
   async remove(id: number): Promise<{ message: string }> {
     const ent = await this.movimientoRepo.findOne({ where: { id } });
     if (!ent) throw new NotFoundException(`Movimiento ${id} no encontrado`);
@@ -181,11 +198,6 @@ export class MovimientoService {
     return { message: `Movimiento ${id} eliminado` };
   }
 
-  /**
-   * Inserta o actualiza la fila de inventario:
-   * - la crea en 0 si no existe
-   * - suma o resta la cantidad sin validar negativo
-   */
   private async upsertInventario(
     productoId: number,
     bodegaId: number,
