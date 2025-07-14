@@ -16,6 +16,14 @@ import { useAuthFetch, ApiError } from '../../components/ui/useAuthFetch';
 // Types
 type Opcion = { id: number; nombre: string };
 
+type Proveedor = {
+  id: number;
+  nombre: string;
+  telefono: string;
+  email: string;
+  direccion: string;
+};
+
 type Producto = {
   id: number;
   nombre: string;
@@ -24,7 +32,7 @@ type Producto = {
   estado: string;
   presentacion: Opcion;
   unidadMedida: Opcion;
-  proveedor: string | null;
+  proveedor: Proveedor | null; // Cambiado de string | null a Proveedor | null
 };
 
 type ProductoForm = {
@@ -55,13 +63,15 @@ const COLUMNS = [
   { header: 'Nombre', accessor: 'nombre' },
   { header: 'Presentación', accessor: 'presentacionNombre' },
   { header: 'Unidad', accessor: 'unidadMedidaNombre' },
-  { header: 'Tipo', accessor: 'tipoProducto' }
+  { header: 'Tipo', accessor: 'tipoProducto' },
+  { header: 'Proveedor', accessor: 'proveedorNombre' }, // Esto mostrará el string directamente
+  { header: 'Estado', accessor: 'estadoFormateado' }
 ];
 
 const ProductosBasePage: React.FC = () => {
   const navigate = useNavigate();
   const { authFetch } = useAuthFetch();
-  
+
   // State
   const [form, setForm] = useState<ProductoForm>(INITIAL_FORM);
   const [data, setData] = useState<Producto[]>([]);
@@ -75,63 +85,73 @@ const ProductosBasePage: React.FC = () => {
   const [filtro, setFiltro] = useState('');
 
   // Transformar datos para la tabla
-  const transformedData = useMemo(() => {
-    return data.map(producto => ({
-      ...producto,
-      presentacionNombre: producto.presentacion?.nombre || 'N/A',
-      unidadMedidaNombre: producto.unidadMedida?.nombre || 'N/A'
-    }));
-  }, [data]);
+const transformedData = useMemo(() => {
+  return data.map((producto: Producto) => ({
+    id: producto.id,
+    nombre: producto.nombre,
+    tipoProducto: producto.tipoProducto,
+    subtipoInsumo: producto.subtipoInsumo,
+    estado: producto.estado,
+    presentacion: producto.presentacion,
+    unidadMedida: producto.unidadMedida,
+    proveedor: producto.proveedor,
+    // Campos adicionales para las columnas
+    presentacionNombre: producto.presentacion?.nombre || 'N/A',
+    unidadMedidaNombre: producto.unidadMedida?.nombre || 'N/A',
+    proveedorNombre: producto.proveedor?.nombre || 'N/A', // Accedemos al nombre del objeto proveedor
+    estadoFormateado: producto.estado === 'ACTIVO' ? '✅ Activo' : '❌ Inactivo'
+  }));
+}, [data]);
 
-  // Datos filtrados
-  const filteredData = useMemo(() => {
-    if (!filtro) return transformedData;
-    const searchTerm = filtro.toLowerCase();
-    return transformedData.filter(p => 
-      p.nombre.toLowerCase().includes(searchTerm) ||
-      p.tipoProducto.toLowerCase().includes(searchTerm) ||
-      p.presentacionNombre.toLowerCase().includes(searchTerm) ||
-      p.unidadMedidaNombre.toLowerCase().includes(searchTerm)
-    );
-  }, [transformedData, filtro]);
+const filteredData = useMemo(() => {
+  if (!filtro) return transformedData;
+  const searchTerm = filtro.toLowerCase();
+  return transformedData.filter(p =>
+    p.nombre.toLowerCase().includes(searchTerm) ||
+    p.tipoProducto.toLowerCase().includes(searchTerm) ||
+    p.presentacionNombre.toLowerCase().includes(searchTerm) ||
+    p.unidadMedidaNombre.toLowerCase().includes(searchTerm) ||
+    p.proveedorNombre.toLowerCase().includes(searchTerm)
+  );
+}, [transformedData, filtro]);
 
   // Data fetching
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const [productosRes, presentacionesRes, unidadesRes, proveedoresRes] = 
-        await Promise.allSettled([
-          authFetch(`${API_BASE}/producto`),
-          authFetch(`${API_BASE}/presentacion`),
-          authFetch(`${API_BASE}/unidadmedida`),
-          authFetch(`${API_BASE}/proveedor`)
-        ]);
+    const fetchData = async () => {
+      try {
+        const [productosRes, presentacionesRes, unidadesRes, proveedoresRes] =
+          await Promise.allSettled([
+            authFetch(`${API_BASE}/producto`),
+            authFetch(`${API_BASE}/presentacion`),
+            authFetch(`${API_BASE}/unidadmedida`),
+            authFetch(`${API_BASE}/proveedor`)
+          ]);
 
-      // Procesar cada respuesta individualmente
-      const productos = productosRes.status === 'fulfilled' 
-        ? await productosRes.value.json() 
-        : [];
-      
-      const presentaciones = presentacionesRes.status === 'fulfilled' 
-        ? await presentacionesRes.value.json() 
-        : [];
-      
-      const unidades = unidadesRes.status === 'fulfilled' 
-        ? await unidadesRes.value.json() 
-        : [];
-      
-      const proveedores = proveedoresRes.status === 'fulfilled' 
-        ? await proveedoresRes.value.json() 
-        : [];
+        // Procesar cada respuesta individualmente
+        const productos = productosRes.status === 'fulfilled'
+          ? await productosRes.value.json()
+          : [];
 
-      setData(productos);
-      setOpciones({ presentaciones, unidades, proveedores });
-    } catch (error) {
-      handleError(error, 'Error al cargar datos');
-    }
-  };
-  fetchData();
-}, []);
+        const presentaciones = presentacionesRes.status === 'fulfilled'
+          ? await presentacionesRes.value.json()
+          : [];
+
+        const unidades = unidadesRes.status === 'fulfilled'
+          ? await unidadesRes.value.json()
+          : [];
+
+        const proveedores = proveedoresRes.status === 'fulfilled'
+          ? await proveedoresRes.value.json()
+          : [];
+
+        setData(productos);
+        setOpciones({ presentaciones, unidades, proveedores });
+      } catch (error) {
+        handleError(error, 'Error al cargar datos');
+      }
+    };
+    fetchData();
+  }, []);
 
   // Handlers
   const handleError = (error: unknown, defaultMessage: string) => {
@@ -152,7 +172,7 @@ const ProductosBasePage: React.FC = () => {
 
   const handleSubmit = async () => {
     const camposFaltantes: string[] = [];
-    
+
     if (!form.nombre.trim()) camposFaltantes.push('Nombre');
     if (!form.tipoProducto.trim()) camposFaltantes.push('Tipo de Producto');
     if (!form.presentacion_id) camposFaltantes.push('Presentación');
@@ -171,7 +191,7 @@ const ProductosBasePage: React.FC = () => {
     try {
       const method = isEditMode ? 'PATCH' : 'POST';
       const url = isEditMode ? `${API_BASE}/producto/${form.id}` : `${API_BASE}/producto`;
-      
+
       const response = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -218,27 +238,25 @@ const ProductosBasePage: React.FC = () => {
       handleError(error, 'Error al eliminar el producto');
     }
   };
-  
 
-  const handleEdit = (id: number) => {
-    const producto = data.find(p => p.id === id);
-    if (!producto) return;
 
-    setForm({
-      id: producto.id,
-      nombre: producto.nombre,
-      tipoProducto: producto.tipoProducto,
-      subtipoInsumo: producto.subtipoInsumo,
-      estado: producto.estado,
-      presentacion_id: producto.presentacion.id,
-      unidadmedida_id: producto.unidadMedida.id,
-      proveedor_id: producto.proveedor 
-        ? opciones.proveedores.find(p => p.nombre === producto.proveedor)?.id || null
-        : null
-    });
-    setIsEditMode(true);
-    setShowModal(true);
-  };
+const handleEdit = (id: number) => {
+  const producto = data.find(p => p.id === id);
+  if (!producto) return;
+
+  setForm({
+    id: producto.id,
+    nombre: producto.nombre,
+    tipoProducto: producto.tipoProducto,
+    subtipoInsumo: producto.subtipoInsumo,
+    estado: producto.estado,
+    presentacion_id: producto.presentacion.id,
+    unidadmedida_id: producto.unidadMedida.id,
+    proveedor_id: producto.proveedor?.id || null // Accedemos al id del objeto proveedor
+  });
+  setIsEditMode(true);
+  setShowModal(true);
+};
 
   const closeModal = () => {
     setShowModal(false);
@@ -266,7 +284,7 @@ const ProductosBasePage: React.FC = () => {
       {showModal && (
         <Modal onClose={closeModal}>
           <h2>{isEditMode ? 'Editar Producto' : 'Agregar Producto'}</h2>
-          
+
           <Input
             label="Nombre *"
             name="nombre"
@@ -275,21 +293,25 @@ const ProductosBasePage: React.FC = () => {
             required
           />
 
-          <Input
+          <Select
             label="Tipo de Producto *"
             name="tipoProducto"
             value={form.tipoProducto}
             onChange={handleChange}
             required
+            options={[
+              { value: 'MATERIA_PRIMA', label: 'Materia Prima' },
+              { value: 'MATERIAL_DE_ENVASE', label: 'Material de Envase' },
+              { value: 'ETIQUETAS', label: 'Etiquetas' }
+            ]}
           />
-
           <Input
-            label="Subtipo de Insumo"
+            label="Subtipo de Producto"
             name="subtipoInsumo"
             value={form.subtipoInsumo || ''}
             onChange={handleChange}
+            maxLength={45}
           />
-
           <Select
             label="Presentación *"
             name="presentacion_id"

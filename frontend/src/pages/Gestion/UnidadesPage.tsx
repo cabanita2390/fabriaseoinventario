@@ -11,7 +11,7 @@ import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
-
+import ExportToExcel from '../../components/ui/ExportToExcel';
 type UnidadMedida = {
   id?: number;
   nombre: string;
@@ -157,6 +157,15 @@ const UnidadesPage = () => {
 
   return (
     <Home>
+      <div className="export-excel-container">
+        <ExportToExcel 
+      data={unidadesFiltradas} 
+      filename="unidades_de_medida"
+      buttonText="Exportar a Excel"
+        />
+            
+      </div>
+      
       <Header>
         <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
           <SearchBar 

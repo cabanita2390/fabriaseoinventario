@@ -14,11 +14,7 @@ import { CreateMovimientoDto } from './dto/create-movimiento.dto';
 import { UpdateMovimientoDto } from './dto/update-movimiento.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import {
-  ADMIN,
-  RECEPTOR_INSUMOS,
-  RECEPTOR_MP,
-} from 'src/auth/constants/roles.constant';
+import { ADMIN, RECEPTOR_MP } from 'src/auth/constants/roles.constant';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -26,18 +22,45 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 export class MovimientoController {
   constructor(private readonly movimientoService: MovimientoService) {}
 
-  @Post()
-  @Roles(ADMIN, RECEPTOR_INSUMOS, RECEPTOR_MP)
-  async create(@Body() createMovimientoDto: CreateMovimientoDto) {
-    return this.movimientoService.create(createMovimientoDto);
+  // Crear
+  @Post('materia-prima')
+  @Roles(ADMIN, RECEPTOR_MP)
+  createMateriaPrima(@Body() dto: CreateMovimientoDto) {
+    return this.movimientoService.createMateriaPrima(dto);
   }
 
-  @Get()
-  @Roles(ADMIN, RECEPTOR_INSUMOS, RECEPTOR_MP)
-  async findAll() {
-    return this.movimientoService.findAll();
+  @Post('material-envase')
+  @Roles(ADMIN)
+  createMaterialEnvase(@Body() dto: CreateMovimientoDto) {
+    return this.movimientoService.createMaterialEnvase(dto);
   }
 
+  @Post('etiquetas')
+  @Roles(ADMIN)
+  createEtiquetas(@Body() dto: CreateMovimientoDto) {
+    return this.movimientoService.createEtiquetas(dto);
+  }
+
+  // Listar todos
+  @Get('materia-prima')
+  @Roles(ADMIN)
+  findMateriaPrima() {
+    return this.movimientoService.findByTipo('materia-prima');
+  }
+
+  @Get('material-envase')
+  @Roles(ADMIN)
+  findMaterialEnvase() {
+    return this.movimientoService.findByTipo('material-envase');
+  }
+
+  @Get('etiquetas')
+  @Roles(ADMIN)
+  findEtiquetas() {
+    return this.movimientoService.findByTipo('etiquetas');
+  }
+
+  // Ver uno, actualizar o eliminar siguen siendo por ID genérico
   @Get(':id')
   @Roles(ADMIN)
   async findOne(@Param('id', ParseIntPipe) id: number) {
@@ -48,10 +71,9 @@ export class MovimientoController {
   @Roles(ADMIN)
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateMovimientoDto: UpdateMovimientoDto,
+    @Body() dto: UpdateMovimientoDto,
   ) {
-    console.log('En mov.controller: ', id, updateMovimientoDto);
-    return this.movimientoService.update(id, updateMovimientoDto);
+    return this.movimientoService.update(id, dto);
   }
 
   @Delete(':id')

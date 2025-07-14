@@ -122,7 +122,7 @@ const Graficos = () => {
         fields={filtros} 
         onSearch={handleBuscar} 
         onReset={() => setData(allData)}
-        showSearchBar={false}
+        showSearchBar={true}
       />
       
       {loading ? (

@@ -1,4 +1,3 @@
-// src/seed/seed.controller.ts
 import { Controller, Post, UseGuards } from '@nestjs/common';
 import { SeedService } from './seed.service';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -14,13 +13,19 @@ export class SeedController {
 
   @Post('materiaprima')
   async seedMateriasPrimas(): Promise<{ message: string; resumen: any }> {
-    // 👉 Tipado agregado
     return this.seedService.seedMateriasPrimas();
   }
 
   @Post('bodegas')
   async seedBodegas(): Promise<{ message: string; resumen: any }> {
-    // 👉 Tipado agregado
     return this.seedService.seedBodegas();
+  }
+
+  @Post('productos-predeterminados')
+  async seedProductosPredeterminados(): Promise<{
+    message: string;
+    resumen: any;
+  }> {
+    return this.seedService.seedProductosPredeterminados();
   }
 }
