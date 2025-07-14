@@ -1,20 +1,19 @@
 import React from 'react';
 import * as XLSX from 'xlsx';
-import { RowData } from '../Movimientos/types/Typesmovimientos'; // Ajusta la ruta
-
-interface ExportToExcelProps {
-  data: RowData[]; // Usamos el tipo específico
+import '../../styles/ui/Excelbutton.css';
+interface ExportToExcelProps<T> {
+  data: T[];
   filename?: string;
   buttonText?: string;
   className?: string;
 }
 
-const ExportToExcel: React.FC<ExportToExcelProps> = ({
+const ExportToExcel = <T extends Record<string, any>>({
   data,
   filename = "exported_data",
   buttonText = "Exportar a Excel",
   className = ""
-}) => {
+}: ExportToExcelProps<T>) => {
   const exportToExcel = () => {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data);
@@ -31,5 +30,6 @@ const ExportToExcel: React.FC<ExportToExcelProps> = ({
     </button>
   );
 };
+
 
 export default ExportToExcel;
