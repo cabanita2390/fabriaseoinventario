@@ -32,10 +32,12 @@ export class UsuarioService {
 
   // 👉 Crear un nuevo usuario
   async create(dto: CreateUsuarioDto): Promise<any> {
+    // 1. Hashear contraseña
     const passwordHash = await this.hashPassword(dto.password);
 
+    // 2. Obtener rol por defecto
     const rolPorDefecto = await this.rolRepo.findOne({
-      where: { nombre: 'OPERARIO_PRODUCCION' },
+      where: { nombre: 'USUARIO' },
     });
     if (!rolPorDefecto) {
       throw new BadRequestException(
@@ -43,6 +45,7 @@ export class UsuarioService {
       );
     }
 
+    // 3. Crear entidad
     const usuarioEntity = this.usuarioRepo.create({
       username: dto.username,
       nombre: dto.nombre ?? dto.username,
@@ -51,11 +54,11 @@ export class UsuarioService {
       rol: rolPorDefecto,
     });
 
+    // 4. Guardar y manejar errores
     let guardado: Usuario;
     try {
       guardado = await this.usuarioRepo.save(usuarioEntity);
     } catch (error) {
-      // 👉 Manejo de error por username o email duplicado
       if (
         error instanceof QueryFailedError &&
         (error as any).code === '23505'
@@ -67,6 +70,7 @@ export class UsuarioService {
       throw error;
     }
 
+    // 5. Devolver sin contraseña
     const completo = await this.usuarioRepo.findOne({
       where: { id: guardado.id },
       relations: ['rol'],
@@ -76,6 +80,7 @@ export class UsuarioService {
         `Usuario con id ${guardado.id} no encontrado después de guardar`,
       );
     }
+
     const { password, ...sinPassword } = completo;
     return sinPassword;
   }
@@ -104,7 +109,7 @@ export class UsuarioService {
 
   // 👉 Actualizar usuario (nombre, email o contraseña)
   async update(id: number, dto: UpdateUsuarioDto): Promise<any> {
-    // 1) Si viene rol_idrol, búscalo (puede devolver null)
+    // 1) Validar rol si viene
     let rolEntity: Rol | null = null;
     if (dto.rol_idrol !== undefined) {
       rolEntity = await this.rolRepo.findOne({ where: { id: dto.rol_idrol } });
@@ -115,7 +120,12 @@ export class UsuarioService {
       }
     }
 
-    // 2) Preloadizar al usuario, inyectando la relación sólo si la tenemos
+    // 2) Hashear contraseña si viene en el DTO
+    if (dto.password) {
+      dto.password = await bcrypt.hash(dto.password, 10);
+    }
+
+    // 3) Preload del usuario con rol si aplica
     const entidad = await this.usuarioRepo.preload({
       id,
       ...dto,
@@ -126,7 +136,7 @@ export class UsuarioService {
       throw new NotFoundException(`Usuario con id ${id} no encontrado`);
     }
 
-    // 3) Guardar cambios
+    // 4) Guardar cambios
     try {
       await this.usuarioRepo.save(entidad);
     } catch (error) {
@@ -141,20 +151,19 @@ export class UsuarioService {
       throw error;
     }
 
-    // 4) Volver a cargar para devolver sin password
+    // 5) Cargar usuario actualizado sin password
     const actualizado = await this.usuarioRepo.findOne({
       where: { id },
       relations: ['rol'],
     });
+
     if (!actualizado) {
       throw new NotFoundException(
         `Usuario con id ${id} no encontrado después de actualizar`,
       );
     }
 
-    // 5) TS aún cree que puede ser null, así que usa ! para afirmar “no es null”
-    const { password, ...sinPassword } = actualizado!;
-
+    const { password, ...sinPassword } = actualizado;
     return sinPassword;
   }
 
