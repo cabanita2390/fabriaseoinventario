@@ -34,7 +34,8 @@ function Tabla({
   const [productosDisponibles, setProductosDisponibles] = useState<any[]>([]);
   const [bodegasDisponibles, setBodegasDisponibles] = useState<any[]>([]);
   const { authFetch } = useAuthFetch();
-
+ // Obtener el usuario del contexto
+  
   // Usamos el hook personalizado para manejar filtros
   const { 
     filtroTexto, 
@@ -83,38 +84,87 @@ function Tabla({
     }
   }, []);
 
-  const cargarDatos = useCallback(async () => {
-    try {
-      const movimientos = await fetchMovimientos(authFetch);
-      
-      const movimientosFormateados = movimientos.map(mov => ({
-        ...mov,
-        fechaFormateada: formatearFecha(mov.fechaMovimiento || mov.fecha),
-        fechaOriginal: mov.fechaMovimiento || mov.fecha
-      }));
-      
-      // Actualizamos los datos usando el hook
-      actualizarDatos(movimientosFormateados);
-      
-      const [productos, bodegas] = await Promise.all([
-        fetchProductosAgrupados(authFetch),
-        fetchBodegas(authFetch)
-      ]);
-      
-      setProductosDisponibles(productos);
-      setBodegasDisponibles(bodegas);
-    } catch (error) {
-      console.error("Error cargando datos:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudieron cargar los datos. Por favor, inténtalo de nuevo.",
+const cargarDatos = useCallback(async () => {
+  try {
+    // 1. Primero cargamos movimientos
+    const movimientos = await fetchMovimientos(authFetch)
+      .catch(error => {
+        throw new Error(`MOVIMIENTOS: ${error.message}`);
       });
+    
+    const movimientosFormateados = movimientos.map(mov => ({
+      ...mov,
+      fechaFormateada: formatearFecha(mov.fechaMovimiento || mov.fecha),
+      fechaOriginal: mov.fechaMovimiento || mov.fecha
+    }));
+    
+    actualizarDatos(movimientosFormateados);
+    
+    // 2. Luego cargamos productos y bodegas en paralelo
+    const [productos, bodegas] = await Promise.all([
+      fetchProductosAgrupados(authFetch)
+        .catch(error => {
+          throw new Error(`PRODUCTOS: ${error.message}`);
+        }),
+      fetchBodegas(authFetch)
+        .catch(error => {
+          throw new Error(`BODEGAS: ${error.message}`);
+        })
+    ]);
+    
+    setProductosDisponibles(productos);
+    setBodegasDisponibles(bodegas);
+    
+  } catch (error) {
+    let errorMessage = "No se pudieron cargar los datos. Por favor, inténtalo de nuevo.";
+    let errorTitle = "Error";
+    
+    if (error instanceof Error) {
+      // Extraemos el tipo de error (MOVIMIENTOS/PRODUCTOS/BODEGAS)
+      const [errorType, ...messageParts] = error.message.split(': ');
+      const detailedMessage = messageParts.join(': ');
+      
+      switch(errorType) {
+        case 'MOVIMIENTOS':
+          errorTitle = "Error en movimientos";
+          if (detailedMessage.includes('No tienes autorización')) {
+            errorMessage = "No tienes permiso para ver los movimientos. Contacta al administrador.";
+          }
+          break;
+          
+        case 'PRODUCTOS':
+          errorTitle = "Error en productos";
+          if (detailedMessage.includes('No tienes autorización')) {
+            errorMessage = "No tienes permiso para ver los productos. Contacta al administrador.";
+          }
+          break;
+          
+        case 'BODEGAS':
+          errorTitle = "Error en bodegas";
+          if (detailedMessage.includes('No tienes autorización')) {
+            errorMessage = "No tienes permiso para ver las bodegas. Contacta al administrador.";
+          } else if (detailedMessage.includes('Failed to fetch')) {
+            errorMessage = "Error al conectar con el servidor de bodegas. Verifica tu conexión.";
+          }
+          break;
+          
+        default:
+          errorMessage = detailedMessage || error.message;
+      }
     }
-  }, [authFetch, formatearFecha, actualizarDatos]);
+    
+    Swal.fire({
+      icon: "error",
+      title: errorTitle,
+      text: errorMessage,
+      timer: 5000,
+      showConfirmButton: true,
+    });
+  }
+}, [authFetch, formatearFecha, actualizarDatos]);
 
   useEffect(() => {
-    cargarDatos();
+    cargarDatos().catch(() => {}); // Evita warnings de promesas no capturadas
   }, [cargarDatos, reloadTrigger]);
 
 

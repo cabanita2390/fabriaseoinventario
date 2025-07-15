@@ -7,10 +7,12 @@ export interface RowData {
   descripcion: string;
   proveedor: string;
   bodega: string;
-  fecha: string;          // Fecha original de la API
-  fechaMovimiento?: string; // Campo alternativo de fecha (opcional)
-  fechaFormateada?: string; // Fecha formateada para mostrar
-  fechaOriginal?: string;   // Fecha original preservada para filtros
+  fecha: string;
+  fechaMovimiento?: string;
+  fechaFormateada?: string;
+  fechaOriginal?: string;
+  producto_id?: number; // Añadir estos campos para compatibilidad
+  bodega_id?: number;
 }
 export interface ProductoAgrupado {
   id: number;
