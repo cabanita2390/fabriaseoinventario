@@ -16,6 +16,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { ADMIN, RECEPTOR_MP } from 'src/auth/constants/roles.constant';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { TipoProducto } from 'src/producto/dto/create-producto.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('movimiento')
@@ -52,19 +53,19 @@ export class MovimientoController {
   @Get('materia-prima')
   @Roles(ADMIN, RECEPTOR_MP)
   findMateriaPrima() {
-    return this.movimientoService.findByTipo('Materia Prima');
+    return this.movimientoService.findByTipo(TipoProducto.MATERIA_PRIMA);
   }
 
   @Get('material-envase')
   @Roles(ADMIN)
   findMaterialEnvase() {
-    return this.movimientoService.findByTipo('Material Envase');
+    return this.movimientoService.findByTipo(TipoProducto.MATERIAL_DE_ENVASE);
   }
 
   @Get('etiquetas')
   @Roles(ADMIN)
   findEtiquetas() {
-    return this.movimientoService.findByTipo('Etiquetas');
+    return this.movimientoService.findByTipo(TipoProducto.ETIQUETAS);
   }
 
   // Detalle, actualizar, eliminar

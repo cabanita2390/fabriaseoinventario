@@ -14,6 +14,7 @@ import { UpdateMovimientoDto } from './dto/update-movimiento.dto';
 import { Producto } from 'src/entities/producto.entity';
 import { Bodega } from 'src/entities/bodega.entity';
 import { Inventario } from 'src/entities/inventario.entity';
+import { TipoProducto } from 'src/producto/dto/create-producto.dto';
 
 @Injectable()
 export class MovimientoService {
@@ -46,9 +47,13 @@ export class MovimientoService {
     return this.create({ ...dto, descripcion: dto.descripcion ?? 'Etiquetas' });
   }
 
-  async findByTipo(tipoDescripcion: string): Promise<Movimiento[]> {
+  async findByTipo(tipoProducto: TipoProducto): Promise<Movimiento[]> {
     return this.movimientoRepo.find({
-      where: { descripcion: tipoDescripcion },
+      where: {
+        producto: {
+          tipoProducto: tipoProducto,
+        },
+      },
       relations: [
         'producto',
         'producto.presentacion',

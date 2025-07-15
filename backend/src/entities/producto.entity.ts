@@ -11,6 +11,7 @@ import { UnidadMedida } from './unidadmedida.entity';
 import { Proveedor } from './proveedor.entity';
 import { Movimiento } from './movimiento.entity';
 import { Inventario } from './inventario.entity';
+import { TipoProducto } from 'src/producto/dto/create-producto.dto';
 
 @Entity({ name: 'producto' })
 export class Producto {
@@ -22,9 +23,9 @@ export class Producto {
 
   @Column({
     type: 'enum',
-    enum: ['MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'],
+    enum: TipoProducto,
   })
-  tipoProducto: 'MATERIA_PRIMA' | 'MATERIAL_DE_ENVASE' | 'ETIQUETAS';
+  tipoProducto: TipoProducto;
 
   @Column({ type: 'varchar', length: 45, nullable: true })
   subtipoInsumo: string; // opcional, si aplica
