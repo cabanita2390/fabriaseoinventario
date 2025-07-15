@@ -32,8 +32,10 @@ export class UsuarioService {
 
   // 👉 Crear un nuevo usuario
   async create(dto: CreateUsuarioDto): Promise<any> {
+    // 1. Hashear contraseña
     const passwordHash = await this.hashPassword(dto.password);
 
+    // 2. Obtener rol por defecto
     const rolPorDefecto = await this.rolRepo.findOne({
       where: { nombre: 'USUARIO' },
     });
@@ -43,6 +45,7 @@ export class UsuarioService {
       );
     }
 
+    // 3. Crear entidad
     const usuarioEntity = this.usuarioRepo.create({
       username: dto.username,
       nombre: dto.nombre ?? dto.username,
@@ -51,11 +54,11 @@ export class UsuarioService {
       rol: rolPorDefecto,
     });
 
+    // 4. Guardar y manejar errores
     let guardado: Usuario;
     try {
       guardado = await this.usuarioRepo.save(usuarioEntity);
     } catch (error) {
-      // 👉 Manejo de error por username o email duplicado
       if (
         error instanceof QueryFailedError &&
         (error as any).code === '23505'
@@ -67,6 +70,7 @@ export class UsuarioService {
       throw error;
     }
 
+    // 5. Devolver sin contraseña
     const completo = await this.usuarioRepo.findOne({
       where: { id: guardado.id },
       relations: ['rol'],
@@ -76,6 +80,7 @@ export class UsuarioService {
         `Usuario con id ${guardado.id} no encontrado después de guardar`,
       );
     }
+
     const { password, ...sinPassword } = completo;
     return sinPassword;
   }

@@ -11,6 +11,7 @@ import { Not, IsNull } from 'typeorm';
 import * as bcrypt from 'bcrypt'; // Asegúrate de tener instalado bcrypt
 import { Rol } from 'src/entities/rol.entity';
 import { Usuario } from 'src/entities/usuario.entity';
+import { TipoProducto } from 'src/producto/dto/create-producto.dto'; // Ajusta el path si mueves el enum
 
 interface SeedRow {
   PRODUCTO: string;
@@ -63,10 +64,7 @@ export class SeedService implements OnApplicationBootstrap {
       const presentacionesPorTipo = new Map<string, Set<string>>();
 
       for (const row of defaultProductRows) {
-        const tipoProducto = row.TIPO_PRODUCTO.trim() as
-          | 'MATERIA_PRIMA'
-          | 'MATERIAL_DE_ENVASE'
-          | 'ETIQUETAS';
+        const tipoProducto = row.TIPO_PRODUCTO.trim() as TipoProducto;
 
         const nombre = row.PRESENTACION.trim();
 
@@ -110,10 +108,7 @@ export class SeedService implements OnApplicationBootstrap {
       // 4. Crear productos
       for (const row of defaultProductRows) {
         const nombre = row.PRODUCTO.trim();
-        const tipoProducto = row.TIPO_PRODUCTO.trim() as
-          | 'MATERIA_PRIMA'
-          | 'MATERIAL_DE_ENVASE'
-          | 'ETIQUETAS';
+        const tipoProducto = row.TIPO_PRODUCTO.trim() as TipoProducto;
 
         const presentacionNombre = row.PRESENTACION.trim();
         const presKey = `${presentacionNombre}__${tipoProducto}`;
@@ -314,11 +309,11 @@ export class SeedService implements OnApplicationBootstrap {
     };
 
     for (const [tipo, rows] of Object.entries(grouped) as [
-      'MATERIA_PRIMA' | 'MATERIAL_DE_ENVASE' | 'ETIQUETAS',
+      TipoProducto, // Cambia esto para usar el enum directamente
       DefaultProductRow[],
     ][]) {
       const count = await this.productoRepo.count({
-        where: { tipoProducto: tipo },
+        where: { tipoProducto: tipo }, // Ahora tipo ya es del tipo TipoProducto
       });
 
       if (count < rows.length) {
@@ -341,12 +336,12 @@ export class SeedService implements OnApplicationBootstrap {
     // Crear un mapa de combinaciones únicas de presentacion + tipo
     const combinacionesUnicas = new Map<
       string,
-      { nombre: string; tipoProducto: Producto['tipoProducto'] }
+      { nombre: string; tipoProducto: TipoProducto }
     >();
 
     for (const row of rows) {
       const nombre = row.PRESENTACION.trim();
-      const tipo = row.TIPO_PRODUCTO.trim() as Producto['tipoProducto'];
+      const tipo = row.TIPO_PRODUCTO.trim() as TipoProducto;
       const key = `${nombre}__${tipo}`;
       combinacionesUnicas.set(key, { nombre, tipoProducto: tipo });
     }
@@ -371,7 +366,7 @@ export class SeedService implements OnApplicationBootstrap {
     // Crear productos
     for (const row of rows) {
       const nombreProducto = row.PRODUCTO.trim();
-      const tipo = row.TIPO_PRODUCTO.trim() as Producto['tipoProducto'];
+      const tipo = row.TIPO_PRODUCTO.trim() as TipoProducto;
       const nombrePres = row.PRESENTACION.trim();
       const key = `${nombrePres}__${tipo}`;
       const presentacion = presMap.get(key);
