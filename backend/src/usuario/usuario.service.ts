@@ -104,7 +104,7 @@ export class UsuarioService {
 
   // 👉 Actualizar usuario (nombre, email o contraseña)
   async update(id: number, dto: UpdateUsuarioDto): Promise<any> {
-    // 1) Si viene rol_idrol, búscalo (puede devolver null)
+    // 1) Validar rol si viene
     let rolEntity: Rol | null = null;
     if (dto.rol_idrol !== undefined) {
       rolEntity = await this.rolRepo.findOne({ where: { id: dto.rol_idrol } });
@@ -115,7 +115,12 @@ export class UsuarioService {
       }
     }
 
-    // 2) Preloadizar al usuario, inyectando la relación sólo si la tenemos
+    // 2) Hashear contraseña si viene en el DTO
+    if (dto.password) {
+      dto.password = await bcrypt.hash(dto.password, 10);
+    }
+
+    // 3) Preload del usuario con rol si aplica
     const entidad = await this.usuarioRepo.preload({
       id,
       ...dto,
@@ -126,7 +131,7 @@ export class UsuarioService {
       throw new NotFoundException(`Usuario con id ${id} no encontrado`);
     }
 
-    // 3) Guardar cambios
+    // 4) Guardar cambios
     try {
       await this.usuarioRepo.save(entidad);
     } catch (error) {
@@ -141,20 +146,19 @@ export class UsuarioService {
       throw error;
     }
 
-    // 4) Volver a cargar para devolver sin password
+    // 5) Cargar usuario actualizado sin password
     const actualizado = await this.usuarioRepo.findOne({
       where: { id },
       relations: ['rol'],
     });
+
     if (!actualizado) {
       throw new NotFoundException(
         `Usuario con id ${id} no encontrado después de actualizar`,
       );
     }
 
-    // 5) TS aún cree que puede ser null, así que usa ! para afirmar “no es null”
-    const { password, ...sinPassword } = actualizado!;
-
+    const { password, ...sinPassword } = actualizado;
     return sinPassword;
   }
 
