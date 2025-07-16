@@ -6,7 +6,7 @@ import SeccionBotones from '../../components/Insumos/components/SeccionBotones';
 import MovimientoForm from '../../components/Insumos/components/MovimientoForm';
 import { useProductos } from '../../components/Insumos/hooks/useProductos';
 import { useBodegas } from '../../components/Insumos/hooks/useBodegas';
-import { crearMovimientoMateriaPrima } from '../../components/Insumos/api/MovimientosService';
+import { crearMovimiento } from '../../components/Insumos/api/MovimientosService';
 import { obtenerInventarioExistente } from '../../components/Insumos/api/InventarioService';
 import { INIT_FORM, Tipo } from '../../components/Insumos/types/InsumosTipe';
 import Swal from 'sweetalert2';
@@ -130,7 +130,7 @@ function InsumosPage() {
         bodega_idbodega: bodegaSeleccionada.id
       };
 
-      await crearMovimientoMateriaPrima(payload);
+      await crearMovimiento(payload);
 
       Swal.fire({ icon: "success", title: "¡Éxito!", text: "El movimiento ha sido guardado correctamente." });
       setShowModal(false);
