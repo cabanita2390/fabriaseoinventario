@@ -32,7 +32,7 @@ export class MovimientoController {
 
   // Crear por tipo
   @Post('materia-prima')
-  @Roles(ADMIN, RECEPTOR_MP)
+  @Roles(ADMIN, RECEPTOR_MP,LIDER_PRODUCCION)
   createMateriaPrima(@Body() dto: CreateMovimientoDto) {
     return this.movimientoService.createMateriaPrima(dto);
   }

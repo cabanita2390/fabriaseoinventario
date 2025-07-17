@@ -17,10 +17,10 @@ export type AppRole =
 const roleToEndpointMap: Record<AppRole, string[]> = {
   'ADMIN': ['/movimiento/materia-prima'],
   'LIDER_PRODUCCION': ['/movimiento/materia-prima'],
-  'RECEPTOR_MP': ['/movimiento/materia-prima'],
+  'RECEPTOR_MP': ['/movimiento/materia-prima','/movimiento/material-envase','/movimiento/material-envase'],
   'RECEPTOR_ENVASE': ['/movimiento/material-envase'],
-  'RECEPTOR_ETIQUETAS': [],
-  'OPERARIO_PRODUCCION': [],
+  'RECEPTOR_ETIQUETAS': ['/movimiento/etiquetas'],
+  'OPERARIO_PRODUCCION': ['/movimiento/material-envase','/movimiento/etiquetas'],
   'USUARIO': []
 };
 

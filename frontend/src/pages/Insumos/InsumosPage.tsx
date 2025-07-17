@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Home from '../../components/Home';
 import Tabla from "../../components/Movimientos/Tabla";
 import { Header } from '../../styles/Insumos.css';
@@ -12,25 +12,58 @@ import { INIT_FORM, Tipo } from '../../components/Insumos/types/InsumosTipe';
 import Swal from 'sweetalert2';
 
 function InsumosPage() {
+  // State declarations
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [tipoActual, setTipoActual] = useState<Tipo>('Ingreso de materia prima');
   const [form, setForm] = useState(INIT_FORM);
-  const [reloadTable, setReloadTable] = useState(0); // Nuevo estado para recargar la tabla
+  const [reloadTable, setReloadTable] = useState(0);
   
-  const { productosDisponibles, productosOriginales, cargarProductos } = useProductos(tipoActual);
-  const { bodegasDisponibles, cargarBodegas } = useBodegas();
+  // Refs
+  const errorShownRef = useRef(false);
+  const permissionErrorRef = useRef(false);
 
+  // Custom hooks
+  const { 
+    productosDisponibles, 
+    productosOriginales, 
+    cargarProductos,
+    loading: loadingProductos,
+    error: errorProductos,
+    hasPermission: hasProductPermission 
+  } = useProductos(tipoActual);
+  
+  const {  
+    bodegasDisponibles,  
+    cargarBodegas, 
+    loading: loadingBodegas,
+    hasPermission: hasBodegaPermission,
+    permissionDenied 
+  } = useBodegas({maxRetries: 3, autoLoad: true});
+
+  // Permission check
+  const hasPermission = hasProductPermission && hasBodegaPermission;
+
+  // Handlers
   const handleOpenModal = useCallback((tipo: Tipo, edit = false) => {
+  if (tipo !== tipoActual) {
+    setForm(prev => ({
+      ...prev,
+      producto: null,
+      presentacionSeleccionada: null,
+      bodega: ""
+    }));
     setTipoActual(tipo);
-    setIsEditMode(edit);
-    setForm({
-      ...INIT_FORM,
-      tipo,
-      fecha: new Date().toISOString().slice(0, 10),
-    });
-    setShowModal(true);
-  }, []);
+    cargarProductos(); // Forzar recarga de productos
+  }
+  setIsEditMode(edit);
+  setForm({
+    ...INIT_FORM,
+    tipo,
+    fecha: new Date().toISOString().slice(0, 10),
+  });
+  setShowModal(true);
+}, [tipoActual, cargarProductos]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -135,7 +168,7 @@ function InsumosPage() {
       Swal.fire({ icon: "success", title: "¡Éxito!", text: "El movimiento ha sido guardado correctamente." });
       setShowModal(false);
       setForm(INIT_FORM);
-      setReloadTable(prev => prev + 1); // Incrementamos para forzar recarga de la tabla
+      setReloadTable(prev => prev + 1);
     } catch (error: any) {
       Swal.fire({
         icon: "error",
@@ -146,13 +179,48 @@ function InsumosPage() {
     }
   };
 
+  // Effects
   useEffect(() => {
-    if (showModal) cargarProductos();
-  }, [showModal, cargarProductos]);
+    const hasPermissionError = permissionDenied || 
+                             (errorProductos && errorProductos.includes('No tienes permisos'));
+    
+    if (hasPermissionError && !permissionErrorRef.current) {
+      permissionErrorRef.current = true;
+      
+      let errorMessage = permissionDenied
+        ? 'No tienes permisos para acceder a las bodegas. Contacta al administrador.'
+        : 'No tienes permisos para acceder a los productos. Contacta al administrador.';
+
+      if (!errorShownRef.current) {
+        errorShownRef.current = true;
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Permisos insuficientes',
+          text: errorMessage,
+          confirmButtonText: 'Entendido',
+          allowOutsideClick: false
+        }).then(() => {
+          errorShownRef.current = false;
+        });
+      }
+    } else if (!hasPermissionError) {
+      permissionErrorRef.current = false;
+    }
+  }, [errorProductos, permissionDenied]);
 
   useEffect(() => {
-    cargarBodegas();
-  }, [cargarBodegas]);
+  if (showModal && hasProductPermission) {
+    cargarProductos();
+  }
+}, [showModal, hasProductPermission, tipoActual, cargarProductos]);
+
+  useEffect(() => {
+    if (hasBodegaPermission && !bodegasDisponibles.length && !loadingBodegas) {
+      const timer = setTimeout(() => cargarBodegas(), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [hasBodegaPermission, bodegasDisponibles.length, loadingBodegas, cargarBodegas]);
 
   return (
     <Home>
@@ -166,13 +234,19 @@ function InsumosPage() {
           isEditMode={isEditMode}
           form={form}
           productosDisponibles={productosDisponibles}
-          bodegasDisponibles={bodegasDisponibles}
+          bodegasDisponibles={hasBodegaPermission ? bodegasDisponibles : []}
           onChange={handleChange}
           onSave={handleSave}
           onClose={() => {
             setShowModal(false);
             setForm(INIT_FORM);
           }}
+          disabled={!hasPermission || loadingBodegas || loadingProductos}
+          bodegasError={!hasBodegaPermission ? 
+            "No tienes permisos para acceder a las bodegas" : 
+            undefined
+          }
+          error={errorProductos ? errorProductos : undefined}
         />
       )}
 
@@ -181,7 +255,7 @@ function InsumosPage() {
         <Tabla 
           mostrarFiltro={false} 
           mostrarExportar={false} 
-          reloadTrigger={reloadTable} // Pasamos la prop
+          reloadTrigger={reloadTable}
         />
       </section>
     </Home>

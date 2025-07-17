@@ -15,7 +15,7 @@ import { UpdateInventarioDto } from './dto/update-inventario.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles  } from 'src/auth/decorators/roles.decorator';
-import { ADMIN, RECEPTOR_MP } from 'src/auth/constants/roles.constant';
+import { ADMIN, RECEPTOR_MP ,LIDER_PRODUCCION} from 'src/auth/constants/roles.constant';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(ADMIN)
@@ -24,13 +24,13 @@ export class InventarioController {
   constructor(private readonly inventarioService: InventarioService) {}
 
   @Post()
-  @Roles(ADMIN,  RECEPTOR_MP)
+  @Roles(ADMIN,  RECEPTOR_MP,LIDER_PRODUCCION)
   create(@Body() createInventarioDto: CreateInventarioDto) {
     return this.inventarioService.create(createInventarioDto);
   }
 
   @Get()
-  @Roles(ADMIN)
+  @Roles(ADMIN,RECEPTOR_MP,LIDER_PRODUCCION)
   findAll() {
     return this.inventarioService.findAll();
   }
