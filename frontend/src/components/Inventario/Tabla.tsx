@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import DataTable from '../ui/DataTable';
 import SearchBar from '../ui/Searchbar';
 import Modal from '../ui/Modal';
-import { fetchInventario, fetchBodegas, updateInventarioItem,deleteInventarioItem } from '../Inventario/api/Invenarioapi';
+import { fetchInventario, fetchBodegas, updateInventarioItem, deleteInventarioItem } from '../Inventario/api/Invenarioapi';
 import { InventarioItemAPI, InventarioItem, Bodega } from '../Inventario/types/inventarioTypes';
 import Swal from 'sweetalert2';
 import EditModal from '../Inventario/components/IdictModal';
+import ExportToExcel from '../ui/ExportToExcel';
 
-// Función para transformar los datos del API a tu estructura InventarioItem
-const transformInventarioData = (apiData: InventarioItemAPI[]): InventarioItem[] => {
+// Función para transformar los datos del API a la estructura InventarioItem
+const transformarDatosInventario = (apiData: InventarioItemAPI[]): InventarioItem[] => {
   return apiData.map(item => ({
     id: item.id,
     nombre: item.producto.nombre,
@@ -17,14 +18,14 @@ const transformInventarioData = (apiData: InventarioItemAPI[]): InventarioItem[]
     unidad_medida: item.producto.unidadMedida.nombre,
     cantidad_actual: item.cantidad_actual,
     estado: item.producto.estado,
-    fechaUltimaActualizacion: item.fechaUltimaActualizacion, // <-- Se mantiene exactamente igual
+    fechaUltimaActualizacion: item.fechaUltimaActualizacion,
     bodega: item.bodega.nombre,
     producto_id: item.producto.id,
     bodega_id: item.bodega.id
   }));
 };
 
-const columns = [
+const columnas = [
   { header: 'ID', accessor: 'id', width: '70px' },
   { header: 'Nombre', accessor: 'nombre' },
   { header: 'Tipo', accessor: 'tipo' },
@@ -50,13 +51,13 @@ const Tabla: React.FC = () => {
         setCargando(true);
         setError(null);
         
-        const [inventarioData, bodegasData] = await Promise.all([
+        const [datosInventario, datosBodegas] = await Promise.all([
           fetchInventario(),
           fetchBodegas()
         ]);
         
-        setBodegasDisponibles(bodegasData);
-        setDatos(transformInventarioData(inventarioData));
+        setBodegasDisponibles(datosBodegas);
+        setDatos(transformarDatosInventario(datosInventario));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
@@ -153,43 +154,50 @@ const Tabla: React.FC = () => {
   };
 
   const handleDelete = async (item: InventarioItem) => {
-  const confirm = await Swal.fire({
-    title: '¿Eliminar item del inventario?',
-    text: 'Esta acción no se puede deshacer',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Sí, eliminar',
-    cancelButtonText: 'Cancelar'
-  });
-
-  if (!confirm.isConfirmed) return;
-
-  try {
-    Swal.fire({
-      title: 'Procesando...',
-      text: 'Eliminando item del inventario',
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading()
+    const confirm = await Swal.fire({
+      title: '¿Eliminar item del inventario?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
     });
 
-    await deleteInventarioItem(item.id);
+    if (!confirm.isConfirmed) return;
 
-    setDatos(prev => prev.filter(i => i.id !== item.id));
-    
-    Swal.fire('Éxito', 'Item eliminado del inventario', 'success');
-  } catch (error) {
-    console.error("Error al eliminar:", error);
-    Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: error instanceof Error ? error.message : 'No se pudo eliminar el item del inventario',
-    });
-  }
-};
+    try {
+      Swal.fire({
+        title: 'Procesando...',
+        text: 'Eliminando item del inventario',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
 
+      await deleteInventarioItem(item.id);
+
+      setDatos(prev => prev.filter(i => i.id !== item.id));
+      
+      Swal.fire('Éxito', 'Item eliminado del inventario', 'success');
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error instanceof Error ? error.message : 'No se pudo eliminar el item del inventario',
+      });
+    }
+  };
 
   return (
     <div>
+      <div className="export-excel-container">
+        <ExportToExcel 
+          data={datosFiltrados}
+          filename="movimientos_inventario"
+          buttonText="Exportar a Excel"
+        />
+      </div>
+
       <div className="d-flex justify-content-between align-items-center mb-5" style={{ marginTop: '20px' }}>
         <div style={{ width: '300px' }}>
           <SearchBar
@@ -214,7 +222,7 @@ const Tabla: React.FC = () => {
         <div style={{ marginTop: '20px' }} className="card border-0 shadow-sm">
           <div className="card-body p-0">
             <DataTable 
-              columns={columns} 
+              columns={columnas} 
               data={datosFiltrados}
               onEdit={handleEdit}
               onDelete={handleDelete}

@@ -6,11 +6,12 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import SearchBar from '../../components/ui/Searchbar';
+import ExportToExcel from '../../components/ui/ExportToExcel';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-import { useAuthFetch, ApiError } from '../../components/ui/useAuthFetch';
+import { useAuthFetch } from '../../components/ui/useAuthFetch'; // Eliminado ApiError que no se usaba
 
 type Proveedor = {
   id?: number;
@@ -30,7 +31,7 @@ const initialForm: Proveedor = {
 const ProveedoresPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<Proveedor>(initialForm);
-  const [data, setData] = useState<Proveedor[]>([]);
+  // Eliminada la variable 'data' que no se usaba
   const [fullData, setFullData] = useState<Proveedor[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -59,7 +60,6 @@ const ProveedoresPage = () => {
         const response = await authFetch('http://localhost:3000/proveedor');
         if (!response.ok) throw new Error('Error al cargar proveedores');
         const proveedores = await response.json();
-        setData(proveedores);
         setFullData(proveedores);
       } catch (error) {
         console.error("Error:", error);
@@ -73,7 +73,7 @@ const ProveedoresPage = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [authFetch]); // Añadido authFetch como dependencia
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -120,10 +120,8 @@ const ProveedoresPage = () => {
       const result = await response.json();
       
       if (isEditMode) {
-        setData(prev => prev.map(p => p.id === form.id ? result : p));
         setFullData(prev => prev.map(p => p.id === form.id ? result : p));
       } else {
-        setData(prev => [...prev, result]);
         setFullData(prev => [...prev, result]);
       }
 
@@ -182,7 +180,6 @@ const ProveedoresPage = () => {
         
         if (!response.ok) throw new Error('Error al eliminar');
         
-        setData(prev => prev.filter(p => p.id !== row.id));
         setFullData(prev => prev.filter(p => p.id !== row.id));
         
         Swal.fire('Eliminado', 'El proveedor ha sido eliminado.', 'success');
@@ -222,6 +219,14 @@ const ProveedoresPage = () => {
           </Button>
         </div>
       </Header>
+
+      <div className="export-excel-container">
+        <ExportToExcel 
+          data={datosFiltrados}
+          filename="listado_proveedores"
+          buttonText="Exportar a Excel"
+        />
+      </div>
 
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando...</div>

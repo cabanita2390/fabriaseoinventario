@@ -6,11 +6,13 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import SearchBar from '../../components/ui/Searchbar';
+import ExportToExcel from '../../components/ui/ExportToExcel';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
+import { useAuthFetch } from '../../components/ui/useAuthFetch'; // Eliminado ApiError que no se usaba
+
 type Presentacion = {
   id?: number;
   nombre: string;
@@ -20,12 +22,10 @@ const initialForm: Presentacion = {
   nombre: ''
 };
 
-
-
 const PresentacionPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<Presentacion>(initialForm);
-  const [data, setData] = useState<Presentacion[]>([]);
+  // Eliminada la variable 'data' que no se usaba
   const [fullData, setFullData] = useState<Presentacion[]>([]);
   const [filtro, setFiltro] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -46,10 +46,9 @@ const PresentacionPage = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const response = await authFetch ('http://localhost:3000/presentacion');
+        const response = await authFetch('http://localhost:3000/presentacion');
         if (!response.ok) throw new Error('Error al cargar presentaciones');
         const presentaciones = await response.json();
-        setData(presentaciones);
         setFullData(presentaciones);
       } catch (error) {
         console.error("Error cargando presentaciones:", error);
@@ -63,7 +62,7 @@ const PresentacionPage = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [authFetch]); // Añadido authFetch como dependencia
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -82,7 +81,7 @@ const PresentacionPage = () => {
         ? `http://localhost:3000/presentacion/${form.id}`
         : 'http://localhost:3000/presentacion';
 
-      const response =  await authFetch(url, {
+      const response = await authFetch(url, {
         method,
         headers: { 
           'Content-Type': 'application/json',
@@ -100,10 +99,8 @@ const PresentacionPage = () => {
       const result = await response.json();
       
       if (isEditMode) {
-        setData(prev => prev.map(p => p.id === form.id ? result : p));
         setFullData(prev => prev.map(p => p.id === form.id ? result : p));
       } else {
-        setData(prev => [...prev, result]);
         setFullData(prev => [...prev, result]);
       }
 
@@ -154,7 +151,6 @@ const PresentacionPage = () => {
         
         if (!response.ok) throw new Error('Error al eliminar');
         
-        setData(prev => prev.filter(p => p.id !== row.id));
         setFullData(prev => prev.filter(p => p.id !== row.id));
         
         Swal.fire('Eliminado', 'La presentación ha sido eliminada.', 'success');
@@ -173,6 +169,14 @@ const PresentacionPage = () => {
 
   return (
     <Home>
+      <div className="export-excel-container">
+        <ExportToExcel 
+          data={datosFiltrados}
+          filename="listado_presentaciones"
+          buttonText="Exportar a Excel"
+        />
+      </div>
+
       <Header>
         <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
           <SearchBar
