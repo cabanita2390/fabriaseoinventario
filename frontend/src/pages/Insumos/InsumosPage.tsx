@@ -46,24 +46,24 @@ function InsumosPage() {
 
   // Handlers
   const handleOpenModal = useCallback((tipo: Tipo, edit = false) => {
-  if (tipo !== tipoActual) {
-    setForm(prev => ({
-      ...prev,
-      producto: null,
-      presentacionSeleccionada: null,
-      bodega: ""
-    }));
-    setTipoActual(tipo);
-    cargarProductos(); // Forzar recarga de productos
-  }
-  setIsEditMode(edit);
-  setForm({
-    ...INIT_FORM,
-    tipo,
-    fecha: new Date().toISOString().slice(0, 10),
-  });
-  setShowModal(true);
-}, [tipoActual, cargarProductos]);
+    if (tipo !== tipoActual) {
+      setForm(prev => ({
+        ...prev,
+        producto: null,
+        presentacionSeleccionada: null,
+        bodega: ""
+      }));
+      setTipoActual(tipo);
+      cargarProductos(); // Forzar recarga de productos
+    }
+    setIsEditMode(edit);
+    setForm({
+      ...INIT_FORM,
+      tipo,
+      fecha: new Date().toISOString().slice(0, 10),
+    });
+    setShowModal(true);
+  }, [tipoActual, cargarProductos]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -120,14 +120,27 @@ function InsumosPage() {
         return;
       }
 
-      const tipoMovimiento = tipoActual.toLowerCase().includes('ingreso') ? 'INGRESO' : 'EGRESO';
+      // Determinar el tipo de movimiento para la API
+      let tipoMovimientoAPI: 'materia-prima' | 'material-envase' | 'etiquetas';
+      
+      if (tipoActual.toLowerCase().includes('materia prima')) {
+        tipoMovimientoAPI = 'materia-prima';
+      } else if (tipoActual.toLowerCase().includes('envase')) {
+        tipoMovimientoAPI = 'material-envase';
+      } else if (tipoActual.toLowerCase().includes('etiqueta')) {
+        tipoMovimientoAPI = 'etiquetas';
+      } else {
+        throw new Error('Tipo de movimiento no reconocido');
+      }
 
-      if (tipoMovimiento === 'EGRESO' && Number(form.cantidad) <= 0) {
+      const tipoOperacion = tipoActual.toLowerCase().includes('ingreso') ? 'INGRESO' : 'EGRESO';
+
+      if (tipoOperacion === 'EGRESO' && Number(form.cantidad) <= 0) {
         Swal.fire({ icon: "error", title: "Cantidad inválida", text: "La cantidad para salida debe ser mayor a 0." });
         return;
       }
 
-      if (tipoMovimiento === 'EGRESO') {
+      if (tipoOperacion === 'EGRESO') {
         const inventarioExistente = await obtenerInventarioExistente(
           productoEspecifico.id, 
           bodegaSeleccionada.id
@@ -156,14 +169,14 @@ function InsumosPage() {
       });
 
       const payload = {
-        tipo: tipoMovimiento,
+        tipo: tipoOperacion,
         cantidad: Number(form.cantidad),
         descripcion: form.descripcion,
         producto_idproducto: productoEspecifico.id,
         bodega_idbodega: bodegaSeleccionada.id
       };
 
-      await crearMovimiento(payload);
+      await crearMovimiento(tipoMovimientoAPI, payload);
 
       Swal.fire({ icon: "success", title: "¡Éxito!", text: "El movimiento ha sido guardado correctamente." });
       setShowModal(false);
@@ -210,10 +223,10 @@ function InsumosPage() {
   }, [errorProductos, permissionDenied]);
 
   useEffect(() => {
-  if (showModal && hasProductPermission) {
-    cargarProductos();
-  }
-}, [showModal, hasProductPermission, tipoActual, cargarProductos]);
+    if (showModal && hasProductPermission) {
+      cargarProductos();
+    }
+  }, [showModal, hasProductPermission, tipoActual, cargarProductos]);
 
   useEffect(() => {
     if (hasBodegaPermission && !bodegasDisponibles.length && !loadingBodegas) {
