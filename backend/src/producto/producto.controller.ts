@@ -13,12 +13,7 @@ import { ProductoService } from './producto.service';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import {
-  ADMIN,
-  LIDER_PRODUCCION,
-  RECEPTOR_MP,RECEPTOR_ENVASE
-  ,RECEPTOR_ETIQUETAS
-} from 'src/auth/constants/roles.constant';
+import {ADMIN,  RECEPTOR_MP,LIDER_PRODUCCION,OPERARIO_PRODUCCION,RECEPTOR_ENVASE,RECEPTOR_ETIQUETAS} from 'src/auth/constants/roles.constant';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
@@ -34,7 +29,7 @@ export class ProductoController {
   }
 
   @Get()
-  @Roles(ADMIN,LIDER_PRODUCCION, RECEPTOR_MP,RECEPTOR_ENVASE,RECEPTOR_ETIQUETAS)
+  @Roles(ADMIN,  RECEPTOR_MP,LIDER_PRODUCCION,OPERARIO_PRODUCCION,RECEPTOR_ENVASE,RECEPTOR_ETIQUETAS)
   async findAll() {
     return this.productoService.findAll();
   }
