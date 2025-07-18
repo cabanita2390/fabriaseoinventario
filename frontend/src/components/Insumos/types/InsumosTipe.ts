@@ -95,7 +95,7 @@ export const PERMISOS_POR_ROL: Record<RolUsuario, Tipo[]> = {
   ],
   RECEPTOR_MP: ['Ingreso de materia prima','Salida de materia prima'],
   RECEPTOR_ENVASE: ['Ingreso de Envase','Salida de Envase'],
-  RECEPTOR_ETIQUETAS: ['Ingreso de Etiqueta','Ingreso de Etiqueta'],
+  RECEPTOR_ETIQUETAS: ['Ingreso de Etiqueta','Salida de Etiqueta'],
   OPERARIO_PRODUCCION: ['Salida de Envase','Salida de Etiqueta'],
   USUARIO: []
 };
