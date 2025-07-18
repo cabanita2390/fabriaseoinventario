@@ -6,11 +6,13 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import SearchBar from '../../components/ui/Searchbar';
+import ExportToExcel from '../../components/ui/ExportToExcel';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
+import { useAuthFetch } from '../../components/ui/useAuthFetch'; // Eliminado ApiError que no se usaba
+
 type Bodega = {
   id: number;
   nombre: string;
@@ -23,12 +25,10 @@ const initialForm: Bodega = {
   ubicacion: null,
 };
 
-
-
 const BodegasPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<Bodega>(initialForm);
-  const [data, setData] = useState<Bodega[]>([]);
+  // Eliminada la variable 'data' que no se usaba
   const [fullData, setFullData] = useState<Bodega[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -52,10 +52,9 @@ const BodegasPage = () => {
       try {
         const response = await authFetch('http://localhost:3000/bodega');
         const bodegas = await response.json();
-        setData(bodegas);
         setFullData(bodegas);
       } catch (error) {
-        const err = error as ApiError;
+        const err = error as Error;
         if (err.message !== 'Sesión expirada') {
           Swal.fire('Error', 'Error al cargar bodegas', 'error');
         }
@@ -63,7 +62,7 @@ const BodegasPage = () => {
     };
 
     loadData();
-  }, []);
+  }, [authFetch]); // Añadido authFetch como dependencia
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ 
@@ -111,7 +110,7 @@ const BodegasPage = () => {
       setShowModal(false);
       setForm(initialForm);
     } catch (error) {
-      const err = error as ApiError;
+      const err = error as Error;
       if (err.message !== 'Sesión expirada') {
         Swal.fire('Error', 'No se pudo guardar la bodega', 'error');
       }
@@ -146,7 +145,7 @@ const BodegasPage = () => {
       setFullData(prev => prev.filter(b => b.id !== row.id));
       Swal.fire('Éxito', 'Bodega eliminada', 'success');
     } catch (error) {
-      const err = error as ApiError;
+      const err = error as Error;
       if (err.message !== 'Sesión expirada') {
         Swal.fire('Error', 'No se pudo eliminar', 'error');
       }
@@ -155,6 +154,14 @@ const BodegasPage = () => {
 
   return (
     <Home>
+      <div className="export-excel-container">
+        <ExportToExcel 
+          data={datosFiltrados}
+          filename="listado_bodegas"
+          buttonText="Exportar a Excel"
+        />
+      </div>
+      
       <Header>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginLeft: 'auto' }}>
           <SearchBar

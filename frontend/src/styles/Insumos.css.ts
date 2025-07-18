@@ -1,5 +1,11 @@
 import styled from 'styled-components';
 import Button from '../components/ui/Button';
+
+// Definir la interfaz para las props extendidas del botón
+interface StyledButtonProps {
+  $noAutorizado?: boolean;
+}
+
 export const Home = styled.main`
   padding: 1rem;
   display: flex;
@@ -12,28 +18,26 @@ export const Header = styled.header`
   width: 100%;
 `;
 
-/* --- Agrupadores de botones --- */
 export const ButtonGroup = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 20px; /* separación entre cada Card */
+  gap: 20px;
   justify-content: space-between;
-  margin-top: 10px; /* Agrega un pequeño espacio arriba */
+  margin-top: 10px;
 
   @media (max-width: 768px) {
     justify-content: center;
   }
 `;
 
-
 export const ButtonContainer = styled.article`
-  flex: 1 1 30%;       /* crece, encoge, base 30% */
-  min-width: 250px;    /* evita que se encoja demasiado */
+  flex: 1 1 30%;
+  min-width: 250px;
   background: #f9f9f9;
   border: 2px solid #ccc;
   border-radius: 8px;
   padding: 1.5rem;
-  display: flex;       /* Usa flex para organizar el contenido */
+  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
@@ -44,35 +48,55 @@ export const ButtonContainer = styled.article`
   }
 `;
 
-/* Contenedor específico para los botones */
 export const ButtonWrapper = styled.div`
-  display: flex;             /* define un contenedor flexible */
-  flex-direction: row;       /* alinea los elementos en fila horizontal */
-  flex-wrap: nowrap;         /* con ellos en la misma línea */
-  gap: 10px;                 /* espacio entre botones */
-  justify-content: center;   /* centra el grupo en el contenedor */
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 10px;
+  justify-content: center;
 `;
 
-
-export const StyledButton = styled(Button)`
+export const StyledButton = styled(Button)<StyledButtonProps>`
   padding: 10px 16px;
   font-size: 0.95rem;
   border-radius: 5px;
-  background: #33c1ff;
-  color: #fff;
+  background: ${({ $noAutorizado }) => $noAutorizado ? '#ffcccc' : '#33c1ff'};
+  color: ${({ $noAutorizado }) => $noAutorizado ? '#990000' : '#fff'};
   border: none;
-  cursor: pointer;
-  transition: background 0.25s;
-
-  /* Evita que el botón se expanda */
+  cursor: ${({ $noAutorizado }) => $noAutorizado ? 'not-allowed' : 'pointer'};
+  transition: all 0.25s;
   width: auto;
   flex: 0 0 auto;
+  position: relative;
 
   &:hover {
-    background: #25a4de;
+    background: ${({ $noAutorizado }) => $noAutorizado ? '#ffcccc' : '#25a4de'};
   }
+
   &:disabled {
     background: #b0dffc;
     cursor: not-allowed;
+  }
+
+  .tooltip {
+    visibility: hidden;
+    width: 120px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  &:hover .tooltip {
+    visibility: ${({ $noAutorizado }) => $noAutorizado ? 'visible' : 'hidden'};
+    opacity: ${({ $noAutorizado }) => $noAutorizado ? 1 : 0};
   }
 `;

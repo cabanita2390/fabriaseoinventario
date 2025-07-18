@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
@@ -6,7 +6,6 @@ import { ModalFooter } from '../../../styles/ui/Modal.css';
 import { StyledButton } from '../../../styles/Insumos.css';
 import { FormState, Tipo, ProductoAgrupado } from '../types/InsumosTipe';
 
-// Definir constantes para valores por defecto
 const DEFAULT_OPTION = "seleccione una opción";
 const EMPTY_STRING = "";
 
@@ -19,14 +18,17 @@ interface MovimientoFormProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onSave: () => Promise<void>;
   onClose: () => void;
-  disabled?: boolean; // Prop opcional añadida
+  disabled?: boolean;
+  bodegasError?: string;
+  error?: string;
 }
 
 const MovimientoForm: React.FC<MovimientoFormProps> = ({
-  tipoActual, isEditMode, form, productosDisponibles, 
-  bodegasDisponibles, onChange, onSave, onClose, disabled = false
+  bodegasError, tipoActual, isEditMode, form, productosDisponibles, 
+  bodegasDisponibles, onChange, onSave, onClose, disabled = false, error
 }) => {
-  // Memoizar opciones para mejor rendimiento
+
+
   const productoOptions = React.useMemo(
     () => [DEFAULT_OPTION, ...productosDisponibles.map((p) => p.nombre)],
     [productosDisponibles]
@@ -42,9 +44,30 @@ const MovimientoForm: React.FC<MovimientoFormProps> = ({
     return [DEFAULT_OPTION, ...form.producto.presentaciones.map(p => p.nombre)];
   }, [form.producto]);
 
-  // Manejo seguro de valores nulos/undefined
   const getSafeValue = (value: string | undefined | null, fallback = EMPTY_STRING) => 
     value ?? fallback;
+
+  const renderError = (message: string | undefined, isBodegaError = false) => {
+    if (!message) return null;
+    
+    return (
+      <div style={{ 
+        padding: '1rem',
+        marginBottom: '1rem',
+        backgroundColor: '#ffeeee',
+        color: '#ff4444',
+        borderRadius: '4px',
+        border: '1px solid #ff4444'
+      }}>
+        {message}
+        {isBodegaError && (
+          <div style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
+            Contacta al administrador para solicitar acceso
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <Modal onClose={onClose} aria-labelledby="movimiento-form-title">
@@ -55,13 +78,17 @@ const MovimientoForm: React.FC<MovimientoFormProps> = ({
         {isEditMode ? `Editar ${tipoActual}` : `Registrar ${tipoActual}`}
       </h2>
 
+      {/* Mostrar errores */}
+      {renderError(error)}
+      {renderError(bodegasError, true)}
+
       <Select
         label="Producto"
         name="producto"
         value={getSafeValue(form.producto?.nombre, DEFAULT_OPTION)}
         onChange={onChange}
         options={productoOptions}
-        disabled={disabled}
+        disabled={disabled || !!error}
         searchable={true}
         aria-required="true"
       />
@@ -72,7 +99,7 @@ const MovimientoForm: React.FC<MovimientoFormProps> = ({
         value={getSafeValue(form.presentacionSeleccionada?.nombre, DEFAULT_OPTION)}
         onChange={onChange}
         options={presentacionOptions}
-        disabled={disabled || !form.producto}
+        disabled={disabled || !form.producto || !!error}
         aria-required="true"
       />
 
@@ -98,7 +125,7 @@ const MovimientoForm: React.FC<MovimientoFormProps> = ({
         type="number" 
         min="0"
         step="0.01"
-        disabled={disabled}
+        disabled={disabled || !!error}
         aria-required="true"
       />
 
@@ -115,24 +142,33 @@ const MovimientoForm: React.FC<MovimientoFormProps> = ({
         name="descripcion" 
         value={getSafeValue(form.descripcion)} 
         onChange={onChange}
-        disabled={disabled}
+        disabled={disabled || !!error}
       />
 
-      <Select
-        label="Bodega"
-        name="bodega"
-        value={getSafeValue(form.bodega, DEFAULT_OPTION)}
-        onChange={onChange}
-        options={bodegaOptions}
-        disabled={disabled}
-        aria-required="true"
-        searchable={true}
-      />
+      <div className="form-field">
+        <label>Bodega</label>
+        <Select
+          label=""
+          name="bodega"
+          value={getSafeValue(form.bodega, DEFAULT_OPTION)}
+          onChange={onChange}
+          options={bodegaOptions}
+          disabled={disabled || !!bodegasError || !!error}
+          aria-required="true"
+          searchable={true}
+        />
+      </div>
 
       <ModalFooter>
         <StyledButton 
+          onClick={onClose}
+          style={{ marginRight: '1rem', backgroundColor: '#6c757d' }}
+        >
+          Cerrar
+        </StyledButton>
+        <StyledButton 
           onClick={onSave} 
-          disabled={disabled}
+          disabled={disabled || !!error || !!bodegasError}
           aria-busy={disabled}
         >
           {disabled ? "Guardando..." : "Guardar"}
