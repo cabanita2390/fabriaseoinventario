@@ -16,24 +16,6 @@ const getTodayDate = (): string => {
   return new Date().toISOString().split('T')[0];
 };
 
-// Definición de los filtros con valores predeterminados
-const filtros: FieldConfig[] = [
-  { 
-    tipo: 'date', 
-    id: 'fechaInicio', 
-    label: 'Fecha de inicio',
-    max: getTodayDate(),
-    defaultValue: getOneWeekAgoDate() // Establecemos el valor predeterminado a hace 7 días
-  },
-  { 
-    tipo: 'date', 
-    id: 'fechaFin', 
-    label: 'Fecha fin',
-    max: getTodayDate(),
-    defaultValue: getTodayDate() // Establecemos el valor predeterminado a hoy
-  },
-];
-
 type Movimiento = {
   fecha: string;
   nombre: string;
@@ -47,6 +29,31 @@ const Graficos = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Definición de los filtros con valores predeterminados
+  const [filtros, setFiltros] = useState<FieldConfig[]>([
+    { 
+      tipo: 'date', 
+      id: 'fechaInicio', 
+      label: 'Fecha de inicio',
+      max: getTodayDate(),
+      defaultValue: getOneWeekAgoDate()
+    },
+    { 
+      tipo: 'date', 
+      id: 'fechaFin', 
+      label: 'Fecha fin',
+      max: getTodayDate(),
+      defaultValue: getTodayDate()
+    },
+    {
+      tipo: 'select',
+      id: 'producto',
+      label: 'Producto',
+      options: [], // Se llenará dinámicamente
+      defaultValue: ''
+    }
+  ]);
+
   const normalizeDate = (dateString: string): string | null => {
     if (!dateString) return null;
     try {
@@ -57,11 +64,33 @@ const Graficos = () => {
     }
   };
 
+  // Función para extraer productos únicos de los movimientos
+  const updateProductOptions = (movimientos: Movimiento[]) => {
+    // Obtener productos únicos de los movimientos
+    const productosUnicos = Array.from(
+      new Set(movimientos.map(mov => mov.nombre))
+    ).filter(nombre => nombre && nombre !== 'Sin nombre');
+
+    // Actualizar las opciones del select
+    setFiltros(prev => prev.map(filtro => 
+      filtro.id === 'producto' 
+        ? { 
+            ...filtro, 
+            options: [
+              { value: '', label: 'Todos los productos' },
+              ...productosUnicos.map(nombre => ({ value: nombre, label: nombre }))
+            ]
+          }
+        : filtro
+    ));
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
+        // Cargar movimientos
         const res = await authFetch('http://localhost:3000/movimiento');
         if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
         
@@ -70,9 +99,13 @@ const Graficos = () => {
           fecha: normalizeDate(mov.fechaMovimiento) || mov.fechaMovimiento,
           nombre: mov.producto?.nombre || 'Sin nombre',
           cantidad: mov.cantidad || 0,
+          tipo: mov.tipo || 'ENTRADA'
         }));
 
         setAllData(movimientos);
+        
+        // Actualizar opciones de productos basándose en los movimientos
+        updateProductOptions(movimientos);
         
         // Filtrar automáticamente por el rango predeterminado (última semana)
         const inicio = getOneWeekAgoDate();
@@ -98,38 +131,64 @@ const Graficos = () => {
   }, []);
 
   const handleBuscar = (filtros: Record<string, string>) => {
-    const { fechaInicio, fechaFin } = filtros;
+    const { fechaInicio, fechaFin, producto } = filtros;
     const inicio = normalizeDate(fechaInicio);
     const fin = normalizeDate(fechaFin);
 
     const filtrado = allData.filter(mov => {
       const fechaMov = normalizeDate(mov.fecha);
+      
+      // Filtro por fecha
       if (!fechaMov) return false;
       if (inicio && fechaMov < inicio) return false;
       if (fin && fechaMov > fin) return false;
+      
+      // Filtro por producto
+      if (producto && producto !== '') {
+        if (mov.nombre !== producto) {
+          return false;
+        }
+      }
+      
       return true;
     });
     
     setData(filtrado);
   };
 
+  const handleReset = () => {
+    // Resetear a los datos de la última semana
+    const inicio = getOneWeekAgoDate();
+    const fin = getTodayDate();
+    const filtrado = allData.filter(mov => {
+      const fechaMov = normalizeDate(mov.fecha);
+      if (!fechaMov) return false;
+      if (fechaMov < inicio) return false;
+      if (fechaMov > fin) return false;
+      return true;
+    });
+    setData(filtrado);
+  };
+
   return (
     <div className="p-4">
       <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Gráficos de Movimientos</h2>
+        <p className="text-gray-600">Visualiza los movimientos de productos por fecha y filtro específico</p>
       </div>
 
       <Filtro 
         fields={filtros} 
         onSearch={handleBuscar} 
-        onReset={() => setData(allData)}
-        showSearchBar={true}
+        onReset={handleReset}
+        showSearchBar={false} // Cambiamos a false ya que ahora usamos select
       />
       
       {loading ? (
         <div className="text-center p-8">
           <div 
             className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"
-            data-testid="loading-spinner" // Añade este atributo
+            data-testid="loading-spinner"
           ></div>
           <p>Cargando datos...</p>
         </div>
@@ -160,6 +219,10 @@ const Graficos = () => {
         </div>
       ) : (
         <>
+          <div className="mb-4 text-sm text-gray-600">
+            Mostrando {data.length} movimiento{data.length !== 1 ? 's' : ''} 
+            {data.length > 0 && data.length < allData.length && ` de ${allData.length} total`}
+          </div>
           <GraficoProductos datos={data} />
         </>
       )}
