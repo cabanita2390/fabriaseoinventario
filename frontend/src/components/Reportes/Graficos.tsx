@@ -1,8 +1,36 @@
+import React, { useState, useEffect } from 'react';
 import Filtro from '../Movimientos/Filtro';
 import GraficoProductos from './GraficoProductos';
 import { FieldConfig } from '../types/FieldConfig';
-import { useState, useEffect } from 'react';
 import { authFetch } from '../../components/ui/useAuthFetch';
+import Swal from 'sweetalert2';
+
+// Definición de tipos y roles
+type AppRole =
+  | 'ADMIN'
+  | 'LIDER_PRODUCCION'
+  | 'RECEPTOR_MP'
+  | 'RECEPTOR_ENVASE'
+  | 'RECEPTOR_ETIQUETAS'
+  | 'OPERARIO_PRODUCCION'
+  | 'USUARIO';
+
+const roleToEndpointMap: Record<AppRole, string[]> = {
+  'ADMIN': ['/movimiento'],
+  'LIDER_PRODUCCION': ['/movimiento'],
+  'RECEPTOR_MP': ['/movimiento/materia-prima'],
+  'RECEPTOR_ENVASE': ['/movimiento/material-envase'],
+  'RECEPTOR_ETIQUETAS': ['/movimiento/etiquetas'],
+  'OPERARIO_PRODUCCION': ['/movimiento/etiquetas', '/movimiento/material-envase'],
+  'USUARIO': []
+};
+
+type Movimiento = {
+  fecha: string;
+  nombre: string;
+  cantidad: number;
+  tipo: 'ENTRADA' | 'SALIDA';
+};
 
 // Función para obtener la fecha de hace 7 días
 const getOneWeekAgoDate = (): string => {
@@ -23,30 +51,24 @@ const filtros: FieldConfig[] = [
     id: 'fechaInicio', 
     label: 'Fecha de inicio',
     max: getTodayDate(),
-    defaultValue: getOneWeekAgoDate() // Establecemos el valor predeterminado a hace 7 días
+    defaultValue: getOneWeekAgoDate()
   },
   { 
     tipo: 'date', 
     id: 'fechaFin', 
     label: 'Fecha fin',
     max: getTodayDate(),
-    defaultValue: getTodayDate() // Establecemos el valor predeterminado a hoy
+    defaultValue: getTodayDate()
   },
 ];
 
-type Movimiento = {
-  fecha: string;
-  nombre: string;
-  cantidad: number;
-  tipo: 'ENTRADA' | 'SALIDA';
-};
-
-const Graficos = () => {
+const Graficos: React.FC = () => {
   const [data, setData] = useState<Movimiento[]>([]);
   const [allData, setAllData] = useState<Movimiento[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Función para normalizar fechas
   const normalizeDate = (dateString: string): string | null => {
     if (!dateString) return null;
     try {
@@ -57,24 +79,103 @@ const Graficos = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
+  // Función para obtener el rol del usuario desde el token
+  const getUserRoleFromToken = (): AppRole | null => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.rol as AppRole;
+    } catch (error) {
+      console.error('Error al decodificar el token:', error);
+      return null;
+    }
+  };
+
+  // Función para verificar permisos del endpoint
+  const checkEndpointPermission = async (endpoint: string): Promise<boolean> => {
+    try {
+      const response = await authFetch(`http://localhost:3000${endpoint}`, {
+        method: 'HEAD'
+      });
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Función principal para cargar movimientos según el rol
+  const fetchMovimientosPorRol = async (): Promise<Movimiento[]> => {
+    const userRole = getUserRoleFromToken();
+
+    if (!userRole) {
+      throw new Error('No se pudo determinar el rol del usuario. Token inválido o ausente.');
+    }
+
+    const endpointsToTry = roleToEndpointMap[userRole];
+
+    if (endpointsToTry.length === 0) {
+      throw new Error(`Tu rol (${userRole}) no tiene acceso a ningún endpoint de movimientos.`);
+    }
+
+    let lastError: Error | null = null;
+    let movimientosAcumulados: Movimiento[] = [];
+
+    for (const endpoint of endpointsToTry) {
       try {
-        const res = await authFetch('http://localhost:3000/movimiento');
-        if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+        const hasPermission = await checkEndpointPermission(endpoint);
+        if (!hasPermission) {
+          console.log(`Sin permiso para el endpoint: ${endpoint}`);
+          continue;
+        }
+
+        const response = await authFetch(`http://localhost:3000${endpoint}`);
         
-        const json = await res.json();
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const json = await response.json();
         const movimientos: Movimiento[] = json.map((mov: any) => ({
           fecha: normalizeDate(mov.fechaMovimiento) || mov.fechaMovimiento,
           nombre: mov.producto?.nombre || 'Sin nombre',
           cantidad: mov.cantidad || 0,
+          tipo: mov.tipo === 'INGRESO' ? 'ENTRADA' : 'SALIDA'
         }));
 
+        movimientosAcumulados = [...movimientosAcumulados, ...movimientos];
+      } catch (error) {
+        if (error instanceof Error) {
+          lastError = error;
+          console.error(`Error con endpoint ${endpoint}:`, error);
+        }
+        continue;
+      }
+    }
+
+    if (movimientosAcumulados.length > 0) {
+      return movimientosAcumulados;
+    }
+
+    if (lastError) {
+      throw lastError;
+    }
+
+    throw new Error(`No tienes acceso a los endpoints de movimientos para tu rol (${userRole}).`);
+  };
+
+  // Efecto para cargar los datos iniciales
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const movimientos = await fetchMovimientosPorRol();
         setAllData(movimientos);
         
-        // Filtrar automáticamente por el rango predeterminado (última semana)
+        // Filtrar por rango predeterminado (última semana)
         const inicio = getOneWeekAgoDate();
         const fin = getTodayDate();
         const filtrado = movimientos.filter(mov => {
@@ -88,15 +189,26 @@ const Graficos = () => {
         setData(filtrado);
       } catch (error) {
         console.error("Error cargando movimientos:", error);
-        setError('Error al cargar datos. Por favor intente más tarde.');
+        const errorMessage = error instanceof Error ? 
+          error.message : 'Error desconocido al cargar datos';
+        
+        setError(errorMessage);
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorMessage,
+          timer: 4000
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    loadData();
   }, []);
 
+  // Función para manejar búsqueda con filtros
   const handleBuscar = (filtros: Record<string, string>) => {
     const { fechaInicio, fechaFin } = filtros;
     const inicio = normalizeDate(fechaInicio);
@@ -116,14 +228,13 @@ const Graficos = () => {
   return (
     <div className="p-4">
       <div className="mb-6">
+        <Filtro 
+          fields={filtros} 
+          onSearch={handleBuscar} 
+          onReset={() => setData(allData)}
+          showSearchBar={true}
+        />
       </div>
-
-      <Filtro 
-        fields={filtros} 
-        onSearch={handleBuscar} 
-        onReset={() => setData(allData)}
-        showSearchBar={true}
-      />
       
       {loading ? (
         <div className="text-center p-8">
@@ -156,9 +267,7 @@ const Graficos = () => {
           </p>
         </div>
       ) : (
-        <>
-          <GraficoProductos datos={data} />
-        </>
+        <GraficoProductos datos={data} />
       )}
     </div>
   );
