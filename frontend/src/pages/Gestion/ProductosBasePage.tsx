@@ -207,10 +207,32 @@ const ProductosBasePage: React.FC = () => {
       });
 
       const result = await response.json();
+
+      // Función para enriquecer el producto con datos locales
+      const enrichProduct = (product: any): Producto => ({
+        id: product.id,
+        nombre: product.nombre,
+        tipoProducto: product.tipoProducto,
+        subtipoInsumo: product.subtipoInsumo,
+        estado: product.estado,
+        presentacion: opciones.presentaciones.find(p => p.id === product.presentacion_idpresentacion) || { id: 0, nombre: 'N/A' },
+        unidadMedida: opciones.unidades.find(u => u.id === product.unidadmedida_idunidadmedida) || { id: 0, nombre: 'N/A' },
+        proveedor: form.proveedor_id ? {
+          id: form.proveedor_id,
+          nombre: opciones.proveedores.find(p => p.id === form.proveedor_id)?.nombre || '',
+          telefono: '',
+          email: '',
+          direccion: ''
+        } : null
+      });
+
+      const enrichedProduct = enrichProduct(result);
+
       setData(prev => isEditMode
-        ? prev.map(p => p.id === form.id ? result : p)
-        : [...prev, result]
+        ? prev.map(p => p.id === form.id ? enrichedProduct : p)
+        : [...prev, enrichedProduct]
       );
+
       closeModal();
       Swal.fire('Éxito', `Producto ${isEditMode ? 'actualizado' : 'creado'} correctamente`, 'success');
     } catch (error) {
