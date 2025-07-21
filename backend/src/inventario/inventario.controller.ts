@@ -8,14 +8,17 @@ import {
   Patch,
   ParseIntPipe,
   UseGuards,
+  Query,
+  ParseEnumPipe,
 } from '@nestjs/common';
 import { InventarioService } from './inventario.service';
 import { CreateInventarioDto } from './dto/create-inventario.dto';
 import { UpdateInventarioDto } from './dto/update-inventario.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles  } from 'src/auth/decorators/roles.decorator';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 import { ADMIN, RECEPTOR_MP } from 'src/auth/constants/roles.constant';
+import { TipoProducto } from 'src/producto/dto/create-producto.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(ADMIN)
@@ -24,16 +27,19 @@ export class InventarioController {
   constructor(private readonly inventarioService: InventarioService) {}
 
   @Post()
-  @Roles(ADMIN,  RECEPTOR_MP)
+  @Roles(ADMIN, RECEPTOR_MP)
   create(@Body() createInventarioDto: CreateInventarioDto) {
     return this.inventarioService.create(createInventarioDto);
   }
-
   @Get()
   @Roles(ADMIN)
-  findAll() {
-    return this.inventarioService.findAll();
+  findAll(
+    @Query('tipoProducto', new ParseEnumPipe(TipoProducto))
+    tipoProducto?: TipoProducto,
+  ) {
+    return this.inventarioService.findAll(tipoProducto);
   }
+
   @Roles(ADMIN)
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
