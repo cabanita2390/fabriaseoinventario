@@ -11,6 +11,7 @@ import { UpdateInventarioDto } from './dto/update-inventario.dto';
 import { Inventario } from '../entities/inventario.entity';
 import { Producto } from '../entities/producto.entity';
 import { Bodega } from '../entities/bodega.entity';
+import { TipoProducto } from 'src/producto/dto/create-producto.dto';
 
 @Injectable()
 export class InventarioService {
@@ -104,10 +105,13 @@ export class InventarioService {
     }
   }
 
-  async findAll(): Promise<any[]> {
+  async findAll(tipoProducto?: TipoProducto): Promise<any[]> {
     try {
+      const whereClause = tipoProducto ? { producto: { tipoProducto } } : {};
+
       const inventarios = await this.inventarioRepo.find({
         relations: ['producto', 'bodega'],
+        where: whereClause,
       });
 
       return inventarios.map((inv) => ({
@@ -122,6 +126,8 @@ export class InventarioService {
       );
     }
   }
+
+  //Crear un find by tipo
 
   async findOne(id: number): Promise<any> {
     const entidad = await this.inventarioRepo.findOne({
