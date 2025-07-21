@@ -104,12 +104,14 @@ const MovimientoForm: React.FC<MovimientoFormProps> = ({
       />
 
       <Input 
+        name="unidadMedida"
         label="Unidad de Medida" 
         value={getSafeValue(form.producto?.unidadMedida?.nombre)} 
         disabled 
       />
 
       <Input 
+        name="proveedor"
         label="Proveedor (opcional)" 
         value={getSafeValue(form.producto?.proveedor?.nombre)} 
         disabled 

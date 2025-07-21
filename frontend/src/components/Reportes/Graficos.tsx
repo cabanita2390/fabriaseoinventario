@@ -44,31 +44,35 @@ const getTodayDate = (): string => {
   return new Date().toISOString().split('T')[0];
 };
 
-// Definición de los filtros con valores predeterminados
-const filtros: FieldConfig[] = [
-  { 
-    tipo: 'date', 
-    id: 'fechaInicio', 
-    label: 'Fecha de inicio',
-    max: getTodayDate(),
-    defaultValue: getOneWeekAgoDate()
-  },
-  { 
-    tipo: 'date', 
-    id: 'fechaFin', 
-    label: 'Fecha fin',
-    max: getTodayDate(),
-    defaultValue: getTodayDate()
-  },
-];
-
 const Graficos: React.FC = () => {
   const [data, setData] = useState<Movimiento[]>([]);
   const [allData, setAllData] = useState<Movimiento[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filtros, setFiltros] = useState<FieldConfig[]>([
+    { 
+      tipo: 'date', 
+      id: 'fechaInicio', 
+      label: 'Fecha de inicio',
+      max: getTodayDate(),
+      defaultValue: getOneWeekAgoDate()
+    },
+    { 
+      tipo: 'date', 
+      id: 'fechaFin', 
+      label: 'Fecha fin',
+      max: getTodayDate(),
+      defaultValue: getTodayDate()
+    },
+    {
+      tipo: 'select',
+      id: 'producto',
+      label: 'Producto',
+      options: [],
+      defaultValue: ''
+    }
+  ]);
 
-  // Función para normalizar fechas
   const normalizeDate = (dateString: string): string | null => {
     if (!dateString) return null;
     try {
@@ -79,7 +83,25 @@ const Graficos: React.FC = () => {
     }
   };
 
-  // Función para obtener el rol del usuario desde el token
+  // Función para extraer productos únicos de los movimientos
+  const updateProductOptions = (movimientos: Movimiento[]) => {
+    const productosUnicos = Array.from(
+      new Set(movimientos.map(mov => mov.nombre))
+    ).filter(nombre => nombre && nombre !== 'Sin nombre');
+
+    setFiltros(prev => prev.map(filtro => 
+      filtro.id === 'producto' 
+        ? { 
+            ...filtro, 
+            options: [
+              { value: '', label: 'Todos los productos' },
+              ...productosUnicos.map(nombre => ({ value: nombre, label: nombre }))
+            ]
+          }
+        : filtro
+    ));
+  };
+
   const getUserRoleFromToken = (): AppRole | null => {
     const token = localStorage.getItem('authToken');
     if (!token) return null;
@@ -93,7 +115,6 @@ const Graficos: React.FC = () => {
     }
   };
 
-  // Función para verificar permisos del endpoint
   const checkEndpointPermission = async (endpoint: string): Promise<boolean> => {
     try {
       const response = await authFetch(`http://localhost:3000${endpoint}`, {
@@ -105,7 +126,6 @@ const Graficos: React.FC = () => {
     }
   };
 
-  // Función principal para cargar movimientos según el rol
   const fetchMovimientosPorRol = async (): Promise<Movimiento[]> => {
     const userRole = getUserRoleFromToken();
 
@@ -165,7 +185,6 @@ const Graficos: React.FC = () => {
     throw new Error(`No tienes acceso a los endpoints de movimientos para tu rol (${userRole}).`);
   };
 
-  // Efecto para cargar los datos iniciales
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -174,8 +193,8 @@ const Graficos: React.FC = () => {
       try {
         const movimientos = await fetchMovimientosPorRol();
         setAllData(movimientos);
+        updateProductOptions(movimientos);
         
-        // Filtrar por rango predeterminado (última semana)
         const inicio = getOneWeekAgoDate();
         const fin = getTodayDate();
         const filtrado = movimientos.filter(mov => {
@@ -208,37 +227,63 @@ const Graficos: React.FC = () => {
     loadData();
   }, []);
 
-  // Función para manejar búsqueda con filtros
   const handleBuscar = (filtros: Record<string, string>) => {
-    const { fechaInicio, fechaFin } = filtros;
+    const { fechaInicio, fechaFin, producto } = filtros;
     const inicio = normalizeDate(fechaInicio);
     const fin = normalizeDate(fechaFin);
 
     const filtrado = allData.filter(mov => {
       const fechaMov = normalizeDate(mov.fecha);
+      
       if (!fechaMov) return false;
       if (inicio && fechaMov < inicio) return false;
       if (fin && fechaMov > fin) return false;
+      
+      if (producto && producto !== '') {
+        if (mov.nombre !== producto) {
+          return false;
+        }
+      }
+      
       return true;
     });
     
     setData(filtrado);
   };
 
+  const handleReset = () => {
+    const inicio = getOneWeekAgoDate();
+    const fin = getTodayDate();
+    const filtrado = allData.filter(mov => {
+      const fechaMov = normalizeDate(mov.fecha);
+      if (!fechaMov) return false;
+      if (fechaMov < inicio) return false;
+      if (fechaMov > fin) return false;
+      return true;
+    });
+    setData(filtrado);
+  };
+
   return (
     <div className="p-4">
       <div className="mb-6">
-        <Filtro 
-          fields={filtros} 
-          onSearch={handleBuscar} 
-          onReset={() => setData(allData)}
-          showSearchBar={true}
-        />
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Gráficos de Movimientos</h2>
+        <p className="text-gray-600">Visualiza los movimientos de productos por fecha y filtro específico</p>
       </div>
+
+      <Filtro 
+        fields={filtros} 
+        onSearch={handleBuscar} 
+        onReset={handleReset}
+        showSearchBar={false}
+      />
       
       {loading ? (
         <div className="text-center p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div 
+            className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"
+            data-testid="loading-spinner"
+          ></div>
           <p>Cargando datos...</p>
         </div>
       ) : error ? (
@@ -267,7 +312,13 @@ const Graficos: React.FC = () => {
           </p>
         </div>
       ) : (
-        <GraficoProductos datos={data} />
+        <>
+          <div className="mb-4 text-sm text-gray-600">
+            Mostrando {data.length} movimiento{data.length !== 1 ? 's' : ''} 
+            {data.length > 0 && data.length < allData.length && ` de ${allData.length} total`}
+          </div>
+          <GraficoProductos datos={data} />
+        </>
       )}
     </div>
   );

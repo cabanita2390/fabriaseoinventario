@@ -38,6 +38,7 @@ const transformMovimientoData = (json: any[]): RowData[] => {
     id: mov.id,
     tipo: mov.tipo === 'INGRESO' ? 'Entrada' : 'Salida',
     producto: mov.producto?.nombre || '',
+    tipoProducto: mov.producto?.tipoProducto || '',
     cantidad: mov.cantidad,
     fecha: mov.fechaMovimiento.split('T')[0],
     descripcion: mov.descripcion || '',

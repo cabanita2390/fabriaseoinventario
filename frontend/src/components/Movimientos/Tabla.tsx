@@ -49,6 +49,7 @@ function Tabla({
   const columns = [
     { header: "Tipo", accessor: "tipo" },
     { header: "Producto", accessor: "producto" },
+    { header: "Tipo", accessor: "tipoProducto" },
     { header: "Cantidad", accessor: "cantidad" },
     { header: "Unidad", accessor: "unidad" },
     { header: "Descripción", accessor: "descripcion" },

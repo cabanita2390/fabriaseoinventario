@@ -47,13 +47,13 @@ const ActionButtons = styled.div`
   }
 `;
 
-const SortableHeader = styled.th<{ sortable?: boolean }>`
-  cursor: ${({ sortable }) => (sortable ? 'pointer' : 'default')};
+const SortableHeader = styled.th<{ $sortable?: boolean }>`
+  cursor: ${({ $sortable }) => ($sortable ? 'pointer' : 'default')};
   user-select: none;
   position: relative;
 
   &:hover {
-    background-color: ${({ sortable }) => (sortable ? 'rgb(73, 84, 101)' : 'transparent')};
+    background-color: ${({ $sortable }) => ($sortable ? 'rgb(73, 84, 101)' : 'transparent')};
   }
 
   .sort-icon {
@@ -61,6 +61,7 @@ const SortableHeader = styled.th<{ sortable?: boolean }>`
     vertical-align: middle;
   }
 `;
+
 
 const PaginationWrapper = styled.div`
   display: flex;
@@ -215,7 +216,7 @@ const DataTable = <T extends object>({
                 <SortableHeader
                   key={col.accessor}
                   onClick={() => col.sortable !== false && requestSort(col.accessor)}
-                  sortable={col.sortable !== false}
+                  $sortable={col.sortable !== false}
                 >
                   {col.header}
                   {getSortIcon(col.accessor)}

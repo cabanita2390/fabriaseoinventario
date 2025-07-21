@@ -8,7 +8,7 @@ interface ModalProps {
 
 const Modal = ({ children, onClose }: ModalProps) => {
   return (
-    <ModalOverlay onClick={onClose}>
+    <ModalOverlay>
       <ModalContent onClick={(e) => e.stopPropagation()}>
         {children}
       </ModalContent>

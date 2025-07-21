@@ -5,21 +5,23 @@ import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
+import Select from '../../components/ui/Select';
 import SearchBar from '../../components/ui/Searchbar';
 import ExportToExcel from '../../components/ui/ExportToExcel';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-import { useAuthFetch } from '../../components/ui/useAuthFetch'; // Eliminado ApiError que no se usaba
-
+import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
 type Presentacion = {
   id?: number;
   nombre: string;
+  tipoProducto: string;
 };
 
 const initialForm: Presentacion = {
-  nombre: ''
+  nombre: '',
+  tipoProducto: 'MATERIA_PRIMA'
 };
 
 const PresentacionPage = () => {
@@ -36,11 +38,32 @@ const PresentacionPage = () => {
   const columns = [
     { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
+    { header: 'Tipo', accessor: 'tipoProductoFormateado' },
   ];
 
-  const datosFiltrados = fullData.filter((presentacion) =>
-    presentacion.nombre.toLowerCase().includes(filtro.toLowerCase())
-  );
+  // Función para formatear el tipo de producto
+  const formatTipoProducto = (tipo: string) => {
+    switch (tipo) {
+      case 'MATERIA_PRIMA':
+        return 'MATERIA_PRIMA';
+      case 'MATERIAL_DE_ENVASE':
+        return 'MATERIAL_DE_ENVASE';
+      case 'ETIQUETAS':
+        return 'ETIQUETAS';
+      default:
+        return tipo;
+    }
+  };
+
+  const datosFiltrados = fullData
+    .map(presentacion => ({
+      ...presentacion,
+      tipoProductoFormateado: formatTipoProducto(presentacion.tipoProducto)
+    }))
+    .filter((presentacion) =>
+      presentacion.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+      presentacion.tipoProductoFormateado.toLowerCase().includes(filtro.toLowerCase())
+    );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,13 +87,18 @@ const PresentacionPage = () => {
     fetchData();
   }, [authFetch]); // Añadido authFetch como dependencia
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSave = async () => {
     if (!form.nombre.trim()) {
       Swal.fire('Error', 'El nombre es obligatorio', 'warning');
+      return;
+    }
+
+    if (!form.tipoProducto.trim()) {
+      Swal.fire('Error', 'El tipo de producto es obligatorio', 'warning');
       return;
     }
 
@@ -87,7 +115,10 @@ const PresentacionPage = () => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ nombre: form.nombre })
+        body: JSON.stringify({ 
+          nombre: form.nombre,
+          tipoProducto: form.tipoProducto 
+        })
       });
 
       if (!response.ok) {
@@ -125,7 +156,11 @@ const PresentacionPage = () => {
       Swal.fire('Error', 'La presentación seleccionada no tiene ID válido', 'error');
       return;
     }
-    setForm(row);
+    setForm({
+      id: row.id,
+      nombre: row.nombre,
+      tipoProducto: row.tipoProducto
+    });
     setIsEditMode(true);
     setShowModal(true);
   };
@@ -224,6 +259,20 @@ const PresentacionPage = () => {
             onChange={handleChange}
             disabled={isLoading}
             required
+          />
+
+          <Select
+            label="Tipo de Producto *"
+            name="tipoProducto"
+            value={form.tipoProducto}
+            onChange={handleChange}
+            required
+            disabled={isLoading}
+            options={[
+              { value: 'MATERIA_PRIMA', label: 'MATERIA_PRIMA' },
+              { value: 'MATERIAL_DE_ENVASE', label: 'MATERIAL_DE_ENVASE' },
+              { value: 'ETIQUETAS', label: 'ETIQUETAS' }
+            ]}
           />
 
           <ModalFooter>
