@@ -44,11 +44,14 @@ export class MovimientoService {
   }
 
   async createEtiquetas(dto: CreateMovimientoDto) {
-    return this.create({ ...dto, descripcion: dto.descripcion ?? 'Etiquetas' });
+    return this.create({
+      ...dto,
+      descripcion: dto.descripcion ?? 'Etiquetas',
+    });
   }
 
   async findByTipo(tipoProducto: TipoProducto): Promise<Movimiento[]> {
-    return this.movimientoRepo.find({
+    const resultados = await this.movimientoRepo.find({
       where: {
         producto: {
           tipoProducto: tipoProducto,
@@ -62,10 +65,18 @@ export class MovimientoService {
         'bodega',
       ],
     });
+
+    if (resultados.length === 0) {
+      throw new NotFoundException(
+        `No hay movimientos registrados para ${tipoProducto}`,
+      );
+    }
+
+    return resultados;
   }
 
   async findAll(): Promise<Movimiento[]> {
-    return this.movimientoRepo.find({
+    const resultados = await this.movimientoRepo.find({
       relations: [
         'producto',
         'producto.presentacion',
@@ -74,6 +85,12 @@ export class MovimientoService {
         'bodega',
       ],
     });
+
+    if (resultados.length === 0) {
+      throw new NotFoundException('No hay movimientos registrados');
+    }
+
+    return resultados;
   }
 
   async findOne(id: number): Promise<any> {
@@ -111,7 +128,7 @@ export class MovimientoService {
     try {
       guardado = await this.movimientoRepo.save(mov);
     } catch (err) {
-      throw err;
+      throw new BadRequestException('Error al guardar el movimiento');
     }
 
     await this.upsertInventario(
