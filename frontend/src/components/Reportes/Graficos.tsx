@@ -267,8 +267,7 @@ const Graficos: React.FC = () => {
   return (
     <div className="p-4">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Gráficos de Movimientos</h2>
-        <p className="text-gray-600">Visualiza los movimientos de productos por fecha y filtro específico</p>
+        
       </div>
 
       <Filtro 
