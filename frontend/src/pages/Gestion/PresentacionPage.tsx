@@ -5,7 +5,9 @@ import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
+import Select from '../../components/ui/Select';
 import SearchBar from '../../components/ui/Searchbar';
+import ExportToExcel from '../../components/ui/ExportToExcel';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -14,18 +16,18 @@ import { useAuthFetch , ApiError } from '../../components/ui/useAuthFetch';
 type Presentacion = {
   id?: number;
   nombre: string;
+  tipoProducto: string;
 };
 
 const initialForm: Presentacion = {
-  nombre: ''
+  nombre: '',
+  tipoProducto: 'MATERIA_PRIMA'
 };
-
-
 
 const PresentacionPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<Presentacion>(initialForm);
-  const [data, setData] = useState<Presentacion[]>([]);
+  // Eliminada la variable 'data' que no se usaba
   const [fullData, setFullData] = useState<Presentacion[]>([]);
   const [filtro, setFiltro] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -36,20 +38,40 @@ const PresentacionPage = () => {
   const columns = [
     { header: 'ID', accessor: 'id' },
     { header: 'Nombre', accessor: 'nombre' },
+    { header: 'Tipo', accessor: 'tipoProductoFormateado' },
   ];
 
-  const datosFiltrados = fullData.filter((presentacion) =>
-    presentacion.nombre.toLowerCase().includes(filtro.toLowerCase())
-  );
+  // Función para formatear el tipo de producto
+  const formatTipoProducto = (tipo: string) => {
+    switch (tipo) {
+      case 'MATERIA_PRIMA':
+        return 'MATERIA_PRIMA';
+      case 'MATERIAL_DE_ENVASE':
+        return 'MATERIAL_DE_ENVASE';
+      case 'ETIQUETAS':
+        return 'ETIQUETAS';
+      default:
+        return tipo;
+    }
+  };
+
+  const datosFiltrados = fullData
+    .map(presentacion => ({
+      ...presentacion,
+      tipoProductoFormateado: formatTipoProducto(presentacion.tipoProducto)
+    }))
+    .filter((presentacion) =>
+      presentacion.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+      presentacion.tipoProductoFormateado.toLowerCase().includes(filtro.toLowerCase())
+    );
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const response = await authFetch ('http://localhost:3000/presentacion');
+        const response = await authFetch('http://localhost:3000/presentacion');
         if (!response.ok) throw new Error('Error al cargar presentaciones');
         const presentaciones = await response.json();
-        setData(presentaciones);
         setFullData(presentaciones);
       } catch (error) {
         console.error("Error cargando presentaciones:", error);
@@ -63,15 +85,20 @@ const PresentacionPage = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [authFetch]); // Añadido authFetch como dependencia
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSave = async () => {
     if (!form.nombre.trim()) {
       Swal.fire('Error', 'El nombre es obligatorio', 'warning');
+      return;
+    }
+
+    if (!form.tipoProducto.trim()) {
+      Swal.fire('Error', 'El tipo de producto es obligatorio', 'warning');
       return;
     }
 
@@ -82,13 +109,16 @@ const PresentacionPage = () => {
         ? `http://localhost:3000/presentacion/${form.id}`
         : 'http://localhost:3000/presentacion';
 
-      const response =  await authFetch(url, {
+      const response = await authFetch(url, {
         method,
         headers: { 
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ nombre: form.nombre })
+        body: JSON.stringify({ 
+          nombre: form.nombre,
+          tipoProducto: form.tipoProducto 
+        })
       });
 
       if (!response.ok) {
@@ -100,10 +130,8 @@ const PresentacionPage = () => {
       const result = await response.json();
       
       if (isEditMode) {
-        setData(prev => prev.map(p => p.id === form.id ? result : p));
         setFullData(prev => prev.map(p => p.id === form.id ? result : p));
       } else {
-        setData(prev => [...prev, result]);
         setFullData(prev => [...prev, result]);
       }
 
@@ -128,7 +156,11 @@ const PresentacionPage = () => {
       Swal.fire('Error', 'La presentación seleccionada no tiene ID válido', 'error');
       return;
     }
-    setForm(row);
+    setForm({
+      id: row.id,
+      nombre: row.nombre,
+      tipoProducto: row.tipoProducto
+    });
     setIsEditMode(true);
     setShowModal(true);
   };
@@ -154,7 +186,6 @@ const PresentacionPage = () => {
         
         if (!response.ok) throw new Error('Error al eliminar');
         
-        setData(prev => prev.filter(p => p.id !== row.id));
         setFullData(prev => prev.filter(p => p.id !== row.id));
         
         Swal.fire('Eliminado', 'La presentación ha sido eliminada.', 'success');
@@ -173,6 +204,14 @@ const PresentacionPage = () => {
 
   return (
     <Home>
+      <div className="export-excel-container">
+        <ExportToExcel 
+          data={datosFiltrados}
+          filename="listado_presentaciones"
+          buttonText="Exportar a Excel"
+        />
+      </div>
+
       <Header>
         <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
           <SearchBar
@@ -220,6 +259,20 @@ const PresentacionPage = () => {
             onChange={handleChange}
             disabled={isLoading}
             required
+          />
+
+          <Select
+            label="Tipo de Producto *"
+            name="tipoProducto"
+            value={form.tipoProducto}
+            onChange={handleChange}
+            required
+            disabled={isLoading}
+            options={[
+              { value: 'MATERIA_PRIMA', label: 'MATERIA_PRIMA' },
+              { value: 'MATERIAL_DE_ENVASE', label: 'MATERIAL_DE_ENVASE' },
+              { value: 'ETIQUETAS', label: 'ETIQUETAS' }
+            ]}
           />
 
           <ModalFooter>

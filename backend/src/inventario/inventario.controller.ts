@@ -14,11 +14,18 @@ import {
 import { InventarioService } from './inventario.service';
 import { CreateInventarioDto } from './dto/create-inventario.dto';
 import { UpdateInventarioDto } from './dto/update-inventario.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { ADMIN, RECEPTOR_MP } from 'src/auth/constants/roles.constant';
-import { TipoProducto } from 'src/producto/dto/create-producto.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import {
+  ADMIN,
+  RECEPTOR_MP,
+  LIDER_PRODUCCION,
+  OPERARIO_PRODUCCION,
+  RECEPTOR_ENVASE,
+  RECEPTOR_ETIQUETAS
+} from '../auth/constants/roles.constant';
+import { TipoProducto } from '../producto/dto/create-producto.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(ADMIN)
@@ -27,20 +34,32 @@ export class InventarioController {
   constructor(private readonly inventarioService: InventarioService) {}
 
   @Post()
-  @Roles(ADMIN, RECEPTOR_MP)
+  @Roles(
+    ADMIN,
+    RECEPTOR_MP,
+    LIDER_PRODUCCION,
+    OPERARIO_PRODUCCION,
+    RECEPTOR_ENVASE,
+    RECEPTOR_ETIQUETAS
+  )
   create(@Body() createInventarioDto: CreateInventarioDto) {
     return this.inventarioService.create(createInventarioDto);
   }
+
   @Get()
-  @Roles(ADMIN)
+  @Roles(
+    ADMIN,
+    LIDER_PRODUCCION,
+    
+  )
   findAll(
-    @Query('tipoProducto', new ParseEnumPipe(TipoProducto))
+    @Query('tipoProducto', new ParseEnumPipe(TipoProducto, { optional: true }))
     tipoProducto?: TipoProducto,
   ) {
     return this.inventarioService.findAll(tipoProducto);
   }
 
-  // Inventario por tipo de producto
+  // Specific inventory endpoints
   @Get('materia-prima')
   @Roles(ADMIN, RECEPTOR_MP)
   findMateriaPrima() {
@@ -48,19 +67,19 @@ export class InventarioController {
   }
 
   @Get('material-envase')
-  @Roles(ADMIN)
+  @Roles(ADMIN,RECEPTOR_ENVASE)
   findMaterialEnvase() {
     return this.inventarioService.findByTipo(TipoProducto.MATERIAL_DE_ENVASE);
   }
 
   @Get('etiquetas')
-  @Roles(ADMIN)
+  @Roles(ADMIN, RECEPTOR_ETIQUETAS)
   findEtiquetas() {
     return this.inventarioService.findByTipo(TipoProducto.ETIQUETAS);
   }
 
-  @Roles(ADMIN)
   @Get(':id')
+  @Roles(ADMIN)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.inventarioService.findOne(id);
   }

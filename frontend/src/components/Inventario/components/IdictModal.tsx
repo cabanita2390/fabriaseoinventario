@@ -73,6 +73,7 @@ const EditModal: React.FC<EditModalProps> = ({ item, bodegas, onClose, onSave, o
     <ModalTitle>Editar Inventario</ModalTitle>
     
     <Input 
+      name='Nombre'
       label="Nombre"
       value={item.nombre}
       onChange={() => {}}
@@ -80,6 +81,7 @@ const EditModal: React.FC<EditModalProps> = ({ item, bodegas, onClose, onSave, o
     />
     
     <Input 
+      name='Tipo'
       label="Tipo"
       value={item.tipo}
       onChange={() => {}}
@@ -87,6 +89,7 @@ const EditModal: React.FC<EditModalProps> = ({ item, bodegas, onClose, onSave, o
     />
     
     <Input 
+      name='Presentación'
       label="Presentación"
       value={item.presentacion}
       onChange={() => {}}
@@ -94,11 +97,13 @@ const EditModal: React.FC<EditModalProps> = ({ item, bodegas, onClose, onSave, o
     />
     
     <Input 
+      name="unidad_medida"
       label="Unidad de Medida"
       value={item.unidad_medida}
       onChange={() => {}}
       disabled={true}
     />
+
     
     <Input 
       label="Cantidad Actual"
@@ -117,6 +122,7 @@ const EditModal: React.FC<EditModalProps> = ({ item, bodegas, onClose, onSave, o
     />
     
     <Input 
+      name="fechaUltimaActualizacion"
       label="Última Actualización"
       value={item.fechaUltimaActualizacion}
       onChange={() => {}}

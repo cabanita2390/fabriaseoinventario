@@ -66,6 +66,40 @@ export type Tipo =
   | 'Ingreso de Etiqueta'
   | 'Salida de Etiqueta';
 
+  export type RolUsuario = 
+  | 'ADMIN'
+  | 'LIDER_PRODUCCION'
+  | 'RECEPTOR_MP'
+  | 'RECEPTOR_ENVASE'
+  | 'RECEPTOR_ETIQUETAS'
+  | 'OPERARIO_PRODUCCION'
+  | 'USUARIO';
+
+// Mapeo de acciones permitidas por rol
+export const PERMISOS_POR_ROL: Record<RolUsuario, Tipo[]> = {
+  ADMIN: [
+    'Ingreso de materia prima', 
+    'Salida de materia prima',
+    'Ingreso de Envase',
+    'Salida de Envase',
+    'Ingreso de Etiqueta',
+    'Salida de Etiqueta'
+  ],
+  LIDER_PRODUCCION: [
+    'Ingreso de materia prima', 
+    'Salida de materia prima',
+    'Ingreso de Envase',
+    'Salida de Envase',
+    'Ingreso de Etiqueta',
+    'Salida de Etiqueta'
+  ],
+  RECEPTOR_MP: ['Ingreso de materia prima','Salida de materia prima'],
+  RECEPTOR_ENVASE: ['Ingreso de Envase','Salida de Envase'],
+  RECEPTOR_ETIQUETAS: ['Ingreso de Etiqueta','Salida de Etiqueta'],
+  OPERARIO_PRODUCCION: ['Salida de Envase','Salida de Etiqueta'],
+  USUARIO: []
+};
+
 export const INIT_FORM: FormState = {
   tipo: "Ingreso",
   producto: null,

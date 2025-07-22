@@ -6,12 +6,13 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import Select from '../../components/ui/Select';
+import ExportToExcel from '../../components/ui/ExportToExcel';
 import { ModalFooter } from '../../styles/ui/Modal.css';
 import { Header, BackButton } from '../../styles/Gestion/Gestion.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import SearchBar from '../../components/ui/Searchbar';
-import { useAuthFetch, ApiError } from '../../components/ui/useAuthFetch';
+import { useAuthFetch } from '../../components/ui/useAuthFetch';
 
 // Types
 type Opcion = { id: number; nombre: string };
@@ -32,7 +33,7 @@ type Producto = {
   estado: string;
   presentacion: Opcion;
   unidadMedida: Opcion;
-  proveedor: Proveedor | null; // Cambiado de string | null a Proveedor | null
+  proveedor: Proveedor | null;
 };
 
 type ProductoForm = {
@@ -64,7 +65,7 @@ const COLUMNS = [
   { header: 'Presentación', accessor: 'presentacionNombre' },
   { header: 'Unidad', accessor: 'unidadMedidaNombre' },
   { header: 'Tipo', accessor: 'tipoProducto' },
-  { header: 'Proveedor', accessor: 'proveedorNombre' }, // Esto mostrará el string directamente
+  { header: 'Proveedor', accessor: 'proveedorNombre' },
   { header: 'Estado', accessor: 'estadoFormateado' }
 ];
 
@@ -85,35 +86,34 @@ const ProductosBasePage: React.FC = () => {
   const [filtro, setFiltro] = useState('');
 
   // Transformar datos para la tabla
-const transformedData = useMemo(() => {
-  return data.map((producto: Producto) => ({
-    id: producto.id,
-    nombre: producto.nombre,
-    tipoProducto: producto.tipoProducto,
-    subtipoInsumo: producto.subtipoInsumo,
-    estado: producto.estado,
-    presentacion: producto.presentacion,
-    unidadMedida: producto.unidadMedida,
-    proveedor: producto.proveedor,
-    // Campos adicionales para las columnas
-    presentacionNombre: producto.presentacion?.nombre || 'N/A',
-    unidadMedidaNombre: producto.unidadMedida?.nombre || 'N/A',
-    proveedorNombre: producto.proveedor?.nombre || 'N/A', // Accedemos al nombre del objeto proveedor
-    estadoFormateado: producto.estado === 'ACTIVO' ? '✅ Activo' : '❌ Inactivo'
-  }));
-}, [data]);
+  const transformedData = useMemo(() => {
+    return data.map((producto: Producto) => ({
+      id: producto.id,
+      nombre: producto.nombre,
+      tipoProducto: producto.tipoProducto,
+      subtipoInsumo: producto.subtipoInsumo,
+      estado: producto.estado,
+      presentacion: producto.presentacion,
+      unidadMedida: producto.unidadMedida,
+      proveedor: producto.proveedor,
+      presentacionNombre: producto.presentacion?.nombre || 'N/A',
+      unidadMedidaNombre: producto.unidadMedida?.nombre || 'N/A',
+      proveedorNombre: producto.proveedor?.nombre || 'N/A',
+      estadoFormateado: producto.estado === 'ACTIVO' ? '✅ Activo' : '❌ Inactivo'
+    }));
+  }, [data]);
 
-const filteredData = useMemo(() => {
-  if (!filtro) return transformedData;
-  const searchTerm = filtro.toLowerCase();
-  return transformedData.filter(p =>
-    p.nombre.toLowerCase().includes(searchTerm) ||
-    p.tipoProducto.toLowerCase().includes(searchTerm) ||
-    p.presentacionNombre.toLowerCase().includes(searchTerm) ||
-    p.unidadMedidaNombre.toLowerCase().includes(searchTerm) ||
-    p.proveedorNombre.toLowerCase().includes(searchTerm)
-  );
-}, [transformedData, filtro]);
+  const filteredData = useMemo(() => {
+    if (!filtro) return transformedData;
+    const searchTerm = filtro.toLowerCase();
+    return transformedData.filter(p =>
+      p.nombre.toLowerCase().includes(searchTerm) ||
+      p.tipoProducto.toLowerCase().includes(searchTerm) ||
+      p.presentacionNombre.toLowerCase().includes(searchTerm) ||
+      p.unidadMedidaNombre.toLowerCase().includes(searchTerm) ||
+      p.proveedorNombre.toLowerCase().includes(searchTerm)
+    );
+  }, [transformedData, filtro]);
 
   // Data fetching
   useEffect(() => {
@@ -151,7 +151,7 @@ const filteredData = useMemo(() => {
       }
     };
     fetchData();
-  }, []);
+  }, [authFetch]);
 
   // Handlers
   const handleError = (error: unknown, defaultMessage: string) => {
@@ -207,10 +207,32 @@ const filteredData = useMemo(() => {
       });
 
       const result = await response.json();
+
+      // Función para enriquecer el producto con datos locales
+      const enrichProduct = (product: any): Producto => ({
+        id: product.id,
+        nombre: product.nombre,
+        tipoProducto: product.tipoProducto,
+        subtipoInsumo: product.subtipoInsumo,
+        estado: product.estado,
+        presentacion: opciones.presentaciones.find(p => p.id === product.presentacion_idpresentacion) || { id: 0, nombre: 'N/A' },
+        unidadMedida: opciones.unidades.find(u => u.id === product.unidadmedida_idunidadmedida) || { id: 0, nombre: 'N/A' },
+        proveedor: form.proveedor_id ? {
+          id: form.proveedor_id,
+          nombre: opciones.proveedores.find(p => p.id === form.proveedor_id)?.nombre || '',
+          telefono: '',
+          email: '',
+          direccion: ''
+        } : null
+      });
+
+      const enrichedProduct = enrichProduct(result);
+
       setData(prev => isEditMode
-        ? prev.map(p => p.id === form.id ? result : p)
-        : [...prev, result]
+        ? prev.map(p => p.id === form.id ? enrichedProduct : p)
+        : [...prev, enrichedProduct]
       );
+
       closeModal();
       Swal.fire('Éxito', `Producto ${isEditMode ? 'actualizado' : 'creado'} correctamente`, 'success');
     } catch (error) {
@@ -239,24 +261,23 @@ const filteredData = useMemo(() => {
     }
   };
 
+  const handleEdit = (id: number) => {
+    const producto = data.find(p => p.id === id);
+    if (!producto) return;
 
-const handleEdit = (id: number) => {
-  const producto = data.find(p => p.id === id);
-  if (!producto) return;
-
-  setForm({
-    id: producto.id,
-    nombre: producto.nombre,
-    tipoProducto: producto.tipoProducto,
-    subtipoInsumo: producto.subtipoInsumo,
-    estado: producto.estado,
-    presentacion_id: producto.presentacion.id,
-    unidadmedida_id: producto.unidadMedida.id,
-    proveedor_id: producto.proveedor?.id || null // Accedemos al id del objeto proveedor
-  });
-  setIsEditMode(true);
-  setShowModal(true);
-};
+    setForm({
+      id: producto.id,
+      nombre: producto.nombre,
+      tipoProducto: producto.tipoProducto,
+      subtipoInsumo: producto.subtipoInsumo,
+      estado: producto.estado,
+      presentacion_id: producto.presentacion.id,
+      unidadmedida_id: producto.unidadMedida.id,
+      proveedor_id: producto.proveedor?.id || null
+    });
+    setIsEditMode(true);
+    setShowModal(true);
+  };
 
   const closeModal = () => {
     setShowModal(false);
@@ -266,12 +287,24 @@ const handleEdit = (id: number) => {
 
   return (
     <Home>
+      <div className="export-excel-container">
+        <ExportToExcel 
+          data={filteredData}
+          filename="listado_productos_base"
+          buttonText="Exportar a Excel"
+        />
+      </div>
+      
       <Header>
-        <SearchBar onSearch={setFiltro} placeholder="Buscar productos..." />
-        <BackButton onClick={() => navigate('/gestion')}>
-          <FaArrowLeft /> Volver
-        </BackButton>
-        <Button onClick={() => setShowModal(true)}>Agregar Producto</Button>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+          <SearchBar onSearch={setFiltro} placeholder="Buscar productos..." />
+          
+          <BackButton onClick={() => navigate('/gestion')}>
+            <FaArrowLeft style={{ marginRight: '8px' }} /> Volver
+          </BackButton>
+          
+          <Button onClick={() => setShowModal(true)}>Agregar Producto</Button>
+        </div>
       </Header>
 
       <DataTable
