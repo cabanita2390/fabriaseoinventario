@@ -49,11 +49,8 @@ export class InventarioController {
   @Get()
   @Roles(
     ADMIN,
-    RECEPTOR_MP,
     LIDER_PRODUCCION,
-    OPERARIO_PRODUCCION,
-    RECEPTOR_ENVASE,
-    RECEPTOR_ETIQUETAS
+    
   )
   findAll(
     @Query('tipoProducto', new ParseEnumPipe(TipoProducto, { optional: true }))
@@ -70,13 +67,13 @@ export class InventarioController {
   }
 
   @Get('material-envase')
-  @Roles(ADMIN)
+  @Roles(ADMIN,RECEPTOR_ENVASE)
   findMaterialEnvase() {
     return this.inventarioService.findByTipo(TipoProducto.MATERIAL_DE_ENVASE);
   }
 
   @Get('etiquetas')
-  @Roles(ADMIN)
+  @Roles(ADMIN, RECEPTOR_ETIQUETAS)
   findEtiquetas() {
     return this.inventarioService.findByTipo(TipoProducto.ETIQUETAS);
   }

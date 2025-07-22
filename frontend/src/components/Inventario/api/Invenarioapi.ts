@@ -1,16 +1,115 @@
-import { InventarioItemAPI, Bodega,InventarioItem } from '../types/inventarioTypes';
-import { authFetch , ApiError } from '../../ui/useAuthFetch';
+import { InventarioItemAPI, Bodega, InventarioItem } from '../types/inventarioTypes';
+import { authFetch } from '../../ui/useAuthFetch';
+import Swal from 'sweetalert2';
+
 const API_BASE_URL = 'http://localhost:3000';
 
+// Definición de tipos para los roles (manteniendo nombres originales en inglés)
+export type AppRole =
+  | 'ADMIN'
+  | 'LIDER_PRODUCCION'
+  | 'RECEPTOR_MP'
+  | 'RECEPTOR_ENVASE'
+  | 'RECEPTOR_ETIQUETAS'
+  | 'OPERARIO_PRODUCCION'
+  | 'USUARIO';
 
-export const fetchInventario = async (): Promise<InventarioItemAPI[]> => {
-  const response = await  authFetch(`${API_BASE_URL}/inventario`);
-  if (!response.ok) throw new Error('Error al cargar el inventario');
-  return response.json();
+// Mapeo de roles a endpoints (nombres originales)
+const roleToEndpointMap: Record<AppRole, string[]> = {
+  'ADMIN': ['/inventario'],
+  'LIDER_PRODUCCION': ['/inventario'],
+  'RECEPTOR_MP': ['/inventario/materia-prima'],
+  'RECEPTOR_ENVASE': ['/inventario/material-envase'],
+  'RECEPTOR_ETIQUETAS': ['/inventario/etiquetas'],
+  'OPERARIO_PRODUCCION': ['/inventario/etiquetas', '/inventario/material-envase'],
+  'USUARIO': []
 };
 
+// Función para extraer el rol del token JWT (manteniendo nombre original)
+const getUserRoleFromToken = (): AppRole | null => {
+  const token = localStorage.getItem('authToken');
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.rol as AppRole;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+};
+
+// Función para verificar permisos (manteniendo nombre original)
+const checkEndpointPermission = async (endpoint: string): Promise<boolean> => {
+  try {
+    const response = await authFetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'HEAD'
+    });
+    return response.ok;
+  } catch (error) {
+    return false;
+  }
+};
+
+// Función principal para obtener inventario (nombre original)
+export const fetchInventario = async (): Promise<InventarioItemAPI[]> => {
+  const userRole = getUserRoleFromToken();
+
+  if (!userRole) {
+    throw new Error('No se pudo determinar el rol del usuario. Token inválido o ausente.');
+  }
+
+  const endpointsToTry = roleToEndpointMap[userRole];
+
+  if (endpointsToTry.length === 0) {
+    throw new Error(`Tu rol (${userRole}) no tiene acceso a ningún endpoint de inventario.`);
+  }
+
+  let lastError: Error | null = null;
+
+  for (const endpoint of endpointsToTry) {
+    try {
+      const hasPermission = await checkEndpointPermission(endpoint);
+      if (!hasPermission) continue;
+
+      const response = await authFetch(`${API_BASE_URL}${endpoint}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const json = await response.json();
+      
+      if (Array.isArray(json) && json.length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'No hay datos',
+          text: `El endpoint ${endpoint} no contiene items de inventario registrados.`,
+          timer: 4000,
+          showConfirmButton: true
+        });
+        continue;
+      }
+      
+      return json;
+    } catch (error) {
+      if (error instanceof Error) {
+        lastError = error;
+      }
+      continue;
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
+  throw new Error(`No tienes acceso a los endpoints de inventario para tu rol (${userRole}).`);
+};
+
+// Funciones originales del API (nombres en inglés)
 export const fetchBodegas = async (): Promise<Bodega[]> => {
-  const response = await  authFetch(`${API_BASE_URL}/bodega`);
+  const response = await authFetch(`${API_BASE_URL}/bodega`);
   if (!response.ok) throw new Error('Error al cargar las bodegas');
   return response.json();
 };
@@ -20,13 +119,20 @@ export const updateInventarioItem = async (id: number, payload: {
   producto_idproducto?: number;
   bodega_idbodega?: number;
 }) => {
-  const response = await  authFetch(`${API_BASE_URL}/inventario/${id}`, {
+  const response = await authFetch(`${API_BASE_URL}/inventario/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   if (!response.ok) throw new Error('Error al actualizar el inventario');
   return response.json();
+};
+
+export const deleteInventarioItem = async (id: number): Promise<void> => {
+  const response = await authFetch(`${API_BASE_URL}/inventario/${id}`, {
+    method: 'DELETE'
+  });
+  if (!response.ok) throw new Error('Error al eliminar el item del inventario');
 };
 
 export const formatFecha = (fechaStr: string): string => {
@@ -54,11 +160,4 @@ export const transformInventarioData = (data: InventarioItemAPI[]): InventarioIt
     producto_id: item.producto.id,
     bodega_id: item.bodega.id
   }));
-};
-
-export const deleteInventarioItem = async (id: number): Promise<void> => {
-  const response = await authFetch(`${API_BASE_URL}/inventario/${id}`, {
-    method: 'DELETE'
-  });
-  if (!response.ok) throw new Error('Error al eliminar el item del inventario');
 };
