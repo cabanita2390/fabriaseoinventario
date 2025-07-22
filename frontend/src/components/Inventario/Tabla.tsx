@@ -220,67 +220,85 @@ const Tabla: React.FC = () => {
 
   return (
     <div>
-      {/* Contenedor con Export y Filtros */}
-      <div className="d-flex align-items-center gap-3 mb-4" style={{ marginTop: '20px' }}>
-        <ExportToExcel 
-          data={datosFiltrados}
-          filename="movimientos_inventario"
-          buttonText="Exportar a Excel"
-        />
-        
-        {/* Filtros por tipo de producto */}
-        <div className="d-flex gap-2">
-          {(['TODOS', 'MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'] as TipoProductoFiltro[]).map((tipo) => (
-            <button
-              key={tipo}
-              className={`btn ${filtroTipo === tipo ? 'btn-primary' : 'btn-outline-secondary'}`}
-              onClick={() => setFiltroTipo(tipo)}
+      {/* SECCIÓN 1: FILTROS Y EXPORT */}
+      <div className="mb-4" style={{ marginTop: '20px' }}>
+        {/* Contenedor con Export y Filtros */}
+        <div className="d-flex align-items-center gap-3 mb-3">
+          <ExportToExcel 
+            data={datosFiltrados}
+            filename="movimientos_inventario"
+            buttonText="Exportar a Excel"
+          />
+          
+          {/* Filtros por tipo de producto */}
+          <div className="d-flex gap-2">
+            {(['TODOS', 'MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'] as TipoProductoFiltro[]).map((tipo) => (
+              <button
+                key={tipo}
+                className={`btn ${filtroTipo === tipo ? 'btn-primary' : 'btn-outline-secondary'}`}
+                onClick={() => setFiltroTipo(tipo)}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  borderRadius: '20px',
+                  border: filtroTipo === tipo ? 'none' : '1px solid #dee2e6',
+                  backgroundColor: filtroTipo === tipo ? obtenerColorBadge(tipo) : 'transparent',
+                  color: filtroTipo === tipo ? 'white' : '#6c757d',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
+              >
+                {obtenerTextoBadge(tipo)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Badge indicador del filtro activo */}
+        {filtroTipo !== 'TODOS' && (
+          <div>
+            <span 
+              className="badge"
               style={{
-                padding: '8px 16px',
-                fontSize: '14px',
-                fontWeight: '500',
-                borderRadius: '20px',
-                border: filtroTipo === tipo ? 'none' : '1px solid #dee2e6',
-                backgroundColor: filtroTipo === tipo ? obtenerColorBadge(tipo) : 'transparent',
-                color: filtroTipo === tipo ? 'white' : '#6c757d',
-                transition: 'all 0.2s ease',
-                cursor: 'pointer'
+                backgroundColor: obtenerColorBadge(filtroTipo),
+                color: 'white',
+                fontSize: '12px',
+                padding: '6px 12px',
+                borderRadius: '15px'
               }}
             >
-              {obtenerTextoBadge(tipo)}
-            </button>
-          ))}
+              Filtrando por: {obtenerTextoBadge(filtroTipo)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* LÍNEA DIVISORIA */}
+      <hr style={{
+        border: 'none',
+        height: '1px',
+        backgroundColor: '#e9ecef',
+        margin: '24px 0',
+        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+      }} />
+
+      {/* SECCIÓN 2: BÚSQUEDA */}
+      <div className="mb-4">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <h6 className="text-muted mb-0" style={{ fontSize: '14px', fontWeight: '600' }}>
+            Búsqueda
+          </h6>
+          <div style={{ width: '300px' }}>
+            <SearchBar
+              onSearch={setFiltro}
+              placeholder="Buscar productos..."
+            />
+          </div>
         </div>
       </div>
 
-      {/* Barra de búsqueda separada */}
-      <div className="d-flex justify-content-end mb-3">
-        <div style={{ width: '300px' }}>
-          <SearchBar
-            onSearch={setFiltro}
-            placeholder="Buscar productos..."
-          />
-        </div>
-      </div>
-
-      {/* Badge indicador del filtro activo */}
-      {filtroTipo !== 'TODOS' && (
-        <div className="mb-3">
-          <span 
-            className="badge"
-            style={{
-              backgroundColor: obtenerColorBadge(filtroTipo),
-              color: 'white',
-              fontSize: '12px',
-              padding: '6px 12px',
-              borderRadius: '15px'
-            }}
-          >
-            Filtrando por: {obtenerTextoBadge(filtroTipo)}
-          </span>
-        </div>
-      )}
-
+      {/* MENSAJES DE ERROR Y CARGA */}
       {error && <div className="alert alert-danger">{error}</div>}
       {cargando && <div className="alert alert-info">Cargando...</div>}
 
@@ -294,6 +312,7 @@ const Tabla: React.FC = () => {
         </div>
       )}
 
+      {/* TABLA DE DATOS */}
       {!cargando && !error && datosFiltrados.length > 0 && (
         <div style={{ marginTop: '20px' }} className="card border-0 shadow-sm">
           <div className="card-body p-0">
