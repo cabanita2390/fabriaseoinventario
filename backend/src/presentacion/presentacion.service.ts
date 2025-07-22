@@ -18,41 +18,42 @@ export class PresentacionService {
     private readonly presentacionRepo: Repository<Presentacion>,
   ) {}
 
-  async create(createDto: CreatePresentacionDto): Promise<Presentacion> {
-    // 1. Validación de reglas de negocio antes de persistir
-    if (!createDto.nombre || createDto.nombre.trim().length === 0) {
+  async create(dto: CreatePresentacionDto): Promise<Presentacion> {
+    const nombre = dto.nombre.trim();
+    const tipoProducto = dto.tipoProducto;
+
+    // 1) Validación básica
+    if (!nombre) {
       throw new BadRequestException(
         'El nombre de la presentación es obligatorio',
       );
     }
 
-    // 2. Chequeo de unicidad (por ejemplo nombre único)
+    // 2) Validación de unicidad por nombre + tipo
     const exists = await this.presentacionRepo.findOne({
-      where: { nombre: createDto.nombre.trim() },
+      where: { nombre, tipoProducto }, // ✅ incluye tipoProducto
     });
     if (exists) {
       throw new ConflictException(
-        `Ya existe una presentación con nombre '${createDto.nombre}'`,
+        `Ya existe una presentación '${nombre}' para tipo ${tipoProducto}`,
       );
     }
 
-    // 3. Creación de la entidad
+    // 3) Creamos la entidad con ambos campos
     const entidad = this.presentacionRepo.create({
-      ...createDto,
-      nombre: createDto.nombre.trim(),
+      nombre,
+      tipoProducto, // ✅ persiste el tipo
     });
 
-    // 4. Intento de guardado con captura de errores de BD
+    // 4) Guardado con manejo de errores
     try {
       return await this.presentacionRepo.save(entidad);
     } catch (error) {
       if (error instanceof QueryFailedError) {
-        // Por ejemplo violación de FK, constraint de DB, etc.
         throw new BadRequestException(
           'Error en la base de datos al crear la presentación',
         );
       }
-      // Cualquier otro error no previsto
       throw new InternalServerErrorException(
         'No se pudo crear la presentación',
       );

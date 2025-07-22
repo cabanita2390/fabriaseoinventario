@@ -24,8 +24,8 @@ export class PresentacionController {
 
   @Post()
   @Roles(ADMIN)
-  async create(@Body() createPresentacionDto: CreatePresentacionDto) {
-    return this.presentacionService.create(createPresentacionDto);
+  async create(@Body() dto: CreatePresentacionDto) {
+    return this.presentacionService.create(dto);
   }
 
   @Get()
