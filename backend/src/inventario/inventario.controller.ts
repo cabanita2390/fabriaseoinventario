@@ -62,6 +62,25 @@ export class InventarioController {
     return this.inventarioService.findAll(tipoProducto);
   }
 
+  // Specific inventory endpoints
+  @Get('materia-prima')
+  @Roles(ADMIN, RECEPTOR_MP)
+  findMateriaPrima() {
+    return this.inventarioService.findByTipo(TipoProducto.MATERIA_PRIMA);
+  }
+
+  @Get('material-envase')
+  @Roles(ADMIN)
+  findMaterialEnvase() {
+    return this.inventarioService.findByTipo(TipoProducto.MATERIAL_DE_ENVASE);
+  }
+
+  @Get('etiquetas')
+  @Roles(ADMIN)
+  findEtiquetas() {
+    return this.inventarioService.findByTipo(TipoProducto.ETIQUETAS);
+  }
+
   @Get(':id')
   @Roles(ADMIN)
   findOne(@Param('id', ParseIntPipe) id: number) {

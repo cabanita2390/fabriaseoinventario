@@ -127,7 +127,35 @@ export class InventarioService {
     }
   }
 
-  //Crear un find by tipo
+  async findByTipo(tipoProducto: TipoProducto): Promise<any[]> {
+    try {
+      const inventarios = await this.inventarioRepo.find({
+        where: {
+          producto: {
+            tipoProducto: tipoProducto,
+          },
+        },
+        relations: ['producto', 'bodega'],
+      });
+
+      if (inventarios.length === 0) {
+        throw new NotFoundException(
+          `No hay inventario registrado para ${tipoProducto}`,
+        );
+      }
+
+      return inventarios.map((inv) => ({
+        ...inv,
+        fechaUltimaActualizacion: this.formatearFechaColombia(
+          inv.fechaUltimaActualizacion,
+        ),
+      }));
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error al consultar el inventario por tipo de producto',
+      );
+    }
+  }
 
   async findOne(id: number): Promise<any> {
     const entidad = await this.inventarioRepo.findOne({
