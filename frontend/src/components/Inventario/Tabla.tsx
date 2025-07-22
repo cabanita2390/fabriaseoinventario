@@ -8,6 +8,9 @@ import Swal from 'sweetalert2';
 import EditModal from '../Inventario/components/IdictModal';
 import ExportToExcel from '../ui/ExportToExcel';
 
+// Tipos de producto disponibles para filtrar
+export type TipoProductoFiltro = 'TODOS' | 'MATERIA_PRIMA' | 'MATERIAL_DE_ENVASE' | 'ETIQUETAS';
+
 // Función para transformar los datos del API a la estructura InventarioItem
 const transformarDatosInventario = (apiData: InventarioItemAPI[]): InventarioItem[] => {
   return apiData.map(item => ({
@@ -39,6 +42,7 @@ const columnas = [
 
 const Tabla: React.FC = () => {
   const [filtro, setFiltro] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState<TipoProductoFiltro>('TODOS');
   const [datos, setDatos] = useState<InventarioItem[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,27 +50,27 @@ const Tabla: React.FC = () => {
   const [bodegasDisponibles, setBodegasDisponibles] = useState<Bodega[]>([]);
 
   useEffect(() => {
-    const cargarDatos = async () => {
-      try {
-        setCargando(true);
-        setError(null);
-        
-        const [datosInventario, datosBodegas] = await Promise.all([
-          fetchInventario(),
-          fetchBodegas()
-        ]);
-        
-        setBodegasDisponibles(datosBodegas);
-        setDatos(transformarDatosInventario(datosInventario));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
-      } finally {
-        setCargando(false);
-      }
-    };
-
     cargarDatos();
-  }, []);
+  }, [filtroTipo]); // Recargar datos cuando cambie el filtro de tipo
+
+  const cargarDatos = async () => {
+    try {
+      setCargando(true);
+      setError(null);
+      
+      const [datosInventario, datosBodegas] = await Promise.all([
+        fetchInventario(filtroTipo !== 'TODOS' ? filtroTipo : undefined),
+        fetchBodegas()
+      ]);
+      
+      setBodegasDisponibles(datosBodegas);
+      setDatos(transformarDatosInventario(datosInventario));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setCargando(false);
+    }
+  };
 
   const datosFiltrados = datos.filter(item => {
     if (!filtro.trim()) return true;
@@ -188,17 +192,69 @@ const Tabla: React.FC = () => {
     }
   };
 
+  const obtenerTextoBadge = (tipo: TipoProductoFiltro) => {
+    switch (tipo) {
+      case 'MATERIA_PRIMA':
+        return 'Materia Prima';
+      case 'MATERIAL_DE_ENVASE':
+        return 'Material de Envase';
+      case 'ETIQUETAS':
+        return 'Etiquetas';
+      default:
+        return 'Todos';
+    }
+  };
+
+  const obtenerColorBadge = (tipo: TipoProductoFiltro) => {
+    switch (tipo) {
+      case 'MATERIA_PRIMA':
+        return '#28a745';
+      case 'MATERIAL_DE_ENVASE':
+        return '#007bff';
+      case 'ETIQUETAS':
+        return '#ffc107';
+      default:
+        return '#6c757d';
+    }
+  };
+
   return (
     <div>
-      <div className="export-excel-container">
+      {/* Contenedor con Export y Filtros */}
+      <div className="d-flex align-items-center gap-3 mb-4" style={{ marginTop: '20px' }}>
         <ExportToExcel 
           data={datosFiltrados}
           filename="movimientos_inventario"
           buttonText="Exportar a Excel"
         />
+        
+        {/* Filtros por tipo de producto */}
+        <div className="d-flex gap-2">
+          {(['TODOS', 'MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'] as TipoProductoFiltro[]).map((tipo) => (
+            <button
+              key={tipo}
+              className={`btn ${filtroTipo === tipo ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => setFiltroTipo(tipo)}
+              style={{
+                padding: '8px 16px',
+                fontSize: '14px',
+                fontWeight: '500',
+                borderRadius: '20px',
+                border: filtroTipo === tipo ? 'none' : '1px solid #dee2e6',
+                backgroundColor: filtroTipo === tipo ? obtenerColorBadge(tipo) : 'transparent',
+                color: filtroTipo === tipo ? 'white' : '#6c757d',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer'
+              }}
+            >
+              {obtenerTextoBadge(tipo)}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="d-flex justify-content-between align-items-center mb-5" style={{ marginTop: '20px' }}>
+      {/* Barra de búsqueda separada */}
+      <div className="d-flex justify-content-end mb-3">
         <div style={{ width: '300px' }}>
           <SearchBar
             onSearch={setFiltro}
@@ -207,6 +263,24 @@ const Tabla: React.FC = () => {
         </div>
       </div>
 
+      {/* Badge indicador del filtro activo */}
+      {filtroTipo !== 'TODOS' && (
+        <div className="mb-3">
+          <span 
+            className="badge"
+            style={{
+              backgroundColor: obtenerColorBadge(filtroTipo),
+              color: 'white',
+              fontSize: '12px',
+              padding: '6px 12px',
+              borderRadius: '15px'
+            }}
+          >
+            Filtrando por: {obtenerTextoBadge(filtroTipo)}
+          </span>
+        </div>
+      )}
+
       {error && <div className="alert alert-danger">{error}</div>}
       {cargando && <div className="alert alert-info">Cargando...</div>}
 
@@ -214,7 +288,9 @@ const Tabla: React.FC = () => {
         <div className="alert alert-info">
           {filtro 
             ? 'No se encontraron productos con ese criterio de búsqueda' 
-            : 'No hay productos en el inventario'}
+            : filtroTipo !== 'TODOS' 
+              ? `No hay productos del tipo ${obtenerTextoBadge(filtroTipo)} en el inventario`
+              : 'No hay productos en el inventario'}
         </div>
       )}
 
