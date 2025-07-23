@@ -292,7 +292,7 @@ const Tabla: React.FC = () => {
           />
           
           {/* Filtros por tipo de producto */}
-          <div className="d-flex gap-2">
+          <div style={{ display: 'flex', gap: '10px' }}> 
             {(['TODOS', 'MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'] as TipoProductoFiltro[]).map((tipo) => (
               <button
                 key={tipo}
@@ -300,10 +300,10 @@ const Tabla: React.FC = () => {
                 onClick={() => handleFiltroTipoChange(tipo)}
                 style={{
                   padding: '8px 16px',
-                  fontSize: '14px',
+                  fontSize: '15px',
                   fontWeight: '500',
                   borderRadius: '20px',
-                  border: filtroTipo === tipo ? 'none' : '1px solid #dee2e6',
+                  border: filtroTipo === tipo ? 'none' : '3px solid #dee2e6',
                   backgroundColor: filtroTipo === tipo ? obtenerColorBadge(tipo) : 'transparent',
                   color: filtroTipo === tipo ? 'white' : '#6c757d',
                   transition: 'all 0.2s ease',
