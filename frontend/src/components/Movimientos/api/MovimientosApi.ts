@@ -1,5 +1,10 @@
-import { RowData, ProductoAgrupado, Bodega } from '../types/Typesmovimientos';
 import Swal from 'sweetalert2';
+import { 
+  RowData, 
+  ProductoAgrupado, 
+  Bodega 
+} from '../types/Typesmovimientos';
+
 export type AppRole =
   | 'ADMIN'
   | 'LIDER_PRODUCCION'
@@ -15,18 +20,17 @@ const roleToEndpointMap: Record<AppRole, string[]> = {
   'RECEPTOR_MP': ['/movimiento/materia-prima'],
   'RECEPTOR_ENVASE': ['/movimiento/material-envase'],
   'RECEPTOR_ETIQUETAS': ['/movimiento/etiquetas'],
-  'OPERARIO_PRODUCCION': ['/movimiento/etiquetas','/movimiento/material-envase'],
+  'OPERARIO_PRODUCCION': ['/movimiento/etiquetas', '/movimiento/material-envase'],
   'USUARIO': []
 };
 
-// Función para extraer el rol del token JWT
 const getUserRoleFromToken = (): AppRole | null => {
   const token = localStorage.getItem('authToken');
   if (!token) return null;
 
   try {
-    const payload = JSON.parse(atob(token.split('.')[1])); // Decodifica el payload
-    return payload.rol as AppRole; // Asume que el rol está en el campo 'rol'
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.rol as AppRole;
   } catch (error) {
     console.error('Error al decodificar el token:', error);
     return null;
@@ -50,17 +54,6 @@ const transformMovimientoData = (json: any[]): RowData[] => {
   }));
 };
 
-const checkEndpointPermission = async (authFetch: any, endpoint: string): Promise<boolean> => {
-  try {
-    const response = await authFetch(`http://localhost:3000${endpoint}`, {
-      method: 'HEAD'
-    });
-    return response.ok;
-  } catch (error) {
-    return false;
-  }
-};
-
 export const fetchMovimientos = async (authFetch: any): Promise<RowData[]> => {
   const userRole = getUserRoleFromToken();
 
@@ -74,13 +67,12 @@ export const fetchMovimientos = async (authFetch: any): Promise<RowData[]> => {
     throw new Error(`Tu rol (${userRole}) no tiene acceso a ningún endpoint de movimientos.`);
   }
 
+  let allMovimientos: RowData[] = [];
+  let endpointsWithData = 0;
   let lastError: Error | null = null;
 
   for (const endpoint of endpointsToTry) {
     try {
-      const hasPermission = await checkEndpointPermission(authFetch, endpoint);
-      if (!hasPermission) continue;
-
       const response = await authFetch(`http://localhost:3000${endpoint}`);
       
       if (!response.ok) {
@@ -89,18 +81,24 @@ export const fetchMovimientos = async (authFetch: any): Promise<RowData[]> => {
       
       const json = await response.json();
       
-      if (Array.isArray(json) && json.length === 0) {
-        Swal.fire({
-          icon: 'info',
-          title: 'No hay datos',
-          text: `El endpoint ${endpoint} no contiene movimientos registrados.`,
-          timer: 4000,
-          showConfirmButton: true
-        });
-        continue;
+      if (Array.isArray(json)) {
+        if (json.length === 0) {
+          // Mostrar alerta pero continuar con otros endpoints
+          Swal.fire({
+            icon: 'info',
+            title: 'Sin datos',
+            text: `El endpoint ${endpoint} no contiene movimientos registrados.`,
+            timer: 3000,
+            showConfirmButton: false
+          });
+        } else {
+          const transformed = transformMovimientoData(json);
+          allMovimientos = [...allMovimientos, ...transformed];
+          endpointsWithData++;
+        }
+      } else {
+        throw new Error(`La respuesta de ${endpoint} no es un array válido`);
       }
-      
-      return transformMovimientoData(json);
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
@@ -109,15 +107,22 @@ export const fetchMovimientos = async (authFetch: any): Promise<RowData[]> => {
           lastError = error;
         }
       }
-      continue;
     }
   }
 
-  if (lastError) {
+  if (allMovimientos.length > 0) {
+    return allMovimientos;
+  }
+
+  if (endpointsWithData === 0 && lastError) {
     throw lastError;
   }
 
-  throw new Error(`No tienes acceso a los endpoints de movimientos para tu rol (${userRole}).`);
+  if (endpointsWithData === 0) {
+    throw new Error(`No se encontraron movimientos en los endpoints para tu rol (${userRole}).`);
+  }
+
+  return [];
 };
 
 export const updateMovimiento = async (
@@ -156,7 +161,8 @@ export const fetchProductosAgrupados = async (authFetch: any): Promise<ProductoA
     for (const producto of data) {
       const existente = agrupados.find(p => p.nombre === producto.nombre);
       if (existente) {
-        if (!existente.presentaciones.some(pr => pr.id === producto.presentacion.id)) {
+        // Corregido: Añadido tipo explícito al parámetro
+        if (!existente.presentaciones.some((pr: { id: number }) => pr.id === producto.presentacion.id)) {
           existente.presentaciones.push(producto.presentacion);
         }
       } else {
