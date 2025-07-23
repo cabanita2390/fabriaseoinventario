@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DataTable from '../ui/DataTable';
 import SearchBar from '../ui/Searchbar';
 import Modal from '../ui/Modal';
@@ -41,6 +42,7 @@ const columnas = [
 ];
 
 const Tabla: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filtro, setFiltro] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<TipoProductoFiltro>('TODOS');
   const [datos, setDatos] = useState<InventarioItem[]>([]);
@@ -49,17 +51,64 @@ const Tabla: React.FC = () => {
   const [editando, setEditando] = useState<InventarioItem | null>(null);
   const [bodegasDisponibles, setBodegasDisponibles] = useState<Bodega[]>([]);
 
+  // Función para obtener el filtro de tipo desde la URL
+  const obtenerFiltroTipoDesdeURL = (): TipoProductoFiltro => {
+    const tipoParam = searchParams.get('tipoProducto');
+    if (tipoParam && ['MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'].includes(tipoParam)) {
+      return tipoParam as TipoProductoFiltro;
+    }
+    return 'TODOS';
+  };
+
+  // Función para obtener el filtro de búsqueda desde la URL
+  const obtenerFiltroBusquedaDesdeURL = (): string => {
+    return searchParams.get('busqueda') || '';
+  };
+
+  // Inicializar filtros desde la URL al cargar el componente
+  useEffect(() => {
+    const tipoDesdeURL = obtenerFiltroTipoDesdeURL();
+    const busquedaDesdeURL = obtenerFiltroBusquedaDesdeURL();
+    
+    setFiltroTipo(tipoDesdeURL);
+    setFiltro(busquedaDesdeURL);
+  }, [searchParams]);
+
+  // Cargar datos cuando cambien los filtros
   useEffect(() => {
     cargarDatos();
-  }, [filtroTipo]); // Recargar datos cuando cambie el filtro de tipo
+  }, [filtroTipo]);
+
+  // Función para actualizar los parámetros de la URL
+  const actualizarURLParams = (nuevoTipo?: TipoProductoFiltro, nuevaBusqueda?: string) => {
+    const params = new URLSearchParams();
+    
+    const tipoAUsar = nuevoTipo !== undefined ? nuevoTipo : filtroTipo;
+    const busquedaAUsar = nuevaBusqueda !== undefined ? nuevaBusqueda : filtro;
+    
+    // Solo agregar parámetros si no son los valores por defecto
+    if (tipoAUsar !== 'TODOS') {
+      params.set('tipoProducto', tipoAUsar);
+    }
+    
+    if (busquedaAUsar.trim()) {
+      params.set('busqueda', busquedaAUsar);
+    }
+    
+    // Actualizar la URL sin recargar la página
+    setSearchParams(params, { replace: true });
+  };
 
   const cargarDatos = async () => {
     try {
       setCargando(true);
       setError(null);
       
+      // Convertir 'TODOS' a undefined para la API
+      const tipoParaAPI = filtroTipo !== 'TODOS' ? filtroTipo : undefined;
+      
       const [datosInventario, datosBodegas] = await Promise.all([
-        fetchInventario(filtroTipo !== 'TODOS' ? filtroTipo : undefined),
+        fetchInventario(tipoParaAPI),
         fetchBodegas()
       ]);
       
@@ -192,6 +241,18 @@ const Tabla: React.FC = () => {
     }
   };
 
+  // Manejar cambio de filtro de tipo
+  const handleFiltroTipoChange = (nuevoTipo: TipoProductoFiltro) => {
+    setFiltroTipo(nuevoTipo);
+    actualizarURLParams(nuevoTipo, filtro);
+  };
+
+  // Manejar cambio de búsqueda
+  const handleBusquedaChange = (nuevaBusqueda: string) => {
+    setFiltro(nuevaBusqueda);
+    actualizarURLParams(filtroTipo, nuevaBusqueda);
+  };
+
   const obtenerTextoBadge = (tipo: TipoProductoFiltro) => {
     switch (tipo) {
       case 'MATERIA_PRIMA':
@@ -236,7 +297,7 @@ const Tabla: React.FC = () => {
               <button
                 key={tipo}
                 className={`btn ${filtroTipo === tipo ? 'btn-primary' : 'btn-outline-secondary'}`}
-                onClick={() => setFiltroTipo(tipo)}
+                onClick={() => handleFiltroTipoChange(tipo)}
                 style={{
                   padding: '8px 16px',
                   fontSize: '14px',
@@ -255,23 +316,26 @@ const Tabla: React.FC = () => {
           </div>
         </div>
 
-        {/* Badge indicador del filtro activo */}
-        {filtroTipo !== 'TODOS' && (
-          <div>
-            <span 
-              className="badge"
-              style={{
-                backgroundColor: obtenerColorBadge(filtroTipo),
-                color: 'white',
-                fontSize: '12px',
-                padding: '6px 12px',
-                borderRadius: '15px'
-              }}
-            >
-              Filtrando por: {obtenerTextoBadge(filtroTipo)}
-            </span>
-          </div>
-        )}
+      {/* Badge indicador del filtro activo */}
+      {filtroTipo !== 'TODOS' && (
+        <div style={{ marginTop: '12px' }}> {/* Añadido margen superior */}
+          <span 
+            className="badge"
+            style={{
+              backgroundColor: obtenerColorBadge(filtroTipo),
+              color: 'white',
+              fontSize: '14px', 
+              padding: '8px 16px', 
+              borderRadius: '20px', 
+              fontWeight: '500', 
+              marginBottom: '1px', 
+              display: 'inline-block' // Mejor control del elemento
+            }}
+          >
+            Filtrando por: {obtenerTextoBadge(filtroTipo)}
+          </span>
+        </div>
+      )}
       </div>
 
       {/* LÍNEA DIVISORIA */}
@@ -291,8 +355,9 @@ const Tabla: React.FC = () => {
           </h6>
           <div style={{ width: '300px' }}>
             <SearchBar
-              onSearch={setFiltro}
+              onSearch={handleBusquedaChange}
               placeholder="Buscar productos..."
+              value={filtro}
             />
           </div>
         </div>

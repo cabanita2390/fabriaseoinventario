@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
-// import "../../styles/Insumos/searchbar.css"
+
 interface SearchBarProps {
   onSearch: (texto: string) => void;
   placeholder?: string;
   className?: string;
+  value?: string; // Añade esta línea
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch, placeholder = 'Buscar...', className }) => {
-  const [query, setQuery] = useState('');
+const SearchBar: React.FC<SearchBarProps> = ({ 
+  onSearch, 
+  placeholder = 'Buscar...', 
+  className,
+  value = '' // Añade esta línea con valor por defecto
+}) => {
+  const [query, setQuery] = useState(value); // Inicializa con el valor proporcionado
+
+  useEffect(() => {
+    setQuery(value); // Actualiza el estado interno cuando cambia el valor externo
+  }, [value]);
 
   useEffect(() => {
     const handler = setTimeout(() => {

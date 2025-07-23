@@ -7,7 +7,6 @@ const API_BASE_URL = 'http://localhost:3000';
 // Tipos de producto para filtrar
 export type TipoProductoFiltro = 'MATERIA_PRIMA' | 'MATERIAL_DE_ENVASE' | 'ETIQUETAS';
 
-// Definición de tipos para los roles (manteniendo nombres originales en inglés)
 export type AppRole =
   | 'ADMIN'
   | 'LIDER_PRODUCCION'
@@ -21,10 +20,10 @@ export type AppRole =
 const roleToEndpointMap: Record<AppRole, string[]> = {
   'ADMIN': ['/inventario'],
   'LIDER_PRODUCCION': ['/inventario'],
-  'RECEPTOR_MP': ['/inventario/materia-prima'],
-  'RECEPTOR_ENVASE': ['/inventario/material-envase'],
-  'RECEPTOR_ETIQUETAS': ['/inventario/etiquetas'],
-  'OPERARIO_PRODUCCION': ['/inventario/etiquetas', '/inventario/material-envase'],
+  'RECEPTOR_MP': ['/inventario'],
+  'RECEPTOR_ENVASE': ['/inventario'],
+  'RECEPTOR_ETIQUETAS': ['/inventario'],
+  'OPERARIO_PRODUCCION': ['/inventario'],
   'USUARIO': []
 };
 
@@ -54,7 +53,7 @@ const checkEndpointPermission = async (endpoint: string): Promise<boolean> => {
   }
 };
 
-// Función para construir la URL con query parameters - CORREGIDA para ser más específica
+// Función para construir la URL con query parameters - SIMPLIFICADA
 const buildInventarioURL = (endpoint: string, tipoProducto?: TipoProductoFiltro): string => {
   const baseURL = `${API_BASE_URL}${endpoint}`;
   
@@ -62,24 +61,14 @@ const buildInventarioURL = (endpoint: string, tipoProducto?: TipoProductoFiltro)
     return baseURL;
   }
   
-  // Agregar el query parameter especificando que es para el tipoProducto del PRODUCTO, no de la presentación
+  // Crear URL con query parameter específico
   const url = new URL(baseURL);
-  url.searchParams.append('productoTipo', tipoProducto); // Cambiado de 'tipo' a 'productoTipo' para ser más específico
+  url.searchParams.append('tipoProducto', tipoProducto);
   
   return url.toString();
 };
 
-// Función auxiliar para filtrar en el frontend si el backend no maneja el filtro correctamente
-const filterInventarioByProductType = (data: InventarioItemAPI[], tipoProducto?: TipoProductoFiltro): InventarioItemAPI[] => {
-  if (!tipoProducto) return data;
-  
-  return data.filter(item => {
-    // Filtrar específicamente por el tipoProducto del PRODUCTO, no de la presentación
-    return item.producto.tipoProducto === tipoProducto;
-  });
-};
-
-// Función principal para obtener inventario - ACTUALIZADA con filtrado mejorado
+// Función principal para obtener inventario - SIMPLIFICADA para usar solo backend
 export const fetchInventario = async (tipoProducto?: TipoProductoFiltro): Promise<InventarioItemAPI[]> => {
   const userRole = getUserRoleFromToken();
 
@@ -94,7 +83,6 @@ export const fetchInventario = async (tipoProducto?: TipoProductoFiltro): Promis
   }
 
   let lastError: Error | null = null;
-  let allData: InventarioItemAPI[] = [];
 
   for (const endpoint of endpointsToTry) {
     try {
@@ -102,50 +90,26 @@ export const fetchInventario = async (tipoProducto?: TipoProductoFiltro): Promis
       const hasPermission = await checkEndpointPermission(endpoint);
       if (!hasPermission) continue;
 
-      // Primero intentar con el filtro en el backend
-      let fullURL = buildInventarioURL(endpoint, tipoProducto);
-      let response = await authFetch(fullURL);
+      // Construir URL con query parameters
+      const fullURL = buildInventarioURL(endpoint, tipoProducto);
+      
+      console.log(`Fetching from: ${fullURL}`); // Para debug
+      
+      const response = await authFetch(fullURL);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
       
-      let json = await response.json();
-      
-      // Si el backend no devuelve datos filtrados correctamente o devuelve datos mixtos,
-      // intentar obtener todos los datos y filtrar en el frontend
-      if (tipoProducto && Array.isArray(json)) {
-        // Verificar si los datos ya están correctamente filtrados
-        const incorrectlyFiltered = json.some(item => item.producto.tipoProducto !== tipoProducto);
-        
-        if (incorrectlyFiltered || json.length === 0) {
-          console.warn(`El backend no filtró correctamente por tipoProducto=${tipoProducto}, aplicando filtro en frontend`);
-          
-          // Obtener todos los datos sin filtro
-          const baseURL = `${API_BASE_URL}${endpoint}`;
-          response = await authFetch(baseURL);
-          
-          if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-          }
-          
-          json = await response.json();
-          
-          // Aplicar filtro en el frontend
-          json = filterInventarioByProductType(json, tipoProducto);
-        }
-      }
+      const json = await response.json();
       
       if (Array.isArray(json)) {
-        allData = [...allData, ...json];
-      }
-      
-      // Si encontramos datos, salir del loop
-      if (allData.length > 0) {
-        break;
+        console.log(`Received ${json.length} items from backend`); // Para debug
+        return json; // Devolver directamente los datos del backend
       }
       
     } catch (error) {
+      console.error(`Error fetching from ${endpoint}:`, error);
       if (error instanceof Error) {
         lastError = error;
       }
@@ -153,29 +117,23 @@ export const fetchInventario = async (tipoProducto?: TipoProductoFiltro): Promis
     }
   }
 
-  // Eliminar duplicados basados en el ID
-  const uniqueData = allData.filter((item, index, self) => 
-    index === self.findIndex(t => t.id === item.id)
-  );
-
-  if (uniqueData.length === 0) {
-    if (lastError) {
-      throw lastError;
-    }
-    
-    const tipoTexto = tipoProducto ? ` del tipo ${tipoProducto}` : '';
-    
-    // Mostrar mensaje informativo si no hay datos
-    Swal.fire({
-      icon: 'info',
-      title: 'No hay datos',
-      text: `No se encontraron items de inventario${tipoTexto} para tu rol (${userRole}).`,
-      timer: 4000,
-      showConfirmButton: true
-    });
+  // Si llegamos aquí, no pudimos obtener datos
+  if (lastError) {
+    throw lastError;
   }
+  
+  const tipoTexto = tipoProducto ? ` del tipo ${tipoProducto}` : '';
+  
+  // Mostrar mensaje informativo si no hay datos
+  Swal.fire({
+    icon: 'info',
+    title: 'No hay datos',
+    text: `No se encontraron items de inventario${tipoTexto} para tu rol (${userRole}).`,
+    timer: 4000,
+    showConfirmButton: true
+  });
 
-  return uniqueData;
+  return []; // Devolver array vacío si no hay datos
 };
 
 // Funciones originales del API (nombres en inglés)
