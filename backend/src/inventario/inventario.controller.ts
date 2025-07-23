@@ -71,13 +71,13 @@ export class InventarioController {
   }
 
   @Get('material-envase')
-  @Roles(ADMIN,RECEPTOR_ENVASE)
+  @Roles(ADMIN,RECEPTOR_ENVASE,OPERARIO_PRODUCCION)
   findMaterialEnvase() {
     return this.inventarioService.findByTipo(TipoProducto.MATERIAL_DE_ENVASE);
   }
 
   @Get('etiquetas')
-  @Roles(ADMIN, RECEPTOR_ETIQUETAS)
+  @Roles(ADMIN, RECEPTOR_ETIQUETAS,OPERARIO_PRODUCCION)
   findEtiquetas() {
     return this.inventarioService.findByTipo(TipoProducto.ETIQUETAS);
   }

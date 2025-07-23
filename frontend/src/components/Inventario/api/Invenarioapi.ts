@@ -17,13 +17,13 @@ export type AppRole =
   | 'USUARIO';
 
 // Mapeo de roles a endpoints (nombres originales)
-const roleToEndpointMap: Record<AppRole, string[]> = {
+const roleToEndpointMap: Record<AppRole, string[]> = {  
   'ADMIN': ['/inventario'],
   'LIDER_PRODUCCION': ['/inventario'],
-  'RECEPTOR_MP': ['/inventario'],
-  'RECEPTOR_ENVASE': ['/inventario'],
-  'RECEPTOR_ETIQUETAS': ['/inventario'],
-  'OPERARIO_PRODUCCION': ['/inventario'],
+  'RECEPTOR_MP': ['/inventario/materia-prima'],
+  'RECEPTOR_ENVASE': ['/inventario/material-envase'],
+  'RECEPTOR_ETIQUETAS': ['/inventario/etiquetas'],
+  'OPERARIO_PRODUCCION': ['/inventario/etiquetas','/inventario/material-envase'],
   'USUARIO': []
 };
 
@@ -82,7 +82,9 @@ export const fetchInventario = async (tipoProducto?: TipoProductoFiltro): Promis
     throw new Error(`Tu rol (${userRole}) no tiene acceso a ningún endpoint de inventario.`);
   }
 
+  let combinedResults: InventarioItemAPI[] = [];
   let lastError: Error | null = null;
+  let successfulRequests = 0;
 
   for (const endpoint of endpointsToTry) {
     try {
@@ -93,7 +95,7 @@ export const fetchInventario = async (tipoProducto?: TipoProductoFiltro): Promis
       // Construir URL con query parameters
       const fullURL = buildInventarioURL(endpoint, tipoProducto);
       
-      console.log(`Fetching from: ${fullURL}`); // Para debug
+      console.log(`Fetching from: ${fullURL}`);
       
       const response = await authFetch(fullURL);
       
@@ -104,8 +106,9 @@ export const fetchInventario = async (tipoProducto?: TipoProductoFiltro): Promis
       const json = await response.json();
       
       if (Array.isArray(json)) {
-        console.log(`Received ${json.length} items from backend`); // Para debug
-        return json; // Devolver directamente los datos del backend
+        console.log(`Received ${json.length} items from ${endpoint}`);
+        combinedResults = [...combinedResults, ...json];
+        successfulRequests++;
       }
       
     } catch (error) {
@@ -117,7 +120,12 @@ export const fetchInventario = async (tipoProducto?: TipoProductoFiltro): Promis
     }
   }
 
-  // Si llegamos aquí, no pudimos obtener datos
+  // Si obtuvimos datos de al menos un endpoint, devolverlos
+  if (successfulRequests > 0) {
+    return combinedResults;
+  }
+
+  // Si llegamos aquí, no pudimos obtener datos de ningún endpoint
   if (lastError) {
     throw lastError;
   }
@@ -135,7 +143,6 @@ export const fetchInventario = async (tipoProducto?: TipoProductoFiltro): Promis
 
   return []; // Devolver array vacío si no hay datos
 };
-
 // Funciones originales del API (nombres en inglés)
 export const fetchBodegas = async (): Promise<Bodega[]> => {
   const response = await authFetch(`${API_BASE_URL}/bodega`);
