@@ -64,13 +64,13 @@ export class MovimientoController {
   }
 
   @Get('material-envase')
-  @Roles(ADMIN, RECEPTOR_ENVASE, LIDER_PRODUCCION)
+  @Roles(ADMIN, RECEPTOR_ENVASE, LIDER_PRODUCCION,OPERARIO_PRODUCCION)
   findMaterialEnvase() {
     return this.movimientoService.findByTipo(TipoProducto.MATERIAL_DE_ENVASE);
   }
 
   @Get('etiquetas')
-  @Roles(ADMIN, RECEPTOR_ETIQUETAS, LIDER_PRODUCCION)
+  @Roles(ADMIN, RECEPTOR_ETIQUETAS, LIDER_PRODUCCION,OPERARIO_PRODUCCION)
   findEtiquetas() {
     return this.movimientoService.findByTipo(TipoProducto.ETIQUETAS);
   }

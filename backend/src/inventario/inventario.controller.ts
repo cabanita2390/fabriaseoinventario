@@ -50,6 +50,10 @@ export class InventarioController {
   @Roles(
     ADMIN,
     LIDER_PRODUCCION,
+    OPERARIO_PRODUCCION,
+    RECEPTOR_MP,
+    RECEPTOR_ENVASE,
+    RECEPTOR_ETIQUETAS,
     
   )
   findAll(
