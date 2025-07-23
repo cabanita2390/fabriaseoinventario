@@ -16,14 +16,14 @@ export type AppRole =
 // Tipo para los movimientos disponibles
 export type TipoMovimiento = 'materia-prima' | 'material-envase' | 'etiquetas';
 
-// Mapeo de roles a endpoints permitidos
+// Mapeo de roles a endpoints permitidos (actualizado)
 const roleToEndpointMap: Record<AppRole, TipoMovimiento[]> = {
-  'ADMIN': ['materia-prima'],
-  'LIDER_PRODUCCION': ['materia-prima'],
-  'RECEPTOR_MP': ['materia-prima', 'material-envase', 'etiquetas'],
+  'ADMIN': ['materia-prima', 'material-envase', 'etiquetas'], // Admin tiene acceso completo
+  'LIDER_PRODUCCION': ['materia-prima', 'material-envase', 'etiquetas'], // Líder puede manejar todos los tipos
+  'RECEPTOR_MP': ['materia-prima'],
   'RECEPTOR_ENVASE': ['material-envase'],
   'RECEPTOR_ETIQUETAS': ['etiquetas'],
-  'OPERARIO_PRODUCCION': ['material-envase', 'etiquetas'],
+  'OPERARIO_PRODUCCION': ['material-envase', 'etiquetas'], // Operario puede manejar envases y etiquetas
   'USUARIO': []
 };
 
@@ -64,7 +64,11 @@ export const crearMovimiento = async (
   const movimientosPermitidos = roleToEndpointMap[userRole];
 
   if (!movimientosPermitidos.includes(tipo)) {
-    throw new Error(`Tu rol (${userRole}) no tiene permiso para crear movimientos de ${tipo}.`);
+    const tiposPermitidos = movimientosPermitidos.join(', ') || 'ninguno';
+    throw new Error(
+      `Tu rol (${userRole}) no tiene permiso para crear movimientos de ${tipo}. ` +
+      `Permitidos: ${tiposPermitidos}`
+    );
   }
 
   try {
@@ -75,9 +79,12 @@ export const crearMovimiento = async (
     };
 
     const endpoint = `/movimiento/${tipo}`;
-    const response = await authFetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem('authToken')}`
+      },
       body: JSON.stringify(payloadCompleto),
     });
 
@@ -109,7 +116,6 @@ export const crearMovimiento = async (
     throw error;
   }
 };
-
 // Función para obtener movimientos
 export const obtenerMovimientos = async (tipo: TipoMovimiento): Promise<any[]> => {
   const userRole = getUserRoleFromToken();
