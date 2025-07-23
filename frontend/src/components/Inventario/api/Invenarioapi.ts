@@ -28,7 +28,7 @@ const roleToEndpointMap: Record<AppRole, string[]> = {
 };
 
 // Función para extraer el rol del token JWT (manteniendo nombre original)
-const getUserRoleFromToken = (): AppRole | null => {
+export const getUserRoleFromToken = (): AppRole | null => {
   const token = localStorage.getItem('authToken');
   if (!token) return null;
 

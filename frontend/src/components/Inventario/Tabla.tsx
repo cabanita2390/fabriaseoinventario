@@ -3,13 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import DataTable from '../ui/DataTable';
 import SearchBar from '../ui/Searchbar';
 import Modal from '../ui/Modal';
-import { fetchInventario, fetchBodegas, updateInventarioItem, deleteInventarioItem } from '../Inventario/api/Invenarioapi';
+import { fetchInventario, fetchBodegas, updateInventarioItem, deleteInventarioItem, getUserRoleFromToken, AppRole } from '../Inventario/api/Invenarioapi';
 import { InventarioItemAPI, InventarioItem, Bodega } from '../Inventario/types/inventarioTypes';
 import Swal from 'sweetalert2';
 import EditModal from '../Inventario/components/IdictModal';
 import ExportToExcel from '../ui/ExportToExcel';
-
-// Tipos de producto disponibles para filtrar
 export type TipoProductoFiltro = 'TODOS' | 'MATERIA_PRIMA' | 'MATERIAL_DE_ENVASE' | 'ETIQUETAS';
 
 // Función para transformar los datos del API a la estructura InventarioItem
@@ -50,6 +48,12 @@ const Tabla: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [editando, setEditando] = useState<InventarioItem | null>(null);
   const [bodegasDisponibles, setBodegasDisponibles] = useState<Bodega[]>([]);
+  const [userRole, setUserRole] = useState<AppRole | null>(null);
+
+  // Obtener el rol al cargar el componente
+  useEffect(() => {
+    setUserRole(getUserRoleFromToken());
+  }, []);
 
   // Función para obtener el filtro de tipo desde la URL
   const obtenerFiltroTipoDesdeURL = (): TipoProductoFiltro => {
@@ -73,6 +77,14 @@ const Tabla: React.FC = () => {
     setFiltroTipo(tipoDesdeURL);
     setFiltro(busquedaDesdeURL);
   }, [searchParams]);
+
+  // Resetear filtro si el usuario no tiene permisos
+  useEffect(() => {
+    if (userRole && !['ADMIN', 'LIDER_PRODUCCION'].includes(userRole)) {
+      setFiltroTipo('TODOS');
+      actualizarURLParams('TODOS', filtro);
+    }
+  }, [userRole]);
 
   // Cargar datos cuando cambien los filtros
   useEffect(() => {
@@ -291,51 +303,53 @@ const Tabla: React.FC = () => {
             buttonText="Exportar a Excel"
           />
           
-          {/* Filtros por tipo de producto */}
-          <div className="d-flex gap-2">
-            {(['TODOS', 'MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'] as TipoProductoFiltro[]).map((tipo) => (
-              <button
-                key={tipo}
-                className={`btn ${filtroTipo === tipo ? 'btn-primary' : 'btn-outline-secondary'}`}
-                onClick={() => handleFiltroTipoChange(tipo)}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  borderRadius: '20px',
-                  border: filtroTipo === tipo ? 'none' : '1px solid #dee2e6',
-                  backgroundColor: filtroTipo === tipo ? obtenerColorBadge(tipo) : 'transparent',
-                  color: filtroTipo === tipo ? 'white' : '#6c757d',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer'
-                }}
-              >
-                {obtenerTextoBadge(tipo)}
-              </button>
-            ))}
-          </div>
+          {/* Filtros por tipo de producto - solo para ADMIN y LIDER_PRODUCCION */}
+          {(userRole === 'ADMIN' || userRole === 'LIDER_PRODUCCION') && (
+            <div className="d-flex gap-2">
+              {(['TODOS', 'MATERIA_PRIMA', 'MATERIAL_DE_ENVASE', 'ETIQUETAS'] as TipoProductoFiltro[]).map((tipo) => (
+                <button
+                  key={tipo}
+                  className={`btn ${filtroTipo === tipo ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  onClick={() => handleFiltroTipoChange(tipo)}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    borderRadius: '20px',
+                    border: filtroTipo === tipo ? 'none' : '1px solid #dee2e6',
+                    backgroundColor: filtroTipo === tipo ? obtenerColorBadge(tipo) : 'transparent',
+                    color: filtroTipo === tipo ? 'white' : '#6c757d',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {obtenerTextoBadge(tipo)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-      {/* Badge indicador del filtro activo */}
-      {filtroTipo !== 'TODOS' && (
-        <div style={{ marginTop: '12px' }}> {/* Añadido margen superior */}
-          <span 
-            className="badge"
-            style={{
-              backgroundColor: obtenerColorBadge(filtroTipo),
-              color: 'white',
-              fontSize: '14px', 
-              padding: '8px 16px', 
-              borderRadius: '20px', 
-              fontWeight: '500', 
-              marginBottom: '1px', 
-              display: 'inline-block' // Mejor control del elemento
-            }}
-          >
-            Filtrando por: {obtenerTextoBadge(filtroTipo)}
-          </span>
-        </div>
-      )}
+        {/* Badge indicador del filtro activo - solo para ADMIN y LIDER_PRODUCCION */}
+        {(userRole === 'ADMIN' || userRole === 'LIDER_PRODUCCION') && filtroTipo !== 'TODOS' && (
+          <div style={{ marginTop: '12px' }}>
+            <span 
+              className="badge"
+              style={{
+                backgroundColor: obtenerColorBadge(filtroTipo),
+                color: 'white',
+                fontSize: '14px', 
+                padding: '8px 16px', 
+                borderRadius: '20px', 
+                fontWeight: '500', 
+                marginBottom: '1px', 
+                display: 'inline-block'
+              }}
+            >
+              Filtrando por: {obtenerTextoBadge(filtroTipo)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* LÍNEA DIVISORIA */}
