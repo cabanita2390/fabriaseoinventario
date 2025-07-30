@@ -23,7 +23,7 @@ import {
   LIDER_PRODUCCION,
   OPERARIO_PRODUCCION,
   RECEPTOR_ENVASE,
-  RECEPTOR_ETIQUETAS
+  RECEPTOR_ETIQUETAS,
 } from '../auth/constants/roles.constant';
 import { TipoProducto } from '../producto/dto/create-producto.dto';
 
@@ -40,18 +40,14 @@ export class InventarioController {
     LIDER_PRODUCCION,
     OPERARIO_PRODUCCION,
     RECEPTOR_ENVASE,
-    RECEPTOR_ETIQUETAS
+    RECEPTOR_ETIQUETAS,
   )
   create(@Body() createInventarioDto: CreateInventarioDto) {
     return this.inventarioService.create(createInventarioDto);
   }
 
   @Get()
-  @Roles(
-    ADMIN,
-    LIDER_PRODUCCION,
-    
-  )
+  @Roles(ADMIN, LIDER_PRODUCCION)
   findAll(
     @Query('tipoProducto', new ParseEnumPipe(TipoProducto, { optional: true }))
     tipoProducto?: TipoProducto,
@@ -67,7 +63,7 @@ export class InventarioController {
   }
 
   @Get('material-envase')
-  @Roles(ADMIN,RECEPTOR_ENVASE)
+  @Roles(ADMIN, RECEPTOR_ENVASE)
   findMaterialEnvase() {
     return this.inventarioService.findByTipo(TipoProducto.MATERIAL_DE_ENVASE);
   }

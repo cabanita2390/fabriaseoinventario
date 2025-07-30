@@ -5,16 +5,22 @@ import { Bodega } from 'src/entities/bodega.entity';
 import { Presentacion } from 'src/entities/presentacion.entity';
 import { Producto } from 'src/entities/producto.entity';
 import { UnidadMedida } from 'src/entities/unidadmedida.entity';
-import { Repository, DeepPartial, Not, IsNull } from 'typeorm'; // ✅ import Not y IsNull
-import { defaultProductRows, DefaultProductRow } from './default_products_data';
-import * as bcrypt from 'bcrypt'; // asegúrate de tener bcrypt instalado
+import { Repository, DeepPartial, Not, IsNull } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { Rol } from 'src/entities/rol.entity';
 import { Usuario } from 'src/entities/usuario.entity';
-import { TipoProducto } from 'src/producto/dto/create-producto.dto'; // ✅ import enum
+import { TipoProducto } from 'src/producto/dto/create-producto.dto'; // Importa el enum
 
-interface SeedRow {
+// Importa los datos de los nuevos archivos
+import { materiaPrimaData } from './materia_prima_data';
+import { materialEnvaseData } from './material_envase_data';
+import { etiquetasData } from './etiquetas_data';
+
+// Define la interfaz para las filas de datos de los productos
+interface DefaultProductRow {
   PRODUCTO: string;
   PRESENTACION: string;
+  UNIDADES: string; // Se agregó la propiedad UNIDADES
   TIPO_PRODUCTO: string;
 }
 
@@ -22,8 +28,11 @@ interface SeedRow {
 export class SeedService implements OnApplicationBootstrap {
   private readonly logger = new Logger(SeedService.name);
 
-  private readonly rows: SeedRow[] = [
-    /* ... tus datos actuales para materias primas ... */
+  // Combina todos los datos de los diferentes archivos en una sola colección
+  private readonly allProductRows: DefaultProductRow[] = [
+    ...materiaPrimaData,
+    ...materialEnvaseData,
+    ...etiquetasData,
   ];
 
   constructor(
@@ -46,244 +55,35 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly usuarioRepo: Repository<Usuario>,
   ) {}
 
-  /** Crea todas las presentaciones únicas según defaultProductRows */
+  /** Crea todas las presentaciones únicas según allProductRows */
   private async seedPresentacionesPredeterminadas(): Promise<void> {
     this.logger.log('Sembrando presentaciones (TODOS los tipos)...');
-    const presentacionesPorTipo = new Map<TipoProducto, Set<string>>();
 
-    for (const row of defaultProductRows) {
-      const tipoProducto = row.TIPO_PRODUCTO.trim() as TipoProducto;
+    // Usamos un Set para almacenar combinaciones únicas de PRESENTACION y TIPO_PRODUCTO
+    const uniquePresentations = new Set<string>();
+    for (const row of this.allProductRows) {
       const nombre = row.PRESENTACION.trim();
-      if (!presentacionesPorTipo.has(tipoProducto)) {
-        presentacionesPorTipo.set(tipoProducto, new Set());
-      }
-      presentacionesPorTipo.get(tipoProducto)!.add(nombre);
+      const tipo = row.TIPO_PRODUCTO.trim();
+      uniquePresentations.add(`${nombre}__${tipo}`); // Almacenamos la combinación única
     }
 
-    for (const [tipoProducto, nombres] of presentacionesPorTipo.entries()) {
-      for (const nombre of nombres) {
-        let pres = await this.presRepo.findOne({
-          where: { nombre, tipoProducto },
-        });
-        if (!pres) {
-          pres = this.presRepo.create({ nombre, tipoProducto }); // ✅ tipoProducto explícito
-          await this.presRepo.save(pres);
-          this.logger.log(`Presentación creada: ${nombre} (${tipoProducto})`);
-        }
+    // Iteramos sobre las combinaciones únicas para crear o verificar presentaciones
+    for (const combo of uniquePresentations) {
+      const [nombre, tipoStr] = combo.split('__');
+      const tipoProducto = tipoStr as TipoProducto;
+
+      // Buscar por nombre Y tipoProducto para asegurar unicidad
+      let pres = await this.presRepo.findOne({ where: { nombre, tipoProducto } });
+
+      if (!pres) {
+        // Si no existe la combinación (nombre, tipoProducto), la creamos
+        pres = this.presRepo.create({ nombre, tipoProducto });
+        await this.presRepo.save(pres);
+        this.logger.log(`Presentación creada: ${nombre} (${tipoProducto})`);
+      } else {
+        // Si ya existe, no hacemos nada, ya que es la combinación correcta
+        this.logger.log(`Presentación ya existe: ${nombre} (${tipoProducto})`);
       }
-    }
-  }
-
-  async seedProductosPredeterminados(): Promise<{
-    message: string;
-    resumen: any;
-  }> {
-    try {
-      this.logger.log('Iniciando seed de productos predeterminados...');
-
-      const resumen: any = {
-        productosCreados: 0,
-        productosExistentes: 0,
-        presentacionesCreadas: 0,
-      };
-
-      // 1. Agrupar presentaciones únicas por tipoProducto
-      const presentacionesPorTipo = new Map<TipoProducto, Set<string>>(); // ✅ usar TipoProducto
-
-      for (const row of defaultProductRows) {
-        const tipoProducto = row.TIPO_PRODUCTO.trim() as TipoProducto; // ✅ cast
-        const nombre = row.PRESENTACION.trim();
-
-        if (!presentacionesPorTipo.has(tipoProducto)) {
-          presentacionesPorTipo.set(tipoProducto, new Set());
-        }
-        presentacionesPorTipo.get(tipoProducto)!.add(nombre);
-      }
-
-      // 2. Crear presentaciones si no existen
-      const presMap = new Map<string, Presentacion>();
-
-      for (const [tipoProducto, nombres] of presentacionesPorTipo.entries()) {
-        for (const nombre of nombres) {
-          let pres = await this.presRepo.findOne({
-            where: { nombre, tipoProducto }, // ✅ filtrar por tipoProducto
-          });
-
-          if (!pres) {
-            pres = this.presRepo.create({
-              nombre,
-              tipoProducto, // ✅ se agrega tipoProducto
-            });
-            pres = await this.presRepo.save(pres);
-            resumen.presentacionesCreadas++;
-          }
-
-          presMap.set(`${nombre}__${tipoProducto}`, pres);
-        }
-      }
-
-      // 3. Asegurar unidad de medida
-      const UMNOMBRE = 'KG';
-      let um = await this.umRepo.findOne({ where: { nombre: UMNOMBRE } });
-      if (!um) {
-        um = this.umRepo.create({ nombre: UMNOMBRE });
-        um = await this.umRepo.save(um);
-      }
-
-      // 4. Crear productos
-      for (const row of defaultProductRows) {
-        const nombre = row.PRODUCTO.trim();
-        const tipoProducto = row.TIPO_PRODUCTO.trim() as TipoProducto; // ✅ cast
-
-        const presKey = `${row.PRESENTACION.trim()}__${tipoProducto}`;
-        const pres = presMap.get(presKey);
-        if (!pres) {
-          this.logger.warn(`Presentación no encontrada para: ${presKey}`);
-          continue;
-        }
-
-        const prodExistente = await this.productoRepo.findOne({
-          where: {
-            nombre,
-            tipoProducto,
-            presentacion: { id: pres.id },
-          },
-          relations: ['presentacion'],
-        });
-
-        if (prodExistente) {
-          resumen.productosExistentes++;
-          this.logger.log(`Producto ya existe: ${nombre}`);
-          continue;
-        }
-
-        const nuevo = this.productoRepo.create({
-          nombre,
-          tipoProducto,
-          estado: 'ACTIVO',
-          presentacion: pres,
-          unidadMedida: um,
-        });
-
-        await this.productoRepo.save(nuevo);
-        resumen.productosCreados++;
-        this.logger.log(`Producto creado: ${nombre}`);
-      }
-
-      // 5. Actualizar secuencia de IDs
-      await this.productoRepo.query(`
-        SELECT setval(
-          pg_get_serial_sequence('"producto"', 'idproducto'),
-          (SELECT MAX(idproducto) FROM "producto")
-        );
-      `);
-
-      // 6. Regenerar presentaciones desde productos existentes
-      const resultadoPresentaciones =
-        await this.regenerarPresentacionesDesdeProductos();
-      resumen.presentacionesCreadas +=
-        resultadoPresentaciones.presentacionesCreadas;
-
-      return {
-        message: 'Seed de productos predeterminados completado',
-        resumen,
-      };
-    } catch (error) {
-      this.logger.error('Error en seedProductosPredeterminados', error);
-      throw error;
-    }
-  }
-
-  async seedMateriasPrimas(): Promise<{ message: string; resumen: any }> {
-    try {
-      this.logger.log('Iniciando seed de materias primas...');
-
-      const presentaciones = Array.from(
-        new Set(this.rows.map((r) => r.PRESENTACION.trim())),
-      );
-
-      const presMap = new Map<string, Presentacion>();
-      let presentacionesCreadas = 0;
-
-      for (const nombre of presentaciones) {
-        const tipo: TipoProducto = TipoProducto.MATERIA_PRIMA; // ✅ usar enum
-
-        let pres = await this.presRepo.findOne({
-          where: { nombre, tipoProducto: tipo },
-        });
-        if (!pres) {
-          pres = this.presRepo.create({
-            nombre,
-            tipoProducto: tipo, // ✅ se agrega tipoProducto
-          });
-          pres = await this.presRepo.save(pres);
-          presentacionesCreadas++;
-        }
-        presMap.set(nombre, pres);
-      }
-
-      const UMNOMBRE = 'KG';
-      let um = await this.umRepo.findOne({ where: { nombre: UMNOMBRE } });
-      if (!um) {
-        um = this.umRepo.create({ nombre: UMNOMBRE });
-        um = await this.umRepo.save(um);
-      }
-
-      const uniqueRows = Array.from(
-        new Map(
-          this.rows.map((r) => [r.PRODUCTO.trim().toUpperCase(), r]),
-        ).values(),
-      );
-
-      let productosCreados = 0;
-      let productosExistentes = 0;
-
-      for (const row of uniqueRows) {
-        const pres = presMap.get(row.PRESENTACION.trim());
-        if (!pres) continue;
-
-        let prod = await this.productoRepo.findOne({
-          where: { nombre: row.PRODUCTO },
-        });
-
-        if (!prod) {
-          const ent = this.productoRepo.create({
-            nombre: row.PRODUCTO,
-            tipoProducto: row.TIPO_PRODUCTO.trim() as TipoProducto, // ✅ cast
-            subtipoInsumo: undefined,
-            estado: 'ACTIVO',
-            presentacion: pres,
-            unidadMedida: um,
-            proveedor: undefined,
-          } as DeepPartial<Producto>);
-
-          prod = await this.productoRepo.save(ent);
-          productosCreados++;
-          this.logger.log(`Producto creado: ${row.PRODUCTO}`);
-        } else {
-          productosExistentes++;
-          this.logger.log(`Producto ya existe: ${row.PRODUCTO}`);
-        }
-      }
-
-      await this.productoRepo.query(`
-        SELECT setval(
-          pg_get_serial_sequence('"producto"', 'idproducto'),
-          (SELECT MAX(idproducto) FROM "producto")
-        );
-      `);
-
-      return {
-        message: 'Seed de Materias Primas completado',
-        resumen: {
-          productosCreados,
-          productosExistentes,
-          presentacionesCreadas,
-        },
-      };
-    } catch (error) {
-      this.logger.error('Error en seedMateriasPrimas', error);
-      throw error;
     }
   }
 
@@ -329,15 +129,14 @@ export class SeedService implements OnApplicationBootstrap {
 
     // 1. Ahora agrupamos por tipoProducto para sembrar productos si hacen falta
     const grouped: Record<TipoProducto, DefaultProductRow[]> = {
-      [TipoProducto.MATERIA_PRIMA]: defaultProductRows.filter(
-        // 🛑 evita el ESLint error casteando explícito:
+      [TipoProducto.MATERIA_PRIMA]: this.allProductRows.filter(
         (p) => (p.TIPO_PRODUCTO as TipoProducto) === TipoProducto.MATERIA_PRIMA,
       ),
-      [TipoProducto.MATERIAL_DE_ENVASE]: defaultProductRows.filter(
+      [TipoProducto.MATERIAL_DE_ENVASE]: this.allProductRows.filter(
         (p) =>
           (p.TIPO_PRODUCTO as TipoProducto) === TipoProducto.MATERIAL_DE_ENVASE,
       ),
-      [TipoProducto.ETIQUETAS]: defaultProductRows.filter(
+      [TipoProducto.ETIQUETAS]: this.allProductRows.filter(
         (p) => (p.TIPO_PRODUCTO as TipoProducto) === TipoProducto.ETIQUETAS,
       ),
     };
@@ -367,50 +166,44 @@ export class SeedService implements OnApplicationBootstrap {
   }
 
   private async seedProductosPorTipo(rows: DefaultProductRow[]) {
-    const combinacionesUnicas = new Map<
-      string,
-      { nombre: string; tipoProducto: TipoProducto }
-    >();
+    const presMap = new Map<string, Presentacion>();
 
     for (const row of rows) {
       const nombre = row.PRESENTACION.trim();
       const tipo = row.TIPO_PRODUCTO.trim() as TipoProducto;
       const key = `${nombre}__${tipo}`;
-      combinacionesUnicas.set(key, { nombre, tipoProducto: tipo });
-    }
-
-    const presMap = new Map<string, Presentacion>();
-
-    for (const [
-      key,
-      { nombre, tipoProducto },
-    ] of combinacionesUnicas.entries()) {
-      let pres = await this.presRepo.findOne({
-        where: { nombre, tipoProducto },
+      const pres = await this.presRepo.findOne({
+        where: { nombre, tipoProducto: tipo },
       });
-      if (!pres) {
-        pres = this.presRepo.create({
-          nombre,
-          tipoProducto, // ✅ se agrega tipoProducto
-        });
-        pres = await this.presRepo.save(pres);
+      if (pres) {
+        presMap.set(key, pres);
+      } else {
+        this.logger.warn(`Presentación no encontrada (después de seedPresentacionesPredeterminadas): ${nombre} (${tipo})`);
+        const newPres = this.presRepo.create({ nombre, tipoProducto: tipo });
+        await this.presRepo.save(newPres);
+        presMap.set(key, newPres);
       }
-      presMap.set(key, pres);
     }
 
+    const productosToSave: Producto[] = [];
     for (const row of rows) {
       const nombreProducto = row.PRODUCTO.trim();
       const tipo = row.TIPO_PRODUCTO.trim() as TipoProducto;
       const key = `${row.PRESENTACION.trim()}__${tipo}`;
       const presentacion = presMap.get(key);
 
-      const unidad = await this.obtenerOUcrearUM(row.UNIDADES || 'KG');
+      if (!presentacion) {
+        this.logger.error(`Error crítico: Presentación "${row.PRESENTACION.trim()} (${tipo})" no encontrada para producto "${nombreProducto}". Saltando este producto.`);
+        continue;
+      }
+
+      const unidad = await this.obtenerOUcrearUM(row.UNIDADES || 'UNIDAD');
 
       const yaExiste = await this.productoRepo.findOne({
         where: {
           nombre: nombreProducto,
           tipoProducto: tipo,
-          presentacion: { nombre: presentacion?.nombre },
+          presentacion: { id: presentacion.id },
         },
       });
 
@@ -422,9 +215,9 @@ export class SeedService implements OnApplicationBootstrap {
           presentacion,
           unidadMedida: unidad,
         });
-        await this.productoRepo.save(producto);
+        productosToSave.push(producto);
         this.logger.log(
-          `Producto creado: ${nombreProducto} (${row.PRESENTACION})`,
+          `Producto preparado para creación: ${nombreProducto} (${row.PRESENTACION})`,
         );
       } else {
         this.logger.log(
@@ -432,6 +225,20 @@ export class SeedService implements OnApplicationBootstrap {
         );
       }
     }
+
+    // INICIO DEL CAMBIO: Guardado por lotes
+    const BATCH_SIZE = 500; // Define el tamaño del lote. Puedes ajustarlo según el rendimiento.
+    if (productosToSave.length > 0) {
+      this.logger.log(`Iniciando guardado de ${productosToSave.length} productos en lotes de ${BATCH_SIZE}...`);
+      for (let i = 0; i < productosToSave.length; i += BATCH_SIZE) {
+        const batch = productosToSave.slice(i, i + BATCH_SIZE);
+        await this.productoRepo.save(batch);
+        this.logger.log(`Lote de ${batch.length} productos guardado. Total procesado: ${i + batch.length}`);
+      }
+      this.logger.log('Todos los productos nuevos guardados exitosamente.');
+    }
+    // FIN DEL CAMBIO: Guardado por lotes
+
 
     await this.productoRepo.query(`
       SELECT setval(
@@ -561,6 +368,7 @@ export class SeedService implements OnApplicationBootstrap {
     }
 
     for (const { nombre, tipoProducto } of combinaciones.values()) {
+      // Buscar por nombre Y tipoProducto para asegurar unicidad
       const yaExiste = await this.presRepo.findOne({
         where: { nombre, tipoProducto },
       });
@@ -568,7 +376,7 @@ export class SeedService implements OnApplicationBootstrap {
         await this.presRepo.save(
           this.presRepo.create({
             nombre,
-            tipoProducto, // ✅ se agrega tipoProducto
+            tipoProducto,
           }),
         );
         presentacionesCreadas++;
