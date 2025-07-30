@@ -1,0 +1,50 @@
+.movimiento-list {
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.movimiento-list h2 {
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.movimiento-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.movimiento-item:last-child {
+  border-bottom: none;
+}
+
+.movimiento-item span {
+  display: block;
+  margin: 0.25rem 0;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+/* Media Query para pantallas pequeñas */
+@media (max-width: 480px) {
+  .movimiento-list h2 {
+    font-size: 1.2rem;
+  }
+
+  .movimiento-item {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+
+  .movimiento-item span {
+    font-size: 0.85rem;
+  }
+}

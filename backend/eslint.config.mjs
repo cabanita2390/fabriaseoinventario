@@ -1,3 +1,4 @@
+// eslint.config.mjs
 // @ts-check
 import eslint from '@eslint/js';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
@@ -26,9 +27,18 @@ export default tseslint.config(
   },
   {
     rules: {
+      // aquí sobrescribimos prettier/prettier
+      'prettier/prettier': [
+        'error',
+        {
+          endOfLine: 'auto',
+          // si quieres, puedes repetir otras opciones de .prettierrc
+        },
+      ],
+
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn'
+      '@typescript-eslint/no-unsafe-argument': 'warn',
     },
   },
 );

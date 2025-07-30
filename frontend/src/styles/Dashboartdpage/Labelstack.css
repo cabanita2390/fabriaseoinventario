@@ -1,0 +1,52 @@
+.label-div {
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 4px; /* le faltaba px */
+}
+
+.labelstack-container {
+  display: flex;
+  justify-content: center; /* mejor centrado en pantallas pequeñas */
+  align-items: flex-start;
+  flex-wrap: wrap; /* importante para hacer que se ajusten */
+  gap: 1rem;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.label-Movimientos,
+.label-stock-bajo {
+  flex: 1 1 250px; /* se ajusta mínimo a 250px */
+  max-width: 300px;
+  min-width: 200px;
+  height: auto;
+  border-radius: 20px;
+  background-color: #9ab9e8;
+  padding: 10px;
+  color: #333;
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.35);
+  font-family: Roboto, sans-serif;
+  font-weight: 400;
+  font-size: 1.2rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.datos {
+  font-weight: normal;
+  margin-left: 0.5rem;
+}
+
+/* Media query para pantallas pequeñas */
+@media (max-width: 480px) {
+  .label-Movimientos,
+  .label-stock-bajo {
+    font-size: 1rem;
+    padding: 0.8rem;
+  }
+}
