@@ -11,21 +11,24 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 export class SeedController {
   constructor(private readonly seedService: SeedService) {}
 
-  @Post('materiaprima')
-  async seedMateriasPrimas(): Promise<{ message: string; resumen: any }> {
-    return this.seedService.seedMateriasPrimas();
-  }
+  // El método seedMateriasPrimas() y seedProductosPredeterminados()
+  // fueron eliminados del SeedService.
+  // La siembra de productos (materias primas, envases, etiquetas)
+  // ahora se maneja automáticamente en el método onApplicationBootstrap
+  // del SeedService al iniciar la aplicación.
+  // Si necesitas forzar una siembra completa, considera crear un método
+  // público en SeedService para ese propósito.
 
   @Post('bodegas')
   async seedBodegas(): Promise<{ message: string; resumen: any }> {
+    // Este método aún existe en SeedService y puede ser llamado.
     return this.seedService.seedBodegas();
   }
 
-  @Post('productos-predeterminados')
-  async seedProductosPredeterminados(): Promise<{
-    message: string;
-    resumen: any;
-  }> {
-    return this.seedService.seedProductosPredeterminados();
+  // Si deseas un endpoint para sembrar roles y el usuario admin,
+  // puedes añadirlo de la siguiente manera:
+  @Post('roles-admin')
+  async seedRolesAndAdmin(): Promise<{ message: string; resumen: any }> {
+    return this.seedService.seedRolesYAdmin();
   }
 }
