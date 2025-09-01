@@ -163,6 +163,7 @@ export class SeedService implements OnApplicationBootstrap {
 
     await this.seedBodegas();
     await this.seedRolesYAdmin();
+
   }
 
   private async seedProductosPorTipo(rows: DefaultProductRow[]) {
@@ -270,19 +271,17 @@ export class SeedService implements OnApplicationBootstrap {
     const rolMap = new Map<string, Rol>();
 
     for (const nombre of rolesIniciales) {
-      const existente = await this.rolRepo.findOne({ where: { nombre } });
-
-      if (existente) {
-        resumen.rolesExistentes++;
-        this.logger.log(`Rol ya existe: ${nombre}`);
-        rolMap.set(nombre, existente);
-      } else {
-        const nuevo = this.rolRepo.create({ nombre });
-        const rol = await this.rolRepo.save(nuevo);
+      let rol = await this.rolRepo.findOne({ where: { nombre } });
+      if (!rol) {
+        rol = this.rolRepo.create({ nombre });
+        rol = await this.rolRepo.save(rol);
         resumen.rolesCreados++;
         this.logger.log(`Rol creado: ${nombre}`);
-        rolMap.set(nombre, rol);
+      } else {
+        resumen.rolesExistentes++;
+        this.logger.log(`Rol ya existe: ${nombre}`);
       }
+      rolMap.set(nombre, rol);
     }
 
     const adminUsername = 'admin';
@@ -293,22 +292,15 @@ export class SeedService implements OnApplicationBootstrap {
     });
 
     if (!admin) {
-      const adminPassword = 'Secreto456*';
+      const adminPassword = 'Secreto456*'; // Puedes cambiarla según necesidades
       const hashed = await bcrypt.hash(adminPassword, 10);
-
-      const rolAdmin = rolMap.get('ADMIN');
-      if (!rolAdmin) {
-        throw new Error(
-          'No se encontró el rol ADMIN para asignar al usuario admin',
-        );
-      }
 
       admin = this.usuarioRepo.create({
         username: adminUsername,
         nombre: 'Administrador',
         email: adminCorreo,
         password: hashed,
-        rol: rolAdmin,
+        rol: rolMap.get('ADMIN'),
       });
 
       await this.usuarioRepo.save(admin);
