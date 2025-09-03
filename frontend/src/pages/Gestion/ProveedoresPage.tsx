@@ -57,7 +57,7 @@ const ProveedoresPage = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const response = await authFetch('http://localhost:3000/proveedor');
+        const response = await authFetch('https://fabriaseo-inventario-backend.onrender.com/proveedor');
         if (!response.ok) throw new Error('Error al cargar proveedores');
         const proveedores = await response.json();
         setFullData(proveedores);
@@ -93,8 +93,8 @@ const ProveedoresPage = () => {
 
       const method = isEditMode ? 'PATCH' : 'POST';
       const url = isEditMode 
-        ? `http://localhost:3000/proveedor/${form.id}`
-        : 'http://localhost:3000/proveedor';
+        ? `https://fabriaseo-inventario-backend.onrender.com/proveedor/${form.id}`
+        : 'https://fabriaseo-inventario-backend.onrender.com/proveedor';
 
       const requestBody = {
         nombre: form.nombre,
@@ -174,7 +174,7 @@ const ProveedoresPage = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await authFetch(`http://localhost:3000/proveedor/${row.id}`, {
+        const response = await authFetch(`https://fabriaseo-inventario-backend.onrender.com/proveedor/${row.id}`, {
           method: 'DELETE'
         });
         

@@ -50,7 +50,7 @@ const BodegasPage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await authFetch('http://localhost:3000/bodega');
+        const response = await authFetch('https://fabriaseo-inventario-backend.onrender.com/bodega');
         const bodegas = await response.json();
         setFullData(bodegas);
       } catch (error) {

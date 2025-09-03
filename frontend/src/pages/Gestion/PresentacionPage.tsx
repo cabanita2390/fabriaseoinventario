@@ -69,7 +69,7 @@ const PresentacionPage = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const response = await authFetch('http://localhost:3000/presentacion');
+        const response = await authFetch('https://fabriaseo-inventario-backend.onrender.com/presentacion');
         if (!response.ok) throw new Error('Error al cargar presentaciones');
         const presentaciones = await response.json();
         setFullData(presentaciones);
@@ -106,8 +106,8 @@ const PresentacionPage = () => {
     try {
       const method = isEditMode ? 'PATCH' : 'POST';
       const url = isEditMode 
-        ? `http://localhost:3000/presentacion/${form.id}`
-        : 'http://localhost:3000/presentacion';
+        ? `https://fabriaseo-inventario-backend.onrender.com/presentacion/${form.id}`
+        : 'https://fabriaseo-inventario-backend.onrender.com/presentacion';
 
       const response = await authFetch(url, {
         method,
@@ -180,7 +180,7 @@ const PresentacionPage = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await authFetch(`http://localhost:3000/presentacion/${row.id}`, {
+        const response = await authFetch(`https://fabriaseo-inventario-backend.onrender.com/presentacion/${row.id}`, {
           method: 'DELETE'
         });
         

@@ -2,7 +2,7 @@ import { Usuario, CreateUsuarioDto, UpdateUsuarioDto, Rol } from '../../Usuarios
 import { useAuthFetch } from '../../ui/useAuthFetch';
 import Swal from 'sweetalert2';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://fabriaseo-inventario-backend.onrender.com';
 
 export const useUsuarioService = () => {
   const { authFetch } = useAuthFetch();
