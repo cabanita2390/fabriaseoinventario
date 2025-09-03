@@ -34,8 +34,7 @@ export class MovimientoController {
   @Post('materia-prima')
   @Roles(ADMIN, RECEPTOR_MP, LIDER_PRODUCCION)
   createMateriaPrima(@Body() dto: CreateMovimientoDto) {
-    // return this.movimientoService.createMateriaPrima(dto);
-    console.log('Prueba movimiento materia prima');
+     return this.movimientoService.createMateriaPrima(dto);
   }
 
   @Post('material-envase')

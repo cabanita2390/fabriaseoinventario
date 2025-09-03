@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
@@ -28,6 +30,8 @@ export class MovimientoService {
     @InjectRepository(Inventario)
     private readonly inventarioRepo: Repository<Inventario>,
   ) {}
+
+  private readonly logger = new Logger('MovimientoService'); // al inicio de la clase
 
   async createMateriaPrima(dto: CreateMovimientoDto) {
     return this.create({
@@ -112,33 +116,117 @@ export class MovimientoService {
   }
 
   async create(dto: CreateMovimientoDto): Promise<any> {
+    const reqId =
+      (crypto as any).randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+    const t0 = Date.now();
+
+    console.log(`[${reqId}] [create] DTO recibido:`, dto);
+
     const tipo = dto.tipo ?? TipoMovimiento.INGRESO;
     const now = new Date();
 
+    // --- PRECHECKS DE SOLO LOG (no cambian tu lógica) ---
+    const preT0 = Date.now();
+    try {
+      // Verifica existencia del producto
+      if (dto.producto_idproducto != null) {
+        const prodRow = await this.movimientoRepo.manager.query(
+          `SELECT idproducto FROM "producto" WHERE idproducto = $1 LIMIT 1`,
+          [dto.producto_idproducto],
+        );
+        console.log(
+          `[${reqId}] [precheck] producto_idproducto=${dto.producto_idproducto} ` +
+            (prodRow?.length ? 'EXISTE' : 'NO_EXISTE'),
+        );
+      } else {
+        console.log(
+          `[${reqId}] [precheck] producto_idproducto NO enviado en DTO`,
+        );
+      }
+
+      // Verifica existencia de la bodega
+      if (dto.bodega_idbodega != null) {
+        const bodRow = await this.movimientoRepo.manager.query(
+          `SELECT idbodega FROM "bodega" WHERE idbodega = $1 LIMIT 1`,
+          [dto.bodega_idbodega],
+        );
+        console.log(
+          `[${reqId}] [precheck] bodega_idbodega=${dto.bodega_idbodega} ` +
+            (bodRow?.length ? 'EXISTE' : 'NO_EXISTE'),
+        );
+      } else {
+        console.log(`[${reqId}] [precheck] bodega_idbodega NO enviado en DTO`);
+      }
+    } catch (e) {
+      console.log(
+        `[${reqId}] [precheck] Error haciendo prechequeos:`,
+        e?.message,
+      );
+    }
+    console.log(`[${reqId}] [precheck] tardó ${Date.now() - preT0}ms`);
+
+    // --- CREA ENTIDAD PARCIAL ---
     const mov = this.movimientoRepo.create({
       tipo,
       cantidad: dto.cantidad,
       fechaMovimiento: now,
       descripcion: dto.descripcion,
-      producto: { id: dto.producto_idproducto },
-      bodega: { id: dto.bodega_idbodega },
+      // OJO: aquí se asignan FK por id; si el id no existe, el save fallará (FK)
+      producto: { id: dto.producto_idproducto } as any,
+      bodega: { id: dto.bodega_idbodega } as any,
     } as DeepPartial<Movimiento>);
 
+    console.log(`[${reqId}] [create] Entidad preparada para guardar:`, {
+      tipo,
+      cantidad: dto.cantidad,
+      fechaMovimiento: now.toISOString(),
+      descripcion: dto.descripcion,
+      producto_id: dto.producto_idproducto,
+      bodega_id: dto.bodega_idbodega,
+    });
+
     let guardado: Movimiento;
+    const saveT0 = Date.now();
     try {
       guardado = await this.movimientoRepo.save(mov);
-    } catch (err) {
+      console.log(
+        `[${reqId}] [create] Guardado OK en ${Date.now() - saveT0}ms -> id=${guardado.id}`,
+      );
+    } catch (err: any) {
+      // Super útil en Postgres: code + detail (p.ej. violaciones de FK)
+      console.error(
+        `[${reqId}] [create] Error al guardar (Postgres code=${err?.code} detail=${err?.detail})`,
+      );
+      console.error(`[${reqId}] [create] Error stack:`, err?.stack ?? err);
       throw new BadRequestException('Error al guardar el movimiento');
     }
 
-    await this.upsertInventario(
-      guardado.producto.id,
-      guardado.bodega.id,
-      guardado.tipo,
-      guardado.cantidad,
-      now,
-    );
+    // --- INVENTARIO (upsert) ---
+    const upT0 = Date.now();
+    try {
+      console.log(
+        `[${reqId}] [inventario] upsert con ` +
+          `producto=${guardado.producto?.id} bodega=${guardado.bodega?.id} ` +
+          `tipo=${guardado.tipo} cant=${guardado.cantidad}`,
+      );
+      await this.upsertInventario(
+        guardado.producto.id,
+        guardado.bodega.id,
+        guardado.tipo,
+        guardado.cantidad,
+        now,
+      );
+      console.log(`[${reqId}] [inventario] OK en ${Date.now() - upT0}ms`);
+    } catch (e: any) {
+      console.error(
+        `[${reqId}] [inventario] Error en upsert: ${e?.message}`,
+        e?.stack ?? '',
+      );
+      // Decide si relanzas o no; por ahora, seguimos arrojando errores arriba si el save falla.
+    }
 
+    // --- RECUPERA COMPLETO ---
+    const findT0 = Date.now();
     const completo = await this.movimientoRepo.findOne({
       where: { id: guardado.id },
       relations: [
@@ -149,8 +237,18 @@ export class MovimientoService {
         'bodega',
       ],
     });
-    if (!completo)
+    console.log(`[${reqId}] [findOne] tardó ${Date.now() - findT0}ms`);
+
+    if (!completo) {
+      console.warn(
+        `[${reqId}] [findOne] No se encontró movimiento id=${guardado.id}`,
+      );
       throw new NotFoundException(`Movimiento ${guardado.id} no hallado`);
+    }
+
+    console.log(
+      `[${reqId}] [done] Total ${Date.now() - t0}ms, id=${guardado.id}`,
+    );
 
     return {
       ...completo,
