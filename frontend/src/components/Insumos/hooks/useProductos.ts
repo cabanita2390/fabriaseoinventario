@@ -55,7 +55,7 @@ export function useProductos(tipoActual: Tipo) {
     setError(null);
     lastTipo.current = tipoActual;
 
-    const res = await authFetch('http://localhost:3000/producto', {
+    const res = await authFetch('https://fabriaseo-inventario-backend.onrender.com/producto', {
       signal: abortController.current.signal
     });
     

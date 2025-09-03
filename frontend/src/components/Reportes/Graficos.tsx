@@ -117,7 +117,7 @@ const Graficos: React.FC = () => {
 
   const checkEndpointPermission = async (endpoint: string): Promise<boolean> => {
     try {
-      const response = await authFetch(`http://localhost:3000${endpoint}`, {
+      const response = await authFetch(`https://fabriaseo-inventario-backend.onrender.com${endpoint}`, {
         method: 'HEAD'
       });
       return response.ok;
@@ -150,7 +150,7 @@ const Graficos: React.FC = () => {
           continue;
         }
 
-        const response = await authFetch(`http://localhost:3000${endpoint}`);
+        const response = await authFetch(`https://fabriaseo-inventario-backend.onrender.com${endpoint}`);
         
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`);

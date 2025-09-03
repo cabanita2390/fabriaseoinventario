@@ -2,7 +2,7 @@ import { InventarioItemAPI, Bodega, InventarioItem } from '../types/inventarioTy
 import { authFetch } from '../../ui/useAuthFetch';
 import Swal from 'sweetalert2';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://fabriaseo-inventario-backend.onrender.com';
 
 // Tipos de producto para filtrar
 export type TipoProductoFiltro = 'MATERIA_PRIMA' | 'MATERIAL_DE_ENVASE' | 'ETIQUETAS';

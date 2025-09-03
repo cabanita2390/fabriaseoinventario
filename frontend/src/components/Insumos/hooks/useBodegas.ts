@@ -55,7 +55,7 @@ export function useBodegas(options: UseBodegasOptions = {}) {
       setLoading(true);
       setError(null);
       
-      const res = await authFetch('http://localhost:3000/bodega', {
+      const res = await authFetch('https://fabriaseo-inventario-backend.onrender.com/bodega', {
         signal: abortController.current.signal
       });
       

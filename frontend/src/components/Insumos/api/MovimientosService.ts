@@ -1,7 +1,7 @@
 import { authFetch } from '../../ui/useAuthFetch';
 import Swal from 'sweetalert2';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://fabriaseo-inventario-backend.onrender.com';
 
 // Tipos de roles
 export type AppRole =

@@ -43,7 +43,7 @@ function Gstockbajo() {
   const { authFetch } = useAuthFetch(); 
 
   useEffect(() => {
-      authFetch('http://localhost:3000/dashboard')
+      authFetch('https://fabriaseo-inventario-backend.onrender.com/dashboard')
     .then((res) => res.json())
     .then((mockData) => {
       const productos: Producto[] = mockData.top5ProductosMasBajoStock;

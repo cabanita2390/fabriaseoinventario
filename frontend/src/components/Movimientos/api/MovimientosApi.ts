@@ -73,7 +73,7 @@ export const fetchMovimientos = async (authFetch: any): Promise<RowData[]> => {
 
   for (const endpoint of endpointsToTry) {
     try {
-      const response = await authFetch(`http://localhost:3000${endpoint}`);
+      const response = await authFetch(`https://fabriaseo-inventario-backend.onrender.com${endpoint}`);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -131,7 +131,7 @@ export const updateMovimiento = async (
   payload: any
 ): Promise<Response> => {
   try {
-    const response = await authFetch(`http://localhost:3000/movimiento/${id}`, {
+    const response = await authFetch(`https://fabriaseo-inventario-backend.onrender.com/movimiento/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -149,7 +149,7 @@ export const updateMovimiento = async (
 
 export const fetchProductosAgrupados = async (authFetch: any): Promise<ProductoAgrupado[]> => {
   try {
-    const res = await authFetch('http://localhost:3000/producto');
+    const res = await authFetch('https://fabriaseo-inventario-backend.onrender.com/producto');
     
     if (!res.ok) {
       throw new Error(`Error ${res.status}: ${res.statusText}`);
@@ -181,7 +181,7 @@ export const fetchProductosAgrupados = async (authFetch: any): Promise<ProductoA
 
 export const fetchBodegas = async (authFetch: any): Promise<Bodega[]> => {
   try {
-    const res = await authFetch('http://localhost:3000/bodega');
+    const res = await authFetch('https://fabriaseo-inventario-backend.onrender.com/bodega');
     
     if (!res.ok) {
       throw new Error(`Error ${res.status}: ${res.statusText}`);

@@ -16,7 +16,7 @@ function MovimientoList() {
   useEffect(() => {
   const obtenerMovimientos = async () => {
     try {
-      const response = await authFetch('http://localhost:3000/dashboard');
+      const response = await authFetch('https://fabriaseo-inventario-backend.onrender.com/dashboard');
       console.log('respuesta: ', response)
       const data = await response.json();
 
