@@ -26,8 +26,6 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Usuario no autenticado o sin rol');
     }
 
-    console.log('Usuario autenticado:', user);
-
     if (!requiredRoles.includes(user.rol.nombre)) {
       throw new ForbiddenException(
         'No tienes permisos para acceder a este recurso',
