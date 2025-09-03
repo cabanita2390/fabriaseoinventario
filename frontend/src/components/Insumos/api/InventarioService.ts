@@ -1,7 +1,7 @@
 import { InventarioItem, UpdateInventarioDto } from '../types/InsumosTipe';
 import { authFetch } from '../../ui/useAuthFetch';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://fabriaseo-inventario-backend.onrender.com';
 
 
 const validateId = (id: number): void => {

@@ -9,7 +9,7 @@ function Labelstack() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await authFetch('http://localhost:3000/dashboard'); // o desde el backend real
+        const res = await authFetch('https://fabriaseo-inventario-backend.onrender.com/dashboard'); // o desde el backend real
         const data = await res.json();
 
         // Suponiendo que el JSON tiene las propiedades así:

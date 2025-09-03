@@ -48,7 +48,7 @@ type ProductoForm = {
 };
 
 // Constants
-const API_BASE = 'http://localhost:3000';
+const API_BASE = 'https://fabriaseo-inventario-backend.onrender.com';
 const INITIAL_FORM: ProductoForm = {
   nombre: '',
   tipoProducto: 'MATERIA_PRIMA',
