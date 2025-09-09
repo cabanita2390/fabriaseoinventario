@@ -119,59 +119,83 @@ export class MovimientoService {
     const reqId =
       (crypto as any).randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
     const t0 = Date.now();
-
     console.log(`[${reqId}] [create] DTO recibido:`, dto);
 
     const tipo = dto.tipo ?? TipoMovimiento.INGRESO;
     const now = new Date();
 
-    // --- PRECHECKS DE SOLO LOG (no cambian tu lógica) ---
+    // --- VALIDACIONES PREVIAS ---
     const preT0 = Date.now();
-    try {
-      // Verifica existencia del producto
-      if (dto.producto_idproducto != null) {
-        const prodRow = await this.movimientoRepo.manager.query(
-          `SELECT idproducto FROM "producto" WHERE idproducto = $1 LIMIT 1`,
-          [dto.producto_idproducto],
-        );
-        console.log(
-          `[${reqId}] [precheck] producto_idproducto=${dto.producto_idproducto} ` +
-            (prodRow?.length ? 'EXISTE' : 'NO_EXISTE'),
-        );
-      } else {
-        console.log(
-          `[${reqId}] [precheck] producto_idproducto NO enviado en DTO`,
-        );
-      }
 
-      // Verifica existencia de la bodega
-      if (dto.bodega_idbodega != null) {
-        const bodRow = await this.movimientoRepo.manager.query(
-          `SELECT idbodega FROM "bodega" WHERE idbodega = $1 LIMIT 1`,
-          [dto.bodega_idbodega],
-        );
-        console.log(
-          `[${reqId}] [precheck] bodega_idbodega=${dto.bodega_idbodega} ` +
-            (bodRow?.length ? 'EXISTE' : 'NO_EXISTE'),
-        );
-      } else {
-        console.log(`[${reqId}] [precheck] bodega_idbodega NO enviado en DTO`);
-      }
-    } catch (e) {
-      console.log(
-        `[${reqId}] [precheck] Error haciendo prechequeos:`,
-        e?.message,
+    // 1. Verificar que el producto existe
+    const producto = await this.productoRepo.findOne({
+      where: { id: dto.producto_idproducto },
+      relations: ['presentacion', 'unidadMedida'],
+    });
+
+    if (!producto) {
+      throw new BadRequestException(
+        `El producto con ID ${dto.producto_idproducto} no existe`,
       );
     }
-    console.log(`[${reqId}] [precheck] tardó ${Date.now() - preT0}ms`);
 
-    // --- CREA ENTIDAD PARCIAL ---
+    // 2. Verificar que la bodega existe
+    const bodega = await this.bodegaRepo.findOne({
+      where: { id: dto.bodega_idbodega },
+    });
+
+    if (!bodega) {
+      throw new BadRequestException(
+        `La bodega con ID ${dto.bodega_idbodega} no existe`,
+      );
+    }
+
+    // 3. VALIDACIÓN CRÍTICA: Para EGRESOS, verificar stock disponible
+    if (tipo === TipoMovimiento.EGRESO) {
+      const inventarioActual = await this.inventarioRepo.findOne({
+        where: {
+          producto: { id: dto.producto_idproducto },
+          bodega: { id: dto.bodega_idbodega },
+        },
+      });
+
+      const stockDisponible = inventarioActual?.stockActual || 0;
+
+      console.log(
+        `[${reqId}] [validacion] Stock disponible: ${stockDisponible}, Cantidad solicitada: ${dto.cantidad}`,
+      );
+
+      if (stockDisponible < dto.cantidad) {
+        throw new BadRequestException(
+          `Stock insuficiente. Stock disponible: ${stockDisponible} ${producto.unidadMedida?.nombre || ''}, ` +
+            `cantidad solicitada: ${dto.cantidad} ${producto.unidadMedida?.nombre || ''}. ` +
+            `Producto: ${producto.nombre} en ${bodega.nombre}`,
+        );
+      }
+
+      // Validar que la cantidad no sea negativa o cero
+      if (dto.cantidad <= 0) {
+        throw new BadRequestException('La cantidad debe ser mayor a 0');
+      }
+    }
+
+    // 4. Para INGRESOS, validar que la cantidad sea positiva
+    if (tipo === TipoMovimiento.INGRESO && dto.cantidad <= 0) {
+      throw new BadRequestException(
+        'La cantidad de ingreso debe ser mayor a 0',
+      );
+    }
+
+    console.log(
+      `[${reqId}] [validaciones] completadas en ${Date.now() - preT0}ms`,
+    );
+
+    // --- CREAR MOVIMIENTO ---
     const mov = this.movimientoRepo.create({
       tipo,
       cantidad: dto.cantidad,
       fechaMovimiento: now,
       descripcion: dto.descripcion,
-      // OJO: aquí se asignan FK por id; si el id no existe, el save fallará (FK)
       producto: { id: dto.producto_idproducto } as any,
       bodega: { id: dto.bodega_idbodega } as any,
     } as DeepPartial<Movimiento>);
@@ -187,13 +211,13 @@ export class MovimientoService {
 
     let guardado: Movimiento;
     const saveT0 = Date.now();
+
     try {
       guardado = await this.movimientoRepo.save(mov);
       console.log(
         `[${reqId}] [create] Guardado OK en ${Date.now() - saveT0}ms -> id=${guardado.id}`,
       );
     } catch (err: any) {
-      // Super útil en Postgres: code + detail (p.ej. violaciones de FK)
       console.error(
         `[${reqId}] [create] Error al guardar (Postgres code=${err?.code} detail=${err?.detail})`,
       );
@@ -201,14 +225,13 @@ export class MovimientoService {
       throw new BadRequestException('Error al guardar el movimiento');
     }
 
-    // --- INVENTARIO (upsert) ---
+    // --- ACTUALIZAR INVENTARIO ---
     const upT0 = Date.now();
     try {
       console.log(
-        `[${reqId}] [inventario] upsert con ` +
-          `producto=${guardado.producto?.id} bodega=${guardado.bodega?.id} ` +
-          `tipo=${guardado.tipo} cant=${guardado.cantidad}`,
+        `[${reqId}] [inventario] upsert con producto=${guardado.producto?.id} bodega=${guardado.bodega?.id} tipo=${guardado.tipo} cant=${guardado.cantidad}`,
       );
+
       await this.upsertInventario(
         guardado.producto.id,
         guardado.bodega.id,
@@ -216,16 +239,18 @@ export class MovimientoService {
         guardado.cantidad,
         now,
       );
+
       console.log(`[${reqId}] [inventario] OK en ${Date.now() - upT0}ms`);
     } catch (e: any) {
       console.error(
         `[${reqId}] [inventario] Error en upsert: ${e?.message}`,
         e?.stack ?? '',
       );
-      // Decide si relanzas o no; por ahora, seguimos arrojando errores arriba si el save falla.
+      // En caso de error en inventario, podrías considerar hacer rollback del movimiento
+      throw new BadRequestException('Error al actualizar el inventario');
     }
 
-    // --- RECUPERA COMPLETO ---
+    // --- RECUPERAR REGISTRO COMPLETO ---
     const findT0 = Date.now();
     const completo = await this.movimientoRepo.findOne({
       where: { id: guardado.id },
@@ -237,6 +262,7 @@ export class MovimientoService {
         'bodega',
       ],
     });
+
     console.log(`[${reqId}] [findOne] tardó ${Date.now() - findT0}ms`);
 
     if (!completo) {
