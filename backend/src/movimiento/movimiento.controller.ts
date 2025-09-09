@@ -38,13 +38,13 @@ export class MovimientoController {
   }
 
   @Post('material-envase')
-  @Roles(ADMIN, RECEPTOR_ENVASE, OPERARIO_PRODUCCION)
+  @Roles(ADMIN, RECEPTOR_ENVASE, OPERARIO_PRODUCCION, LIDER_PRODUCCION)
   createMaterialEnvase(@Body() dto: CreateMovimientoDto) {
     return this.movimientoService.createMaterialEnvase(dto);
   }
 
   @Post('etiquetas')
-  @Roles(ADMIN, RECEPTOR_ETIQUETAS, OPERARIO_PRODUCCION)
+  @Roles(ADMIN, RECEPTOR_ETIQUETAS, OPERARIO_PRODUCCION, LIDER_PRODUCCION)
   createEtiquetas(@Body() dto: CreateMovimientoDto) {
     return this.movimientoService.createEtiquetas(dto);
   }
