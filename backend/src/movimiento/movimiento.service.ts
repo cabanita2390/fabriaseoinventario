@@ -159,7 +159,7 @@ export class MovimientoService {
         },
       });
 
-      const stockDisponible = inventarioActual?.stockActual || 0;
+      const stockDisponible = inventarioActual?.cantidad_actual || 0;
 
       console.log(
         `[${reqId}] [validacion] Stock disponible: ${stockDisponible}, Cantidad solicitada: ${dto.cantidad}`,
@@ -246,7 +246,6 @@ export class MovimientoService {
         `[${reqId}] [inventario] Error en upsert: ${e?.message}`,
         e?.stack ?? '',
       );
-      // En caso de error en inventario, podrías considerar hacer rollback del movimiento
       throw new BadRequestException('Error al actualizar el inventario');
     }
 
