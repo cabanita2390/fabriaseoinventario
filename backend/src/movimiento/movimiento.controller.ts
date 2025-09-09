@@ -34,18 +34,19 @@ export class MovimientoController {
   @Post('materia-prima')
   @Roles(ADMIN, RECEPTOR_MP, LIDER_PRODUCCION)
   createMateriaPrima(@Body() dto: CreateMovimientoDto) {
-     return this.movimientoService.createMateriaPrima(dto);
+    return this.movimientoService.createMateriaPrima(dto);
   }
 
   @Post('material-envase')
-  @Roles(ADMIN, LIDER_PRODUCCION, RECEPTOR_ENVASE, OPERARIO_PRODUCCION,)
+  @Roles(ADMIN, LIDER_PRODUCCION, RECEPTOR_ENVASE, OPERARIO_PRODUCCION)
   createMaterialEnvase(@Body() dto: CreateMovimientoDto) {
     return this.movimientoService.createMaterialEnvase(dto);
   }
 
   @Post('etiquetas')
-  @Roles(ADMIN, LIDER_PRODUCCION,RECEPTOR_ETIQUETAS, OPERARIO_PRODUCCION)
+  @Roles(ADMIN, LIDER_PRODUCCION, RECEPTOR_ETIQUETAS, OPERARIO_PRODUCCION)
   createEtiquetas(@Body() dto: CreateMovimientoDto) {
+    console.log('prueba movimiento service');
     return this.movimientoService.createEtiquetas(dto);
   }
 
@@ -64,13 +65,13 @@ export class MovimientoController {
   }
 
   @Get('material-envase')
-  @Roles(ADMIN, RECEPTOR_ENVASE, LIDER_PRODUCCION,OPERARIO_PRODUCCION)
+  @Roles(ADMIN, RECEPTOR_ENVASE, LIDER_PRODUCCION, OPERARIO_PRODUCCION)
   findMaterialEnvase() {
     return this.movimientoService.findByTipo(TipoProducto.MATERIAL_DE_ENVASE);
   }
 
   @Get('etiquetas')
-  @Roles(ADMIN, RECEPTOR_ETIQUETAS, LIDER_PRODUCCION,OPERARIO_PRODUCCION)
+  @Roles(ADMIN, RECEPTOR_ETIQUETAS, LIDER_PRODUCCION, OPERARIO_PRODUCCION)
   findEtiquetas() {
     return this.movimientoService.findByTipo(TipoProducto.ETIQUETAS);
   }
